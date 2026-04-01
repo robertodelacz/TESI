@@ -10,7 +10,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <!-- ✦ DataLabels como plugin separado, se registra manualmente UNA sola vez -->
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-<script src="https://unpkg.com/@dotlottie/player-component@2.7.1/dist/dotlottie-player.mjs" type="module"></script>
+<!-- ✦ dotLottie Player para animaciones Lottie -->
+<script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+
 <style>
 :root {
   --yellow:   #FDB913;
@@ -350,6 +352,10 @@ body {
   font-size: 11px;
   color: rgba(253,185,19,0.70);
   pointer-events: none;
+  transition: opacity 0.2s;
+}
+.select-wrap.loading::after {
+  opacity: 0;
 }
 .periodo-select {
   appearance: none;
@@ -378,6 +384,93 @@ body {
 .periodo-select option { background: #1a2235; color: #fff; }
 .select-anio { min-width: 110px; }
 .select-mes  { min-width: 180px; }
+
+/* ══ LOADING STATE — Spinner elegante en selectores ══ */
+.select-wrap.loading .periodo-select {
+  background: linear-gradient(90deg, 
+    rgba(255,255,255,0.03) 0%, 
+    rgba(253,185,19,0.08) 50%, 
+    rgba(255,255,255,0.03) 100%);
+  background-size: 200% 100%;
+  animation: selectShimmer 1.5s ease-in-out infinite;
+  pointer-events: none;
+  color: rgba(255,255,255,0.5);
+}
+@keyframes selectShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Mini spinner circular dentro del select */
+.select-spinner {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+.select-spinner svg {
+  width: 100%;
+  height: 100%;
+  animation: spinnerRotate 1s linear infinite;
+}
+.select-spinner circle {
+  fill: none;
+  stroke: var(--yellow);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 30;
+}
+@keyframes spinnerRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ══ MES SELECCIONADO — Glow y animación ══ */
+.select-mes.selected {
+  animation: mesSelectedPulse 0.4s ease-out;
+  box-shadow: 0 0 0 3px rgba(253,185,19,0.25), 0 0 20px rgba(253,185,19,0.15);
+}
+@keyframes mesSelectedPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(253,185,19,0.4); }
+  50% { transform: scale(1.02); box-shadow: 0 0 0 6px rgba(253,185,19,0.2); }
+  100% { transform: scale(1); box-shadow: 0 0 0 3px rgba(253,185,19,0.25), 0 0 20px rgba(253,185,19,0.15); }
+}
+
+/* ══ OPCIONES — Entrada animada ══ */
+.select-mes option {
+  animation: optionFadeIn 0.3s ease-out both;
+}
+.select-mes option:nth-child(1) { animation-delay: 0s; }
+.select-mes option:nth-child(2) { animation-delay: 0.03s; }
+.select-mes option:nth-child(3) { animation-delay: 0.06s; }
+.select-mes option:nth-child(4) { animation-delay: 0.09s; }
+.select-mes option:nth-child(5) { animation-delay: 0.12s; }
+.select-mes option:nth-child(6) { animation-delay: 0.15s; }
+.select-mes option:nth-child(7) { animation-delay: 0.18s; }
+.select-mes option:nth-child(8) { animation-delay: 0.21s; }
+.select-mes option:nth-child(9) { animation-delay: 0.24s; }
+.select-mes option:nth-child(10) { animation-delay: 0.27s; }
+.select-mes option:nth-child(11) { animation-delay: 0.30s; }
+.select-mes option:nth-child(12) { animation-delay: 0.33s; }
+.select-mes option:nth-child(13) { animation-delay: 0.36s; }
+@keyframes optionFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Estado loaded — breve glow de confirmación */
+.select-wrap.loaded .periodo-select {
+  animation: loadedGlow 0.6s ease-out;
+}
+@keyframes loadedGlow {
+  0% { box-shadow: 0 0 0 0 rgba(253,185,19,0.5); }
+  50% { box-shadow: 0 0 12px 4px rgba(253,185,19,0.3); }
+  100% { box-shadow: none; }
+}
 
 .pc-sep-label {
   font-size: 20px;
@@ -451,21 +544,188 @@ body {
   position: relative;
   z-index: 1;
 }
+
+/* ══ STATUS CHIP — PREMIUM ANIMADO ══ */
 .status-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 14px;
-  border-radius: 20px;
-  font-size: 11px;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 24px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+  animation: chipEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transition: all 0.4s ease;
 }
-.status-chip.cargado  { background:rgba(5,150,105,0.15);  border:1px solid rgba(52,211,153,0.30); color:#34d399; }
-.status-chip.cargando { background:rgba(253,185,19,0.12); border:1px solid rgba(253,185,19,0.28); color:#FDB913; }
-.status-chip.vacio    { background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);color:rgba(255,255,255,0.35); }
-.dot-anim { width:6px; height:6px; border-radius:50%; background:currentColor; animation:blink 1s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+@keyframes chipEnter {
+  0% { 
+    opacity: 0; 
+    transform: translateX(20px) scale(0.8); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateX(0) scale(1); 
+  }
+}
+
+/* Estado: Cargando */
+.status-chip.cargando { 
+  background: linear-gradient(135deg, rgba(253,185,19,0.15) 0%, rgba(253,185,19,0.25) 100%);
+  border: 1px solid rgba(253,185,19,0.4);
+  color: #FDB913;
+  box-shadow: 0 0 20px rgba(253,185,19,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+.status-chip.cargando::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(253,185,19,0.3), transparent);
+  animation: shimmerChip 1.5s infinite;
+}
+@keyframes shimmerChip {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Estado: Cargado */
+.status-chip.cargado { 
+  background: linear-gradient(135deg, rgba(5,150,105,0.15) 0%, rgba(52,211,153,0.25) 100%);
+  border: 1px solid rgba(52,211,153,0.5);
+  color: #34d399;
+  box-shadow: 0 0 20px rgba(52,211,153,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+  animation: chipEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both, celebrateShake 0.5s ease 0.3s;
+}
+
+@keyframes celebrateShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px) rotate(-1deg); }
+  40% { transform: translateX(3px) rotate(1deg); }
+  60% { transform: translateX(-2px) rotate(-0.5deg); }
+  80% { transform: translateX(2px) rotate(0.5deg); }
+}
+
+/* Estado: Vacío */
+.status-chip.vacio { 
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  color: rgba(255,255,255,0.35);
+}
+
+/* Spinner circular de progreso */
+.status-spinner {
+  width: 16px;
+  height: 16px;
+  position: relative;
+  flex-shrink: 0;
+}
+.status-spinner svg {
+  width: 100%;
+  height: 100%;
+  animation: spinStatus 1s linear infinite;
+}
+.status-spinner circle {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 32;
+  stroke-dashoffset: 24;
+}
+@keyframes spinStatus {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Check animado */
+.status-check {
+  width: 16px;
+  height: 16px;
+  position: relative;
+  flex-shrink: 0;
+}
+.status-check svg {
+  width: 100%;
+  height: 100%;
+}
+.status-check circle {
+  fill: currentColor;
+  opacity: 0.2;
+  animation: checkCirclePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.status-check polyline {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  animation: checkDraw 0.4s ease 0.2s forwards;
+}
+@keyframes checkCirclePop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 0.3; }
+  100% { transform: scale(1); opacity: 0.2; }
+}
+@keyframes checkDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Confetti particles */
+.status-confetti {
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  pointer-events: none;
+}
+.status-confetti span {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  animation: confettiBurst 0.6s ease-out forwards;
+}
+.status-confetti span:nth-child(1) { background: #34d399; animation-delay: 0s; --angle: -30deg; --dist: 25px; }
+.status-confetti span:nth-child(2) { background: #fbbf24; animation-delay: 0.05s; --angle: -60deg; --dist: 20px; }
+.status-confetti span:nth-child(3) { background: #60a5fa; animation-delay: 0.1s; --angle: -90deg; --dist: 28px; }
+.status-confetti span:nth-child(4) { background: #f472b6; animation-delay: 0.08s; --angle: -120deg; --dist: 22px; }
+.status-confetti span:nth-child(5) { background: #a78bfa; animation-delay: 0.12s; --angle: -150deg; --dist: 26px; }
+.status-confetti span:nth-child(6) { background: #34d399; animation-delay: 0.03s; --angle: 30deg; --dist: 24px; }
+.status-confetti span:nth-child(7) { background: #fbbf24; animation-delay: 0.07s; --angle: 60deg; --dist: 30px; }
+.status-confetti span:nth-child(8) { background: #60a5fa; animation-delay: 0.11s; --angle: 90deg; --dist: 20px; }
+
+@keyframes confettiBurst {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(
+      calc(cos(var(--angle)) * var(--dist)),
+      calc(sin(var(--angle)) * var(--dist))
+    ) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Texto con pulse en cargando */
+.status-text {
+  position: relative;
+}
+.status-chip.cargando .status-text {
+  animation: textPulse 1.5s ease-in-out infinite;
+}
+@keyframes textPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
 
 /* ── Contenedores — fondo blanco sólido, video no se cuela ── */
 .reporte-wrap {
@@ -516,29 +776,10 @@ body {
    - El relieve lo da la geometría de luz, no el color
 ══════════════════════════════════════════════════════ */
 :root {
-  --card-bg:      #fffef9;  /* amarillo imperceptible — casi blanco */
-  --card-border:  #d1d5db;  /* gris medio — contraste limpio */
-  --card-shadow:
-    -5px -5px 12px rgba(255,255,255,0.88),
-     6px  6px 16px rgba(0,0,0,0.11),
-     0   16px 40px rgba(0,0,0,0.07),
-     0    0   0 1px rgba(209,213,219,0.60) inset;
-  --card-shadow-hover:
-    -7px -7px 18px rgba(255,255,255,0.95),
-     8px  8px 22px rgba(0,0,0,0.14),
-     0   24px 56px rgba(0,0,0,0.09),
-     0    0   0 1px rgba(209,213,219,0.80) inset;
-  --card-shadow:
-    /* luz arriba-izquierda */
-    -4px -4px 10px rgba(255,255,255,0.90),
-    /* sombra abajo-derecha */
-     5px  5px 14px rgba(0,0,0,0.09),
-    /* penumbra difusa lejana */
-     0   12px 32px rgba(0,0,0,0.06);
-  --card-shadow-hover:
-    -6px -6px 14px rgba(255,255,255,0.95),
-     7px  7px 20px rgba(0,0,0,0.12),
-     0   20px 48px rgba(0,0,0,0.08);
+  --card-bg:      linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,249,230,0.75) 100%);  /* glassmorphism amarillo */
+  --card-border:  rgba(255,255,255,0.4);  /* borde luminoso */
+  --card-shadow:  0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+  --card-shadow-hover: 0 12px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
   --card-radius:  18px;
 }
 
@@ -547,9 +788,11 @@ body {
 .rtype-card,
 .cgauge-card {
   background:    var(--card-bg) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border:        1px solid var(--card-border) !important;
   border-radius: var(--card-radius) !important;
-  box-shadow:    var(--card-shadow) !important;
+  box-shadow:    0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6) !important;
 }
 
 /* chart-card y bars-card — mismo relieve, fondo blanco puro */
@@ -570,15 +813,6 @@ body {
   transform:  translateY(-3px) !important;
 }
 
-/* Eliminar franjas de color de tarjetas */
-.kpi-box::before,
-.rtype-card > div:first-child[style*="height:3px"],
-.chart-card::before,
-.bars-card::before,
-.cgauge-card > div:first-child[style*="height:3px"] {
-  display: none !important;
-}
-
 /* Quitar el pseudo ::before de chart-card */
 .chart-card::before { display: none !important; }
 
@@ -593,11 +827,9 @@ body {
 .kpi-section { padding:28px 40px; background:transparent; border-bottom:none; }
 .kpi-row { display:grid; grid-template-columns:repeat(3,1fr); gap:28px; margin-bottom:20px; }
 
-/* ══ TARJETA KPI — estilo infografía con relieve ══ */
+/* ══ TARJETA KPI — estilo glassmorphism ══ */
 .kpi-box {
   position: relative;
-  background: #fff;
-  border-radius: 12px;
   padding: 0;
   cursor: pointer;
   overflow: visible;
@@ -605,40 +837,25 @@ body {
   animation: cardIn 0.5s cubic-bezier(0.34,1.3,0.64,1) both;
 }
 
-/* Marco exterior con color (efecto de borde grueso) */
+/* Franja superior de color */
 .kpi-box::before {
   content: '';
   position: absolute;
-  top: -4px;
-  left: -4px;
-  right: 4px;
-  bottom: 4px;
-  border-radius: 14px;
-  z-index: -1;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 18px 18px 0 0;
+  z-index: 1;
 }
 .kpi-box.total::before { background: var(--yellow); }
 .kpi-box.completos::before { background: #10B981; }
 .kpi-box.incidencias::before { background: #EF4444; }
 
-/* Sombra de profundidad */
-.kpi-box::after {
-  content: '';
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  right: -8px;
-  bottom: -8px;
-  background: rgba(0,0,0,0.08);
-  border-radius: 14px;
-  z-index: -2;
-  filter: blur(8px);
-}
-
-/* Contenedor interno blanco */
+/* Contenedor interno — transparente para mostrar el gradiente del padre */
 .kpi-box-inner {
-  background: #fff;
+  background: transparent;
   border-radius: 10px;
-  border: 1px solid rgba(0,0,0,0.04);
   padding: 28px 24px 24px;
   display: flex;
   flex-direction: column;
@@ -647,19 +864,9 @@ body {
   position: relative;
 }
 
-/* Borde interior sutil de color */
-.kpi-box.total .kpi-box-inner { border-top: 3px solid var(--yellow); }
-.kpi-box.completos .kpi-box-inner { border-top: 3px solid #10B981; }
-.kpi-box.incidencias .kpi-box-inner { border-top: 3px solid #EF4444; }
-
 /* Hover effect */
 .kpi-box:hover {
-  transform: translateY(-6px);
-}
-.kpi-box:hover::after {
-  transform: translateY(4px);
-  filter: blur(12px);
-  opacity: 0.12;
+  transform: translateY(-4px);
 }
 
 /* Dots decorativos esquina superior derecha */
@@ -688,8 +895,8 @@ body {
 
 /* Ícono centrado con color de línea */
 .kpi-icon-wrap { 
-  width: 56px; 
-  height: 56px; 
+  width: 156px; 
+  height: 156px; 
   display: flex; 
   align-items: center; 
   justify-content: center; 
@@ -754,21 +961,29 @@ body {
   from { opacity:0; transform:translateY(14px) scale(0.97); }
   to   { opacity:1; transform:translateY(0)    scale(1);    }
 }
-.rtype-body { padding: 20px 22px 18px; }
-.rtype-top { display:flex; align-items:center; gap:18px; }
+.rtype-body { padding: 24px 26px 22px; }
+.rtype-top { display:flex; align-items:flex-start; gap:22px; }
 .rtype-info { flex:1; min-width:0; }
-.rtype-nombre { font-size:15px; font-weight:800; letter-spacing:-0.3px; margin-bottom:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.rtype-univ-label { font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-bottom:14px; }
+.rtype-nombre { font-size:18px; font-weight:800; letter-spacing:-0.4px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rtype-univ-label { font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:18px; }
 .rtype-divider { height:1px; background:rgba(0,0,0,0.05); margin:2px 0; }
-.rtype-dot-ok  { width:7px;height:7px;border-radius:50%;background:#10b981;flex-shrink:0; }
-.rtype-dot-inc { width:7px;height:7px;border-radius:50%;background:#dc2626;flex-shrink:0; }
-.rtype-health-row  { display:flex;align-items:center;gap:8px;padding:5px 0; }
-.rtype-health-label{ font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.8px;flex:1; }
-.rtype-health-num  { font-size:20px;font-weight:800;color:#1a202c;line-height:1;letter-spacing:-.5px;min-width:28px;text-align:right; }
-.rtype-health-pct  { font-size:11px;font-weight:700;color:#94a3b8;min-width:38px;text-align:right;font-family:'Inter',sans-serif; }
-.rtype-minibar-track { display:flex;height:5px;border-radius:5px;overflow:hidden;background:rgba(0,0,0,0.06);gap:2px;margin-top:4px; }
-.rtype-minibar-ok  { height:100%;border-radius:5px;background:#10b981;transition:width 1.4s ease; }
-.rtype-minibar-inc { height:100%;border-radius:5px;transition:width 1.4s ease; }
+.rtype-dot-ok  { width:8px;height:8px;border-radius:50%;background:#10b981;flex-shrink:0; }
+.rtype-dot-inc { width:8px;height:8px;border-radius:50%;background:#dc2626;flex-shrink:0; }
+.rtype-health-row  { display:flex;align-items:center;gap:10px;padding:6px 0; }
+.rtype-health-label{ font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.8px;flex:1; }
+.rtype-health-num  { font-size:24px;font-weight:800;color:#1e293b;line-height:1;letter-spacing:-.5px;min-width:32px;text-align:right; }
+.rtype-health-pct  { font-size:13px;font-weight:700;color:#94a3b8;min-width:44px;text-align:right;font-family:'Inter',sans-serif; }
+.rtype-minibar-track { display:flex;height:8px;border-radius:8px;overflow:hidden;background:rgba(0,0,0,0.06);gap:2px;margin-top:6px; }
+.rtype-minibar-ok  { height:100%;border-radius:8px;background:#10b981;transition:width 1.4s ease; }
+.rtype-minibar-inc { height:100%;border-radius:8px;transition:width 1.4s ease; }
+
+/* Barras SVG más grandes */
+.rtype-bars-wrap {
+  margin-top: 8px;
+}
+.rtype-bars-wrap svg {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.06));
+}
 
 /* ══ CGAUGE CARD — ajustes específicos ══ */
 .cgauge-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
@@ -1068,14 +1283,7 @@ canvas { display:block !important; position:relative; z-index:1; }
   gap: 20px;
 }
 .cgauge-card {
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
   overflow: hidden;
-  box-shadow:
-    0 1px 0 rgba(255,255,255,0.9) inset,
-    0 4px 12px rgba(0,0,0,0.05),
-    0 12px 32px rgba(0,0,0,0.06);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   animation: cardIn 0.5s cubic-bezier(0.34,1.3,0.64,1) both;
 }
@@ -1084,11 +1292,6 @@ canvas { display:block !important; position:relative; z-index:1; }
 .cgauge-card:nth-child(3){ animation-delay:0.19s; }
 .cgauge-card:hover {
   transform: translateY(-3px);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,0.9) inset,
-    0 8px 24px rgba(0,0,0,0.09),
-    0 20px 48px rgba(0,0,0,0.07),
-    0 0 0 1.5px var(--col, #e2e8f0);
 }
 .cgauge-body {
   padding: 20px 18px 18px;
@@ -1127,6 +1330,107 @@ canvas { display:block !important; position:relative; z-index:1; }
   font-weight: 700;
   letter-spacing: 0.2px;
   font-family: 'Inter', sans-serif;
+}
+
+/* ══ LOADER ANIMADO — estilo reloj premium ══ */
+.clock-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  gap: 24px;
+}
+.clock-loader-svg {
+  width: 120px;
+  height: 120px;
+  filter: drop-shadow(0 8px 24px rgba(253, 185, 19, 0.25));
+}
+.clock-face {
+  fill: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%);
+  stroke: var(--yellow);
+  stroke-width: 3;
+}
+.clock-center {
+  fill: var(--yellow);
+}
+.clock-hand-hour {
+  stroke: var(--gray);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transform-origin: 60px 60px;
+  animation: rotateHour 3s linear infinite;
+}
+.clock-hand-minute {
+  stroke: var(--yellow);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transform-origin: 60px 60px;
+  animation: rotateMinute 1s linear infinite;
+}
+.clock-hand-second {
+  stroke: #EF4444;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  transform-origin: 60px 60px;
+  animation: rotateSecond 0.5s linear infinite;
+}
+@keyframes rotateHour {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes rotateMinute {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes rotateSecond {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.clock-tick {
+  stroke: var(--gray);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.clock-tick-small {
+  stroke: #cbd5e1;
+  stroke-width: 1;
+}
+.clock-loader-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray);
+  font-family: 'IBM Plex Sans', sans-serif;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.clock-loader-dots {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 4px;
+}
+.clock-loader-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--yellow);
+  animation: dotBounce 1.4s ease-in-out infinite;
+}
+.clock-loader-dots span:nth-child(1) { animation-delay: 0s; }
+.clock-loader-dots span:nth-child(2) { animation-delay: 0.2s; }
+.clock-loader-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.clock-loader-sub {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-top: -8px;
 }
 
 /* ══ AÑO COMPLETO — toggle de vista ══ */
@@ -1294,12 +1598,15 @@ canvas { display:block !important; position:relative; z-index:1; }
 }
 
 /* ══ TABLA BASE ══ */
-.tbl { width:100%; border-collapse:collapse; border:1px solid var(--border); border-radius:8px; overflow:hidden; font-family:'Inter',sans-serif; } padding:11px 18px; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:1px; font-weight:700; color:#4a5568; border-bottom:2px solid #cbd5e1; }
+.tbl { width:100%; border-collapse:collapse; border:1px solid var(--border); border-radius:12px; overflow:hidden; font-family:'Inter',sans-serif; }
+.tbl thead tr { background:linear-gradient(135deg, #1e293b 0%, #334155 100%); }
+.tbl th { padding:14px 18px; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:1.2px; font-weight:700; color:#e2e8f0; border-bottom:none; }
 .tbl td { padding:12px 18px; font-size:13px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
 .tbl tr:last-child td { border-bottom:none; }
 .tbl tr:nth-child(even) td { background:#f8fafc; }
 .tbl tbody tr:hover td { background:#fffbeb; cursor:pointer; }
-.tbl tfoot tr td { background:#f8fafc; font-weight:700; font-size:12px; color:var(--text); border-top:2px solid var(--border); padding:10px 18px; }
+.tbl tfoot tr td { background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); font-weight:700; font-size:13px; color:#92400e; border-top:3px solid var(--yellow); padding:14px 18px; }
+.tbl tfoot tr td strong { color:#78350f; }
 @keyframes rowIn { from{opacity:0;transform:translateX(-6px);} to{opacity:1;transform:translateX(0);} }
 .tbl tbody tr { animation:rowIn 0.22s ease both; }
 
@@ -1385,6 +1692,189 @@ video { pointer-events:none; outline:none; }
 .sp-area-name { font-size:14px; font-weight:600; color:var(--text); }
 .sp-area-pct  { font-size:11px; color:var(--faint); margin-top:1px; font-family:'Inter',sans-serif; }
 .sp-area-num  { font-size:22px; font-weight:800; }
+
+/* ══ PANEL DETALLE TIPO EXPEDIENTE ══ */
+.tipo-panel-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:750; display:none; backdrop-filter:blur(3px); }
+.tipo-panel-overlay.open { display:block; animation: fadeIn 0.2s ease; }
+.tipo-panel { 
+  position:fixed; 
+  right:-560px; 
+  top:0; 
+  bottom:0; 
+  width:520px; 
+  background:#fff; 
+  z-index:850; 
+  box-shadow:-12px 0 50px rgba(0,0,0,0.18); 
+  transition:right 0.4s cubic-bezier(0.4,0,0.2,1); 
+  overflow-y:auto; 
+  display:flex;
+  flex-direction:column;
+}
+.tipo-panel.open { right:0; }
+
+.tp-header { 
+  padding:24px 28px 20px; 
+  position:relative;
+  flex-shrink:0;
+}
+.tp-header-stripe {
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:4px;
+}
+.tp-close { 
+  position:absolute; 
+  top:16px; 
+  right:16px; 
+  width:36px; 
+  height:36px; 
+  background:#f1f5f9; 
+  border:1px solid #e2e8f0; 
+  border-radius:8px; 
+  color:#64748b; 
+  font-size:20px; 
+  cursor:pointer; 
+  display:flex; 
+  align-items:center; 
+  justify-content:center;
+  transition: all 0.2s;
+}
+.tp-close:hover { background:#e2e8f0; color:#1e293b; }
+
+.tp-tipo-name { 
+  font-size:22px; 
+  font-weight:800; 
+  letter-spacing:-0.5px;
+  margin-bottom:4px;
+  padding-right:44px;
+}
+.tp-tipo-sub { 
+  font-size:12px; 
+  color:#64748b; 
+  font-weight:500;
+}
+
+.tp-kpis { 
+  display:grid; 
+  grid-template-columns:repeat(3,1fr); 
+  gap:12px; 
+  padding:0 28px 24px;
+  flex-shrink:0;
+}
+.tp-kpi { 
+  background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); 
+  border:1px solid #e2e8f0; 
+  border-radius:12px; 
+  padding:16px; 
+  text-align:center;
+}
+.tp-kpi-val { 
+  font-size:28px; 
+  font-weight:800; 
+  letter-spacing:-1px; 
+  line-height:1;
+  margin-bottom:4px;
+}
+.tp-kpi-val.green { color:#059669; }
+.tp-kpi-val.red { color:#dc2626; }
+.tp-kpi-val.gray { color:#1e293b; }
+.tp-kpi-label { 
+  font-size:10px; 
+  font-weight:700; 
+  color:#94a3b8; 
+  text-transform:uppercase; 
+  letter-spacing:0.8px;
+}
+
+.tp-section { 
+  padding:20px 28px;
+  border-top:1px solid #f1f5f9;
+}
+.tp-section:last-child { padding-bottom:32px; }
+.tp-sec-title { 
+  font-size:11px; 
+  font-weight:700; 
+  color:#64748b; 
+  text-transform:uppercase; 
+  letter-spacing:1.2px; 
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.tp-sec-title svg { opacity:0.5; }
+
+/* Areas con incidencias en panel tipo */
+.tp-areas-grid { display:flex; flex-direction:column; gap:8px; }
+.tp-area-item { 
+  display:flex; 
+  align-items:center; 
+  justify-content:space-between;
+  padding:12px 14px;
+  background:#f8fafc;
+  border-radius:10px;
+  border:1px solid #e2e8f0;
+}
+.tp-area-left { display:flex; align-items:center; gap:10px; }
+.tp-area-dot { width:10px; height:10px; border-radius:3px; }
+.tp-area-name { font-size:14px; font-weight:600; color:#1e293b; }
+.tp-area-num { 
+  font-size:18px; 
+  font-weight:800;
+  padding:4px 12px;
+  border-radius:8px;
+  background:#fff;
+  border:2px solid;
+}
+
+/* Tabla de expedientes en panel tipo */
+.tp-exp-table { width:100%; border-collapse:collapse; }
+.tp-exp-table th { 
+  font-size:10px; 
+  font-weight:700; 
+  color:#64748b; 
+  text-transform:uppercase; 
+  letter-spacing:0.8px;
+  padding:10px 12px;
+  text-align:left;
+  background:#f8fafc;
+  border-bottom:2px solid #e2e8f0;
+}
+.tp-exp-table th:last-child { text-align:center; }
+.tp-exp-table td { 
+  padding:12px;
+  border-bottom:1px solid #f1f5f9;
+  font-size:13px;
+}
+.tp-exp-table tr:hover { background:#fafbfc; }
+.tp-exp-id { font-weight:600; color:#1e293b; }
+.tp-exp-fecha { color:#64748b; }
+.tp-exp-inc { 
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:32px;
+  padding:4px 10px;
+  background:#fef2f2;
+  border:2px solid #fecaca;
+  border-radius:8px;
+  font-weight:800;
+  color:#dc2626;
+  font-size:14px;
+}
+.tp-no-inc {
+  text-align:center;
+  padding:32px;
+  color:#94a3b8;
+  font-size:14px;
+}
+.tp-no-inc-icon {
+  font-size:40px;
+  margin-bottom:12px;
+  opacity:0.5;
+}
 
 /* ══ MAIN ══ */
 .main-wrap { padding:28px 40px; max-width:1440px; margin:0 auto; }
@@ -1539,19 +2029,6 @@ video { pointer-events:none; outline:none; }
   width: 50px; height: 2px;
   background: var(--yellow);
   border-radius: 2px;
-}
-/* Ajuste para que el lottie no se vea cortado */
-dotlottie-player {
-    display: inline-block;
-    vertical-align: middle;
-}
-
-/* Si quieres que cambie de tamaño según el contenedor */
-.kpi-icon-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
 }
 .proy-sec-num {
   font-size: 14px;
@@ -1807,6 +2284,117 @@ dotlottie-player {
 }
 .proy-empty-icon { font-size: 56px; margin-bottom: 20px; opacity: 0.4; }
 .proy-empty-text { font-size: 15px; font-weight: 500; }
+
+/* ══ GRÁFICO DE TIPOS DE PROYECTO ══ */
+.proy-tipo-chart {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  padding: 28px 20px;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+}
+.proy-tipo-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.proy-tipo-dona {
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.08));
+}
+.proy-tipo-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.proy-tipo-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+}
+.proy-tipo-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+}
+
+/* ══ BADGES DE TIPO ══ */
+.proy-tipo-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tipo-credito {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+.tipo-cumplimiento {
+  background: #ede9fe;
+  color: #6d28d9;
+  border: 1px solid #c4b5fd;
+}
+.tipo-otro {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+/* ══ TABLA FULL WIDTH CON SCROLL ══ */
+.proy-tabla-full {
+  min-width: 1200px;
+}
+.proy-tabla-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+.proy-tabla-desc {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* ══ BARRA DE AVANCE ══ */
+.proy-avance-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.proy-avance-bar {
+  flex: 1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 50px;
+}
+.proy-avance-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s ease;
+}
+.proy-avance-num {
+  font-size: 12px;
+  font-weight: 800;
+  min-width: 36px;
+  text-align: right;
+}
 </style>
 </head>
 <body>
@@ -1942,7 +2530,7 @@ dotlottie-player {
 
       <!-- Mes — opcional -->
       <div class="select-wrap pc-mes-wrap">
-        <select class="periodo-select select-mes" id="selectMes">
+        <select class="periodo-select select-mes" id="selectMes" onchange="onCambioMes()">
           <option value="">Todo el año</option>
         </select>
       </div>
@@ -2030,6 +2618,52 @@ dotlottie-player {
   </div>
 </div>
 
+<!-- ══ PANEL DETALLE TIPO EXPEDIENTE ══ -->
+<div class="tipo-panel-overlay" id="tipoPanelOverlay" onclick="cerrarTipoPanel()"></div>
+<div class="tipo-panel" id="tipoPanel">
+  <div class="tp-header">
+    <div class="tp-header-stripe" id="tpStripe"></div>
+    <button class="tp-close" onclick="cerrarTipoPanel()">×</button>
+    <div class="tp-tipo-name" id="tpTipoName">—</div>
+    <div class="tp-tipo-sub" id="tpTipoSub">Detalle de expedientes</div>
+  </div>
+  <div class="tp-kpis">
+    <div class="tp-kpi">
+      <div class="tp-kpi-val gray" id="tpTotal">0</div>
+      <div class="tp-kpi-label">Total</div>
+    </div>
+    <div class="tp-kpi">
+      <div class="tp-kpi-val green" id="tpCompletos">0</div>
+      <div class="tp-kpi-label">Completos</div>
+    </div>
+    <div class="tp-kpi">
+      <div class="tp-kpi-val red" id="tpIncidencias">0</div>
+      <div class="tp-kpi-label">Con Inc.</div>
+    </div>
+  </div>
+  <div class="tp-section" id="tpAreasSection">
+    <div class="tp-sec-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      Áreas con Incidencias
+    </div>
+    <div class="tp-areas-grid" id="tpAreasList"></div>
+  </div>
+  <div class="tp-section">
+    <div class="tp-sec-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      Expedientes con Incidencias
+    </div>
+    <div id="tpExpList"></div>
+  </div>
+</div>
+
 <script>
 // ════════════════════════════════════════════════════════════
 // ✦ REGISTRO DE DATALABELS — UNA SOLA VEZ, AL INICIO
@@ -2055,9 +2689,9 @@ const AREAS_CFG = {
 };
 
 const ICONOS_KPI = {
-  total:       'https://cdn-icons-mp4.freepik.com/512/15332/15332435.mp4',
-  completos:   'https://cdn-icons-mp4.freepik.com/512/11237/11237478.mp4',
-  incidencias: 'https://cdn-icons-mp4.freepik.com/512/19021/19021870.mp4'
+  total:       'https://lottie.host/99e3df44-ea02-4ddd-ba84-79091ae2d1a3/HMYW6qzaMK.lottie',
+  completos:   'https://lottie.host/9d085cf5-3146-49e2-9160-8a9cd8fddb15/AXFZEDDiCm.lottie',
+  incidencias: 'https://lottie.host/61521474-d22f-4343-846e-8b0d8fcc66cd/Ls48KmaclD.lottie'
 };
 
 const ICONOS_CIERRE = {
@@ -2095,6 +2729,7 @@ const CACHE    = {};
 const CARGANDO = {};
 let anioActual     = 2026;
 let datosMostrados = null;
+let incidenciasAnuales = [];
 window.charts = {};
 
 // ════════════════════════════════════
@@ -2155,8 +2790,39 @@ function cargarAnio(anio, cb) {
 function onCambioAnio() {
   const anio = parseInt(document.getElementById('selectAnio').value);
   anioActual = anio;
-  document.getElementById('selectMes').innerHTML = '<option value="">— Cargando... —</option>';
-  cargarAnio(anio, () => poblarMeses(anio));
+  
+  // Agregar estado loading al wrapper del mes
+  const mesWrap = document.querySelector('.pc-mes-wrap');
+  const mesSelect = document.getElementById('selectMes');
+  
+  mesWrap.classList.remove('loaded');
+  mesWrap.classList.add('loading');
+  
+  // Agregar spinner
+  let spinner = mesWrap.querySelector('.select-spinner');
+  if (!spinner) {
+    spinner = document.createElement('div');
+    spinner.className = 'select-spinner';
+    spinner.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>';
+    mesWrap.appendChild(spinner);
+  }
+  
+  mesSelect.innerHTML = '<option value="">Cargando...</option>';
+  
+  cargarAnio(anio, () => {
+    poblarMeses(anio);
+    
+    // Quitar loading, agregar loaded
+    mesWrap.classList.remove('loading');
+    mesWrap.classList.add('loaded');
+    
+    // Quitar spinner
+    const sp = mesWrap.querySelector('.select-spinner');
+    if (sp) sp.remove();
+    
+    // Quitar clase loaded después de la animación
+    setTimeout(() => mesWrap.classList.remove('loaded'), 600);
+  });
 }
 
 function poblarMeses(anio) {
@@ -2176,6 +2842,26 @@ function poblarMeses(anio) {
   });
   setStatus(disp.length ? 'cargado' : 'vacio',
     disp.length ? `${disp.length} mes${disp.length!==1?'es':''} disponible${disp.length!==1?'s':''}` : `Sin datos ${anio}`);
+}
+
+function onCambioMes() {
+  const mesSelect = document.getElementById('selectMes');
+  
+  // Quitar clase selected anterior
+  mesSelect.classList.remove('selected');
+  
+  // Forzar reflow para reiniciar animación
+  void mesSelect.offsetWidth;
+  
+  // Agregar clase selected con efecto glow
+  if (mesSelect.value) {
+    mesSelect.classList.add('selected');
+    
+    // Quitar después de la animación
+    setTimeout(() => {
+      mesSelect.classList.remove('selected');
+    }, 2000);
+  }
 }
 
 function verReporte() {
@@ -2202,6 +2888,8 @@ function verReporte() {
   const clavePrev = mesPrev > 0 ? `${anio}-${String(mesPrev).padStart(2,'0')}` : null;
   const datosPrev = clavePrev && CACHE[anio]?.[clavePrev] ? CACHE[anio][clavePrev] : null;
 
+  // Limpiar incidencias anuales y establecer datos del mes
+  incidenciasAnuales = [];
   datosMostrados = datos;
   renderReporte(datos, MESES_L[mesNum], anio, datosPrev, MESES_L[mesPrev]);
   setStatus('cargado', `${MESES_L[mesNum]} ${anio}`);
@@ -2248,6 +2936,9 @@ function renderAnioCompleto(mesesData, anio) {
   const pctI   = totTotal ? Math.round((totInc / totTotal) * 100) : 0;
   const totArea = totalesPorArea(incidenciasAcum);
   const totalIncs = Object.values(totArea).reduce((s,v) => s+v, 0);
+
+  // Guardar incidencias anuales para filtros y panel de tipo
+  incidenciasAnuales = incidenciasAcum;
 
   // Dato sintético del año para initCharts (donas KPI)
   const datosAnio = {
@@ -2343,10 +3034,55 @@ window.switchVistaAnio = function(vista) {
 
 function setStatus(tipo, texto) {
   const chip = document.getElementById('statusChip');
+  const prevTipo = chip.dataset.tipo || '';
+  
+  // Forzar re-animación
+  chip.style.animation = 'none';
+  void chip.offsetWidth;
+  chip.style.animation = '';
+  
+  chip.dataset.tipo = tipo;
   chip.className = `status-chip ${tipo}`;
-  chip.innerHTML = tipo === 'cargando'
-    ? `<div class="dot-anim"></div><span>${texto}</span>`
-    : `<span>${texto}</span>`;
+  
+  if (tipo === 'cargando') {
+    // Spinner circular + texto con pulse
+    chip.innerHTML = `
+      <div class="status-spinner">
+        <svg viewBox="0 0 16 16">
+          <circle cx="8" cy="8" r="6"/>
+        </svg>
+      </div>
+      <span class="status-text">${texto}</span>
+    `;
+  } else if (tipo === 'cargado') {
+    // Check animado + confetti
+    chip.innerHTML = `
+      <div class="status-check">
+        <svg viewBox="0 0 16 16">
+          <circle cx="8" cy="8" r="7"/>
+          <polyline points="4,8 7,11 12,5"/>
+        </svg>
+      </div>
+      <span class="status-text">${texto}</span>
+      ${prevTipo === 'cargando' ? `
+        <div class="status-confetti">
+          <span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span>
+        </div>
+      ` : ''}
+    `;
+    
+    // Limpiar confetti después de la animación
+    if (prevTipo === 'cargando') {
+      setTimeout(() => {
+        const confetti = chip.querySelector('.status-confetti');
+        if (confetti) confetti.remove();
+      }, 700);
+    }
+  } else {
+    // Vacío - solo texto
+    chip.innerHTML = `<span class="status-text">${texto}</span>`;
+  }
 }
 
 // ════════════════════════════════════
@@ -2464,6 +3200,55 @@ function esJSON(obj) {
   return JSON.stringify(obj).replace(/'/g,"\\'").replace(/"/g,'&quot;');
 }
 
+function htmlClockLoader(mensaje = 'Cargando', submensaje = '') {
+  return `
+    <div class="clock-loader">
+      <svg class="clock-loader-svg" viewBox="0 0 120 120">
+        <!-- Fondo del reloj -->
+        <circle cx="60" cy="60" r="54" fill="url(#clockGradient)" stroke="var(--yellow)" stroke-width="3"/>
+        <defs>
+          <linearGradient id="clockGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#fffef5"/>
+            <stop offset="100%" style="stop-color:#fff3cc"/>
+          </linearGradient>
+        </defs>
+        
+        <!-- Marcas de las horas -->
+        ${[...Array(12)].map((_, i) => {
+          const angle = (i * 30 - 90) * Math.PI / 180;
+          const x1 = 60 + 44 * Math.cos(angle);
+          const y1 = 60 + 44 * Math.sin(angle);
+          const x2 = 60 + (i % 3 === 0 ? 38 : 41) * Math.cos(angle);
+          const y2 = 60 + (i % 3 === 0 ? 38 : 41) * Math.sin(angle);
+          const cls = i % 3 === 0 ? 'clock-tick' : 'clock-tick-small';
+          return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" class="'+cls+'"/>';
+        }).join('')}
+        
+        <!-- Manecilla de la hora -->
+        <line x1="60" y1="60" x2="60" y2="32" class="clock-hand-hour"/>
+        
+        <!-- Manecilla de los minutos -->
+        <line x1="60" y1="60" x2="60" y2="22" class="clock-hand-minute"/>
+        
+        <!-- Manecilla de los segundos -->
+        <line x1="60" y1="65" x2="60" y2="18" class="clock-hand-second"/>
+        
+        <!-- Centro del reloj -->
+        <circle cx="60" cy="60" r="5" fill="var(--yellow)"/>
+        <circle cx="60" cy="60" r="2.5" fill="var(--gray)"/>
+      </svg>
+      
+      <div class="clock-loader-text">
+        ${mensaje}
+        <span class="clock-loader-dots">
+          <span></span><span></span><span></span>
+        </span>
+      </div>
+      ${submensaje ? '<div class="clock-loader-sub">' + submensaje + '</div>' : ''}
+    </div>
+  `;
+}
+
 function parsearDocumentosHTML(texto) {
   const raw = (texto == null ? '' : String(texto)).trim();
   if (!raw || raw === '—') return [];
@@ -2488,7 +3273,7 @@ function htmlSkeleton() {
 }
 
 function htmlKPIs(total, completos, incidencias, pctC, pctI, label, prev, prevNombre) {
-  const vid = (s) => `<video class="kpi-icon-img" autoplay loop muted playsinline><source src="${s}" type="video/mp4"></video>`;
+  const lottie = (s) => `<dotlottie-player src="${s}" background="transparent" speed="1" style="width:68px;height:68px;" loop autoplay></dotlottie-player>`;
   window._kpiData = { total, completos, incidencias, pctC, pctI };
 
   // ── Delta helper — tipo ticker bursátil ──
@@ -2529,86 +3314,84 @@ function htmlKPIs(total, completos, incidencias, pctC, pctI, label, prev, prevNo
   const CIRC      = 2 * Math.PI * R_ARC; // ≈ 490
 
   const donaSVG = (id, color, colorLight, pct, label, sublabel, delayClass, esFijo) => {
-    const safeId   = id.replace(/[^a-zA-Z0-9]/g, '');
-    const CIRC_VAL = (2 * Math.PI * 78).toFixed(4);
-    // Si esFijo=true (dona total) el arco arranca ya lleno, sin animación de conteo
-    const offsetInicial = esFijo ? '0' : CIRC_VAL;
-    return `
-    <div class="kpi-dona-wrap">
-      <svg class="dona-svg-stage ${delayClass}"
-           id="svg${safeId}"
-           viewBox="0 0 ${SVG_SIZE} ${SVG_SIZE}"
-           width="${SVG_SIZE}" height="${SVG_SIZE}"
-           xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <radialGradient id="dkGrad${safeId}" cx="40%" cy="35%" r="65%">
-            <stop offset="0%"   stop-color="#4d5f75"/>
-            <stop offset="100%" stop-color="#1e2533"/>
-          </radialGradient>
-          <linearGradient id="aGrad${safeId}" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%"   stop-color="${colorLight}"/>
-            <stop offset="100%" stop-color="${color}"/>
-          </linearGradient>
-          <filter id="glow${safeId}" x="-25%" y="-25%" width="150%" height="150%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
+  const safeId   = id.replace(/[^a-zA-Z0-9]/g, '');
+  const CIRC_VAL = (2 * Math.PI * 78).toFixed(4);
+  const offsetInicial = esFijo ? '0' : CIRC_VAL;
 
-        <circle cx="${CX}" cy="${CY}" r="${R_OUT}"
-          fill="none" stroke="${color}" stroke-width="14" opacity="0.13"/>
-        <circle cx="${CX}" cy="${CY}" r="${R_MID}"
-          fill="none" stroke="${color}" stroke-width="11" opacity="0.26"/>
-        <circle cx="${CX}" cy="${CY}" r="${R_ARC}"
-          fill="none" stroke="#cbd5e1" stroke-opacity="0.5"
-          stroke-width="${STROKE_W}" stroke-linecap="round"/>
-        <circle id="arc${safeId}"
-          cx="${CX}" cy="${CY}" r="${R_ARC}"
-          fill="none" stroke="url(#aGrad${safeId})"
-          stroke-width="${STROKE_W}" stroke-linecap="round"
-          stroke-dasharray="${CIRC_VAL}"
-          stroke-dashoffset="${offsetInicial}"
-          transform="rotate(-90 ${CX} ${CY})"
-          filter="url(#glow${safeId})"/>
+  // Parámetros geométricos para centrado
+  const SVG_SIZE = 220;
+  const CX       = 110;
+  const CY       = 110;
+  const R_OUT    = 100;
+  const R_MID    = 88;
+  const R_ARC    = 78;
+  const STROKE_W = 18;
 
-        <!-- Dot luminoso en la punta del arco -->
-        <circle id="dot${safeId}"
-          cx="${CX}" cy="${CY - R_ARC}" r="${STROKE_W / 2 + 1}"
-          fill="${color}" opacity="${esFijo ? 0 : 0}"/>
-        <circle id="dotHalo${safeId}"
-          cx="${CX}" cy="${CY - R_ARC}" r="${STROKE_W / 2 + 4}"
-          fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55"
-          opacity="${esFijo ? 0 : 0}"/>
+  return `
+  <div class="kpi-dona-wrap">
+    <svg class="dona-svg-stage ${delayClass}"
+         id="svg${safeId}"
+         viewBox="0 0 ${SVG_SIZE} ${SVG_SIZE}"
+         width="${SVG_SIZE}" height="${SVG_SIZE}"
+         xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="dkGrad${safeId}" cx="40%" cy="35%" r="65%">
+          <stop offset="0%"   stop-color="#4d5f75"/>
+          <stop offset="100%" stop-color="#1e2533"/>
+        </radialGradient>
+        <linearGradient id="aGrad${safeId}" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%"   stop-color="${colorLight}"/>
+          <stop offset="100%" stop-color="${color}"/>
+        </linearGradient>
+        <filter id="glow${safeId}" x="-25%" y="-25%" width="150%" height="150%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
 
-        <circle cx="${CX}" cy="${CY}" r="57" fill="#253044"/>
-        <circle cx="${CX}" cy="${CY}" r="57" fill="url(#dkGrad${safeId})"/>
-        <circle cx="${CX}" cy="${CY}" r="57"
-          fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
-        <circle cx="${CX}" cy="${CY}" r="${R_ARC - STROKE_W/2 - 1}"
-          fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <circle cx="${CX}" cy="${CY}" r="${R_OUT}" fill="none" stroke="${color}" stroke-width="14" opacity="0.13"/>
+      <circle cx="${CX}" cy="${CY}" r="${R_MID}" fill="none" stroke="${color}" stroke-width="11" opacity="0.26"/>
+      <circle cx="${CX}" cy="${CY}" r="${R_ARC}" fill="none" stroke="#cbd5e1" stroke-opacity="0.5" stroke-width="${STROKE_W}" stroke-linecap="round"/>
+      
+      <circle id="arc${safeId}"
+        cx="${CX}" cy="${CY}" r="${R_ARC}"
+        fill="none" stroke="url(#aGrad${safeId})"
+        stroke-width="${STROKE_W}" stroke-linecap="round"
+        stroke-dasharray="${CIRC_VAL}"
+        stroke-dashoffset="${offsetInicial}"
+        transform="rotate(-90 ${CX} ${CY})"
+        filter="url(#glow${safeId})"/>
 
-        <!-- Etiqueta superior — color del arco -->
-        <text x="${CX}" y="${CY - 16}"
-          font-family="IBM Plex Sans, sans-serif"
-          font-size="9" font-weight="800" letter-spacing="1.5"
-          text-anchor="middle" dominant-baseline="middle"
-          fill="${colorLight}">${label.toUpperCase()}</text>
+      <circle id="dot${safeId}" cx="${CX}" cy="${CY - R_ARC}" r="${STROKE_W / 2 + 1}" fill="${color}" opacity="${esFijo ? 0 : 0}"/>
+      <circle id="dotHalo${safeId}" cx="${CX}" cy="${CY - R_ARC}" r="${STROKE_W / 2 + 4}" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55" opacity="${esFijo ? 0 : 0}"/>
 
-        <!-- SOLO PORCENTAJE — dato principal de la dona -->
-        <text id="pct${safeId}"
-          x="${CX}" y="${CY + 10}"
-          font-family="IBM Plex Sans, sans-serif"
-          font-size="42" font-weight="800" letter-spacing="-1"
-          text-anchor="middle" dominant-baseline="middle"
-          fill="#ffffff">${esFijo ? '100%' : '0%'}</text>
-      </svg>
+      <circle cx="${CX}" cy="${CY}" r="57" fill="#253044"/>
+      <circle cx="${CX}" cy="${CY}" r="57" fill="url(#dkGrad${safeId})"/>
+      <circle cx="${CX}" cy="${CY}" r="57" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+      <circle cx="${CX}" cy="${CY}" r="${R_ARC - STROKE_W/2 - 1}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
 
+      <text x="${CX}" y="${CY - 16}" 
+        font-family="IBM Plex Sans, sans-serif"
+        font-size="10" font-weight="800" letter-spacing="1.5"
+        text-anchor="middle" dominant-baseline="middle"
+        fill="${colorLight}">${label ? label.toUpperCase() : (id.includes('ok') ? 'COMPLETOS' : 'INCIDENCIAS')}</text>
+
+      <text id="pct${safeId}"
+        x="${CX}" y="${CY + 14}"
+        font-family="IBM Plex Sans, sans-serif"
+        font-size="44" font-weight="800" letter-spacing="-2"
+        text-anchor="middle" dominant-baseline="middle"
+        fill="#ffffff">${esFijo ? '100%' : '0%'}</text>
+    </svg>
+
+    ${label || sublabel ? `
       <div class="dona-label-bottom">
-        <div class="dona-label-title" style="color:${color}">${label}</div>
-        <div class="dona-label-sub">${sublabel}</div>
+        ${label ? `<div class="dona-label-title" style="color:${color}">${label}</div>` : ''}
+        ${sublabel ? `<div class="dona-label-sub">${sublabel}</div>` : ''}
       </div>
-    </div>`;
-  };
+    ` : ''}
+  </div>`;
+};
 
   return `<div class="kpi-section">
     ${secTitulo(1, 'Resumen General', 'Universo total de expedientes evaluados en el período', label)}
@@ -2618,7 +3401,7 @@ function htmlKPIs(total, completos, incidencias, pctC, pctI, label, prev, prevNo
       <div class="kpi-box total">
         <div class="kpi-box-inner">
           <div class="kpi-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-          <div class="kpi-icon-wrap">${vid(ICONOS_KPI.total)}</div>
+          <div class="kpi-icon-wrap">${lottie(ICONOS_KPI.total)}</div>
           <div class="kpi-label">Total Evaluados</div>
           <div class="kpi-num num-pop">${total}</div>
           ${delta(total, prev?.total, false)}
@@ -2627,16 +3410,7 @@ function htmlKPIs(total, completos, incidencias, pctC, pctI, label, prev, prevNo
       <div class="kpi-box completos">
         <div class="kpi-box-inner">
           <div class="kpi-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-          <div class="kpi-icon-container">
-    <dotlottie-player 
-        src="https://lottie.host/e298cc8f-50b8-4b9d-9c3e-8c87ee566b8b/FZGnLzBEP3.json" 
-        background="transparent" 
-        speed="1" 
-        style="width: 120px; height: 120px;" 
-        loop 
-        autoplay>
-    </dotlottie-player>
-</div>
+          <div class="kpi-icon-wrap">${lottie(ICONOS_KPI.completos)}</div>
           <div class="kpi-label">Sin Incidencias</div>
           <div class="kpi-num num-pop">${completos}</div>
           ${delta(completos, prev?.sinIncidencias, false)}
@@ -2645,7 +3419,7 @@ function htmlKPIs(total, completos, incidencias, pctC, pctI, label, prev, prevNo
       <div class="kpi-box incidencias">
         <div class="kpi-box-inner">
           <div class="kpi-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-          <div class="kpi-icon-wrap">${vid(ICONOS_KPI.incidencias)}</div>
+          <div class="kpi-icon-wrap">${lottie(ICONOS_KPI.incidencias)}</div>
           <div class="kpi-label">Con Incidencias</div>
           <div class="kpi-num num-pop">${incidencias}</div>
           ${delta(incidencias, prev?.conIncidencias, true)}
@@ -2655,8 +3429,8 @@ function htmlKPIs(total, completos, incidencias, pctC, pctI, label, prev, prevNo
 
     <!-- DONAS: solo porcentaje animado — rol proporcional -->
     <div class="kpi-donas-panel">
-      ${donaSVG('kpi_ok',  '#059669','#34d399', pctC, 'Completos',  'expedientes sin incidencias',   'delay-1', false)}
-      ${donaSVG('kpi_inc', '#dc2626','#f87171', pctI, 'Incidencias','expedientes con observaciones', 'delay-2', false)}
+      ${donaSVG('kpi_ok',  '#059669','#34d399', pctC, '', '', 'delay-1', false)}
+      ${donaSVG('kpi_inc', '#dc2626','#f87171', pctI, '', '', 'delay-2', false)}    
     </div>
 
   </div>`;
@@ -2756,7 +3530,7 @@ function htmlRubros(conteo, incs, label) {
         '<text id="pctT' + safeT + '"' +
           ' x="' + CX + '" y="' + (CY + 13) + '"' +
           ' font-family="IBM Plex Sans, sans-serif"' +
-          ' font-size="10" font-weight="700"' +
+          ' font-size="16" font-weight="700"' +
           ' text-anchor="middle" dominant-baseline="middle"' +
           ' fill="' + col.light + '">0%</text>' +
       '</svg>';
@@ -2764,21 +3538,22 @@ function htmlRubros(conteo, incs, label) {
 
     // ── BARRAS PREMIUM ──
     // Izquierda: número absoluto | Centro: barra animada | Derecha: círculo con %
-    const BW    = 148;
-    const BH    = 12;
-    const R_B   = 6;
-    const CIR_R = 14;
+    const BW    = 160;                      // Ancho de barra
+    const BH    = 14;                       // Altura de barra
+    const R_B   = 7;                        // Radio de esquinas
+    const CIR_R = 16;                       // Radio del círculo %
     const NUM_X = 0;                     
-    const BAR_X = 28;                     
-    const CIR_X = BAR_X + BW + CIR_R + 8; 
-    const SVG_W = CIR_X + CIR_R + 4;
-    const wOk   = ok  > 0 ? Math.max(6, Math.round((pctOk  / 100) * BW)) : 0;
-    const wInc  = inc > 0 ? Math.max(6, Math.round((pctInc / 100) * BW)) : 0;
-    const Y1    = 16;
-    const Y2    = 46;
+    const BAR_X = 32;                       // Inicio de barra
+    const CIR_X = BAR_X + BW + CIR_R + 10;  // Posición del círculo
+    const SVG_W = CIR_X + CIR_R + 6;
+    const wOk   = ok  > 0 ? Math.max(8, Math.round((pctOk  / 100) * BW)) : 0;
+    const wInc  = inc > 0 ? Math.max(8, Math.round((pctInc / 100) * BW)) : 0;
+    const Y1    = 20;                       // Posición Y primera barra
+    const Y2    = 52;                       // Posición Y segunda barra
 const barrasSVG =
-      '<svg viewBox="0 0 ' + SVG_W + ' 58" width="100%" height="58"' +
-        ' xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible;margin-top:4px;">' +
+      '<div class="rtype-bars-wrap">' +
+      '<svg viewBox="0 0 ' + SVG_W + ' 68" width="100%" height="68"' +
+        ' xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible;">' +
         '<defs>' +
           '<linearGradient id="gOk' + safeT + '" x1="0%" y1="0%" x2="100%" y2="0%">' +
             '<stop offset="0%" stop-color="#34d399"/>' +
@@ -2789,80 +3564,94 @@ const barrasSVG =
             '<stop offset="100%" stop-color="#dc2626"/>' +
           '</linearGradient>' +
           '<filter id="fOk' + safeT + '" x="-4%" y="-100%" width="108%" height="300%">' +
-            '<feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/>' +
+            '<feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/>' +
             '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>' +
           '</filter>' +
           '<filter id="fInc' + safeT + '" x="-4%" y="-100%" width="108%" height="300%">' +
-            '<feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/>' +
+            '<feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/>' +
             '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>' +
           '</filter>' +
         '</defs>' +
 
         // ── FILA COMPLETOS ──
         // Label encima de la barra
-        '<text x="' + BAR_X + '" y="3"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="7" font-weight="700"' +
-          ' fill="#94a3b8" dominant-baseline="auto" letter-spacing="1">COMPLETOS</text>' +
+        '<text x="' + BAR_X + '" y="4"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="8" font-weight="700"' +
+          ' fill="#64748b" dominant-baseline="auto" letter-spacing="1">COMPLETOS</text>' +
         // Número izquierda — verde
         '<text x="' + NUM_X + '" y="' + Y1 + '"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="15" font-weight="800"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="16" font-weight="800"' +
           ' fill="#059669" dominant-baseline="middle">' + ok + '</text>' +
         // Track
         '<rect x="' + BAR_X + '" y="' + (Y1 - BH/2) + '" width="' + BW + '" height="' + BH + '"' +
-          ' rx="' + R_B + '" ry="' + R_B + '" fill="#f1f5f9"/>' +
+          ' rx="' + R_B + '" ry="' + R_B + '" fill="#e2e8f0"/>' +
         // Barra animada
         '<rect id="bOk' + safeT + '"' +
           ' x="' + BAR_X + '" y="' + (Y1 - BH/2) + '" width="0" height="' + BH + '"' +
           ' rx="' + R_B + '" ry="' + R_B + '"' +
           ' fill="url(#gOk' + safeT + ')" filter="url(#fOk' + safeT + ')"' +
           ' data-w="' + wOk + '" data-bx="' + BAR_X + '"/>' +
+        // Dot en la punta de la barra
+        '<circle id="dotOk' + safeT + '"' +
+          ' cx="' + BAR_X + '" cy="' + Y1 + '" r="' + (BH/2 + 2) + '"' +
+          ' fill="#fff" stroke="#059669" stroke-width="2.5"' +
+          ' opacity="0" data-bx="' + BAR_X + '" data-w="' + wOk + '"/>' +
         // Gloss
         '<rect x="' + BAR_X + '" y="' + (Y1 - BH/2) + '" width="' + BW + '" height="' + Math.round(BH/2) + '"' +
-          ' rx="' + R_B + '" ry="' + R_B + '" fill="rgba(255,255,255,0.10)" pointer-events="none"/>' +
+          ' rx="' + R_B + '" ry="' + R_B + '" fill="rgba(255,255,255,0.15)" pointer-events="none"/>' +
         // Círculo % derecha — verde
         '<circle cx="' + CIR_X + '" cy="' + Y1 + '" r="' + CIR_R + '" fill="#059669"/>' +
         '<circle cx="' + CIR_X + '" cy="' + Y1 + '" r="' + CIR_R + '"' +
-          ' fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1.2"/>' +
+          ' fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>' +
         '<text x="' + CIR_X + '" y="' + Y1 + '"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="8" font-weight="800"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="10" font-weight="800"' +
           ' fill="#fff" text-anchor="middle" dominant-baseline="middle">' + pctOk + '%</text>' +
 
         // ── FILA INCIDENCIAS ──
-        '<text x="' + BAR_X + '" y="33"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="7" font-weight="700"' +
-          ' fill="#94a3b8" dominant-baseline="auto" letter-spacing="1">INCIDENCIAS</text>' +
-        // Número izquierda — rojo
+        // Label encima
+        '<text x="' + BAR_X + '" y="' + (Y2 - BH/2 - 8) + '"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="8" font-weight="700"' +
+          ' fill="#64748b" dominant-baseline="auto" letter-spacing="1">CON INCIDENCIAS</text>' +
+        // Número izquierda
         '<text x="' + NUM_X + '" y="' + Y2 + '"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="15" font-weight="800"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="16" font-weight="800"' +
           ' fill="#dc2626" dominant-baseline="middle">' + inc + '</text>' +
         // Track
         '<rect x="' + BAR_X + '" y="' + (Y2 - BH/2) + '" width="' + BW + '" height="' + BH + '"' +
-          ' rx="' + R_B + '" ry="' + R_B + '" fill="#f1f5f9"/>' +
+          ' rx="' + R_B + '" ry="' + R_B + '" fill="#e2e8f0"/>' +
         // Barra animada
         '<rect id="bInc' + safeT + '"' +
           ' x="' + BAR_X + '" y="' + (Y2 - BH/2) + '" width="0" height="' + BH + '"' +
           ' rx="' + R_B + '" ry="' + R_B + '"' +
           ' fill="url(#gInc' + safeT + ')" filter="url(#fInc' + safeT + ')"' +
           ' data-w="' + wInc + '" data-bx="' + BAR_X + '"/>' +
+        // Dot en la punta de la barra
+        '<circle id="dotInc' + safeT + '"' +
+          ' cx="' + BAR_X + '" cy="' + Y2 + '" r="' + (BH/2 + 2) + '"' +
+          ' fill="#fff" stroke="#dc2626" stroke-width="2.5"' +
+          ' opacity="0" data-bx="' + BAR_X + '" data-w="' + wInc + '"/>' +
         // Gloss
         '<rect x="' + BAR_X + '" y="' + (Y2 - BH/2) + '" width="' + BW + '" height="' + Math.round(BH/2) + '"' +
-          ' rx="' + R_B + '" ry="' + R_B + '" fill="rgba(255,255,255,0.10)" pointer-events="none"/>' +
+          ' rx="' + R_B + '" ry="' + R_B + '" fill="rgba(255,255,255,0.15)" pointer-events="none"/>' +
         // Círculo % derecha — rojo
         '<circle cx="' + CIR_X + '" cy="' + Y2 + '" r="' + CIR_R + '" fill="#dc2626"/>' +
         '<circle cx="' + CIR_X + '" cy="' + Y2 + '" r="' + CIR_R + '"' +
-          ' fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1.2"/>' +
+          ' fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>' +
         '<text x="' + CIR_X + '" y="' + Y2 + '"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="8" font-weight="800"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="10" font-weight="800"' +
           ' fill="#fff" text-anchor="middle" dominant-baseline="middle">' + pctInc + '%</text>' +
 
-      '</svg>';
+      '</svg></div>';
 
-
-    return '<div class="rtype-card"' +
+    // Datos para el panel de detalle - usar data attributes
+    return '<div class="rtype-card rtype-clickable"' +
         ' data-safe="' + safeT + '" data-pct="' + pctUniv + '" data-circ="' + CIRC + '"' +
-        ' style="--col-main:' + col.main + ';border-color:' + col.border + ';">' +
+        ' data-tipo="' + t + '"' +
+        ' data-total="' + total + '"' +
+        ' data-inc="' + inc + '"' +
+        ' style="--col-main:' + col.main + ';cursor:pointer;">' +
       // Franja color tipo
-      '<div style="height:3px;background:' + col.main + ';"></div>' +
+      '<div style="height:3px;background:' + col.main + ';border-radius:18px 18px 0 0;"></div>' +
       '<div class="rtype-body">' +
         '<div class="rtype-top">' +
           // Dona izquierda
@@ -2880,7 +3669,7 @@ const barrasSVG =
   }).join('');
 
   return '<div class="rep-section">' +
-    '<div class="sec-titulo">' + secTitulo(2, 'Expedientes por Tipo', 'Distribución del universo evaluado por categoría de crédito', label) + '</div>' +
+    '<div class="sec-titulo">' + secTitulo(2, 'Expedientes por Tipo', 'Distribución del universo evaluado por tipo de colocación', label) + '</div>' +
     '<div class="rtype-grid" id="rtypeGrid">' + tarjetas + '</div>' +
   '</div>';
 }
@@ -2932,7 +3721,7 @@ function htmlDistribucion(totArea, totalIncs, label) {
         // % dentro al final
         '<text id="pctA' + safeN + '"' +
           ' x="' + (wBar - R_PILL - 4) + '" y="' + CY + '"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="800"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="16" font-weight="800"' +
           ' fill="rgba(255,255,255,0.95)" text-anchor="end" dominant-baseline="middle"' +
           ' opacity="0">' + pct + '%</text>' +
         // Círculo blanco en la punta
@@ -2963,19 +3752,15 @@ return '<div class="rep-section">' +
   '<div class="sec-titulo">' + secTitulo(3, 'Distribución de Incidencias', 'Desglose por área responsable de las observaciones registradas', 'Período: ' + label) + '</div>' +
   '<table class="tbl" style="table-layout:fixed;width:100%;">' +
     '<thead><tr>' +
-      '<th style="width:32%;padding:14px 18px 14px 20px;">Área</th>' +
-      '<th style="width:12%;text-align:center;padding:14px 12px;">Total</th>' +
-      '<th style="width:56%;padding:14px 18px;">Distribución</th>' +
+      '<th style="width:32%;">Área</th>' +
+      '<th style="width:12%;text-align:center;">Total</th>' +
+      '<th style="width:56%;">Distribución</th>' +
     '</tr></thead>' +
     '<tbody>' + filas + '</tbody>' +
     '<tfoot><tr>' +
-      '<td style="padding:14px 18px 14px 20px;"><strong>Total general</strong></td>' +
-      '<td style="text-align:center;padding:14px 12px;"><strong style="font-size:15px;color:#1a202c;">' + totalIncs + '</strong></td>' +
-      '<td style="padding:14px 18px;">' +
-        '<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;">' +
-          '<strong style="font-size:14px;color:#1a202c;min-width:48px;text-align:right;">100%</strong>' +
-        '</div>' +
-      '</td>' +
+      '<td><strong style="font-size:14px;">Total general</strong></td>' +
+      '<td style="text-align:center;"><strong style="font-size:18px;">' + totalIncs + '</strong></td>' +
+      '<td><strong style="font-size:16px;">100%</strong></td>' +
     '</tr></tfoot>' +
   '</table>' +
 '</div>';
@@ -3003,6 +3788,31 @@ function htmlExpedientes(incidencias) {
   </div>`;
 }
 
+// Versión para el panel expandido - muestra TODOS los expedientes, no solo 15
+function htmlExpedientesPanel(incidencias) {
+  if (!incidencias || !incidencias.length) {
+    return `<div class="rep-section"><div class="sec-titulo"><h2>Sin expedientes con incidencias</h2></div></div>`;
+  }
+  const sorted = [...incidencias].sort((a,b) => b.totalIncidencias-a.totalIncidencias);
+  const filas = sorted.map((exp, idx) => {
+    const bg = idx%2===0?'#fff':'#f8fafc', bc = idx===sorted.length-1?'transparent':'#e2e8f0', cls = tipoCSSClass(exp.tipo);
+    return `<tr style="background:${bg};" onclick='abrirDetalle(${esJSON(exp)})'>
+      <td style="border-bottom:1px solid ${bc};"><span style="font-weight:600;font-size:13px;color:#94a3b8;">${idx+1}</span></td>
+      <td style="border-bottom:1px solid ${bc};"><span style="font-weight:600;font-size:13px;">${exp.id}</span></td>
+      <td style="border-bottom:1px solid ${bc};"><span style="color:#718096;font-size:13px;">${exp.fecha}</span></td>
+      <td style="border-bottom:1px solid ${bc};"><span class="tipo-badge ${cls}">${exp.tipo||'—'}</span></td>
+      <td style="border-bottom:1px solid ${bc};text-align:center;"><span class="inc-badge" style="border-color:#dc2626;color:#dc2626;">${exp.totalIncidencias}</span></td>
+    </tr>`;
+  }).join('');
+  return `<div class="rep-section">
+    <div class="tbl-controls">
+      <div><div class="sec-titulo" style="text-align:left;margin-bottom:0;"><h2 style="font-size:20px;">Expedientes con Incidencias</h2><p>Total: ${incidencias.length} expedientes</p></div></div>
+      <select class="sort-sel" onchange="reordenarExpedientesPanel(this.value)"><option value="desc">↓ Más incidencias</option><option value="asc">↑ Menos incidencias</option><option value="fecha">📅 Por fecha</option></select>
+    </div>
+    <table class="tbl"><thead><tr><th style="width:5%">#</th><th style="width:30%">ID Oportunidad</th><th style="width:18%">Fecha de Firma</th><th style="width:27%">Tipo</th><th style="width:20%;text-align:center;">Incidencias</th></tr></thead><tbody id="tbodyExpPanel">${filas}</tbody></table>
+  </div>`;
+}
+
 function htmlEtapasCierre(etapas, completos, label) {
   if (!etapas) return '';
   const e1  = etapas['1a Revision'] || 0;
@@ -3013,8 +3823,8 @@ function htmlEtapasCierre(etapas, completos, label) {
   // Colores que codifican eficiencia
   const CFG = [
     { id:'e1', label:'1ª Revisión',    sub:'Óptimo',   val:e1, col:'#10b981', light:'#34d399', dark:'#065f46', bg:'#f0fdf4', border:'#86efac' },
-    { id:'e2', label:'2ª Revisión',    sub:'Moderado', val:e2, col:'#f59e0b', light:'#fbbf24', dark:'#92400e', bg:'#fffbeb', border:'#fde68a' },
-    { id:'ef', label:'Revisión Final', sub:'Crítico',  val:ef, col:'#ef4444', light:'#f87171', dark:'#991b1b', bg:'#fef2f2', border:'#fecaca' },
+    { id:'e2', label:'2ª Revisión',    sub:'Cumple', val:e2, col:'#f59e0b', light:'#fbbf24', dark:'#92400e', bg:'#fffbeb', border:'#fde68a' },
+    { id:'ef', label:'Revisión Final', sub:'Alerta',  val:ef, col:'#ef4444', light:'#f87171', dark:'#991b1b', bg:'#fef2f2', border:'#fecaca' },
   ];
 
   // ── Semicírculo SVG (180°) ──
@@ -3101,26 +3911,26 @@ function htmlEtapasCierre(etapas, completos, label) {
 
         // Número — centrado en el tercio superior del semicírculo
         '<text x="' + CX + '" y="' + (CY - 14) + '"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="28" font-weight="800"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="30" font-weight="800"' +
           ' fill="#fff" text-anchor="middle" dominant-baseline="middle">' + c.val + '</text>' +
 
         // Porcentaje animado — justo debajo del número
         '<text id="sgPct' + safeId + '" x="' + CX + '" y="' + (CY + 10) + '"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="700"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="19" font-weight="700"' +
           ' fill="' + c.light + '" text-anchor="middle" dominant-baseline="middle">0%</text>' +
 
         // Marcadores 0% y 100% en los extremos del arco
         '<text x="' + (CX - R - SW + 2) + '" y="' + (CY + 18) + '"' +
-          ' font-family="Inter, sans-serif" font-size="8" font-weight="600"' +
+          ' font-family="Inter, sans-serif" font-size="12" font-weight="600"' +
           ' fill="#94a3b8" text-anchor="middle">0%</text>' +
         '<text x="' + (CX + R + SW - 2) + '" y="' + (CY + 18) + '"' +
-          ' font-family="Inter, sans-serif" font-size="8" font-weight="600"' +
+          ' font-family="Inter, sans-serif" font-size="12" font-weight="600"' +
           ' fill="#94a3b8" text-anchor="middle">100%</text>' +
       '</svg>';
 
-    return '<div class="cgauge-card" style="--col:' + c.col + ';border-color:' + c.border + ';"' +
+    return '<div class="cgauge-card" style="--col:' + c.col + ';"' +
         ' data-id="' + safeId + '" data-pct="' + pct + '" data-semi="' + SEMI + '">' +
-      '<div style="height:3px;background:' + c.col + ';border-radius:12px 12px 0 0;"></div>' +
+      '<div style="height:3px;background:' + c.col + ';border-radius:18px 18px 0 0;"></div>' +
       '<div class="cgauge-body">' +
         svgSemi +
         '<div class="cgauge-label">' +
@@ -3356,6 +4166,16 @@ function initCharts(datos) {
     const circ  = parseFloat(card.getAttribute('data-circ') || 0);
     if (!safeT || circ === 0) return;
 
+    // ── Agregar click handler para abrir panel de tipo ──
+    if (card.classList.contains('rtype-clickable')) {
+      card.addEventListener('click', function() {
+        const tipo = this.getAttribute('data-tipo');
+        const total = parseInt(this.getAttribute('data-total') || 0);
+        const inc = parseInt(this.getAttribute('data-inc') || 0);
+        abrirTipoPanel(tipo, { total: total, conIncidencias: inc });
+      });
+    }
+
     const baseDelay = 350 + idx * 160;
 
     // ── 1) Arco de la dona + dot ──
@@ -3401,22 +4221,37 @@ function initCharts(datos) {
     }
 
     // ── 2) Barras horizontales ──
-  // ── 2) Barras horizontales — solo animan el width ──
+  // ── 2) Barras horizontales — animan width + dot en la punta ──
     ['Ok','Inc'].forEach((tipo, ti) => {
       const barEl = document.getElementById('b' + tipo + safeT);
+      const dotEl = document.getElementById('dot' + tipo + safeT);
       if (!barEl) return;
       const wTarget  = parseFloat(barEl.getAttribute('data-w') || 0);
+      const bx       = parseFloat(barEl.getAttribute('data-bx') || 0);
       const barDelay = baseDelay + 300 + ti * 260;
       const dur      = 1400;
-      if (wTarget <= 0) return;
+      if (wTarget <= 0) {
+        if (dotEl) dotEl.setAttribute('opacity', '0');
+        return;
+      }
+      // Mostrar dot al inicio de la animación
+      if (dotEl) dotEl.setAttribute('opacity', '1');
       setTimeout(() => {
         let start = null;
         (function tick(now) {
           if (!start) start = now;
           const raw = Math.min((now - start) / dur, 1);
-          barEl.setAttribute('width', (wTarget * easeOutExpo(raw)).toFixed(2));
+          const currentW = wTarget * easeOutExpo(raw);
+          barEl.setAttribute('width', currentW.toFixed(2));
+          // Mover dot al final de la barra
+          if (dotEl) {
+            dotEl.setAttribute('cx', (bx + currentW).toFixed(2));
+          }
           if (raw < 1) requestAnimationFrame(tick);
-          else barEl.setAttribute('width', wTarget);
+          else {
+            barEl.setAttribute('width', wTarget);
+            if (dotEl) dotEl.setAttribute('cx', (bx + wTarget).toFixed(2));
+          }
         })(performance.now());
       }, barDelay);
     });
@@ -3548,8 +4383,14 @@ const SEC_PANEL_CFG = {
     name: 'Expedientes con Incidencias',
     sub:  'Listado detallado de expedientes que presentaron observaciones',
     render: (body) => {
-      if (!datosMostrados) return;
-      body.innerHTML = htmlExpedientes(datosMostrados.incidencias || []);
+      // Usar datosMostrados para mensual, incidenciasAnuales para anual
+      let incidencias = [];
+      if (datosMostrados && datosMostrados.incidencias && datosMostrados.incidencias.length) {
+        incidencias = datosMostrados.incidencias;
+      } else if (incidenciasAnuales && incidenciasAnuales.length) {
+        incidencias = incidenciasAnuales;
+      }
+      body.innerHTML = htmlExpedientesPanel(incidencias);
     }
   },
   'sec-detalle': {
@@ -3567,7 +4408,7 @@ const SEC_PANEL_CFG = {
     name: 'Panel de Proyectos',
     sub:  'Gestión y seguimiento de proyectos de Contraloría',
     render: (body) => {
-      body.innerHTML = '<div style="padding:60px;text-align:center;color:#94a3b8;"><div style="font-size:32px;margin-bottom:12px;">⏳</div>Cargando proyectos...</div>';
+      body.innerHTML = htmlClockLoader('Cargando proyectos', 'Obteniendo datos del sistema...');
       google.script.run
         .withSuccessHandler(data => {
           body.innerHTML = htmlPanelProyectos(data);
@@ -3589,7 +4430,7 @@ function sbNavegar(anclaId, itemEl) {
     document.getElementById('secPanelIcon').textContent = cfg.icon;
     document.getElementById('secPanelName').textContent = cfg.name;
     document.getElementById('secPanelSub').textContent  = cfg.sub;
-    body.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;">Cargando...</div>';
+    body.innerHTML = htmlClockLoader('Cargando');
     document.getElementById('secOverlay').classList.add('open');
     document.getElementById('secPanel').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -3663,24 +4504,200 @@ function toggleArea(nombre) {
   }
 }
 
+// Variable global para almacenar incidencias del año completo - movida arriba
+
 function reordenarExpedientes(orden) {
-  if (!datosMostrados) return;
-  let exps = [...(datosMostrados.incidencias||[])];
-  if (orden==='desc')      exps.sort((a,b) => b.totalIncidencias-a.totalIncidencias);
-  else if (orden==='asc')  exps.sort((a,b) => a.totalIncidencias-b.totalIncidencias);
-  else                     exps.sort((a,b) => a.fecha.localeCompare(b.fecha));
-  const mostrar = exps.slice(0,15), tbody = document.getElementById('tbodyExp');
+  // Usar datosMostrados para reporte mensual, o incidenciasAnuales para anual
+  let exps = [];
+  if (datosMostrados && datosMostrados.incidencias && datosMostrados.incidencias.length) {
+    exps = [...datosMostrados.incidencias];
+  } else if (incidenciasAnuales.length) {
+    exps = [...incidenciasAnuales];
+  }
+  
+  if (!exps.length) return;
+  
+  if (orden === 'desc') {
+    exps.sort((a, b) => (b.totalIncidencias || 0) - (a.totalIncidencias || 0));
+  } else if (orden === 'asc') {
+    exps.sort((a, b) => (a.totalIncidencias || 0) - (b.totalIncidencias || 0));
+  } else {
+    // Por fecha
+    exps.sort((a, b) => {
+      const fA = a.fecha ? a.fecha.split('/').reverse().join('-') : '';
+      const fB = b.fecha ? b.fecha.split('/').reverse().join('-') : '';
+      return fA.localeCompare(fB);
+    });
+  }
+  
+  const mostrar = exps.slice(0, 15);
+  const tbody = document.getElementById('tbodyExp');
   if (!tbody) return;
-  tbody.innerHTML = mostrar.map((exp,idx) => {
-    const bg = idx%2===0?'#fff':'#f8fafc', bc = idx===mostrar.length-1?'transparent':'#e2e8f0', cls = tipoCSSClass(exp.tipo);
+  
+  tbody.innerHTML = mostrar.map((exp, idx) => {
+    const bg = idx % 2 === 0 ? '#fff' : '#f8fafc';
+    const bc = idx === mostrar.length - 1 ? 'transparent' : '#e2e8f0';
+    const cls = tipoCSSClass(exp.tipo);
     return `<tr style="background:${bg};" onclick='abrirDetalle(${esJSON(exp)})'>
-      <td style="border-bottom:1px solid ${bc};"><span style="font-weight:600;font-size:13px;color:#94a3b8;">${idx+1}</span></td>
+      <td style="border-bottom:1px solid ${bc};"><span style="font-weight:600;font-size:13px;color:#94a3b8;">${idx + 1}</span></td>
       <td style="border-bottom:1px solid ${bc};"><span style="font-weight:600;font-size:13px;">${exp.id}</span></td>
       <td style="border-bottom:1px solid ${bc};"><span style="color:#718096;font-size:13px;">${exp.fecha}</span></td>
-      <td style="border-bottom:1px solid ${bc};"><span class="tipo-badge ${cls}">${exp.tipo||'—'}</span></td>
+      <td style="border-bottom:1px solid ${bc};"><span class="tipo-badge ${cls}">${exp.tipo || '—'}</span></td>
       <td style="border-bottom:1px solid ${bc};text-align:center;"><span class="inc-badge" style="border-color:#dc2626;color:#dc2626;">${exp.totalIncidencias}</span></td>
     </tr>`;
   }).join('');
+}
+
+// Reordenar expedientes en el panel expandido (muestra TODOS, no solo 15)
+function reordenarExpedientesPanel(orden) {
+  let exps = [];
+  if (datosMostrados && datosMostrados.incidencias && datosMostrados.incidencias.length) {
+    exps = [...datosMostrados.incidencias];
+  } else if (incidenciasAnuales && incidenciasAnuales.length) {
+    exps = [...incidenciasAnuales];
+  }
+  
+  if (!exps.length) return;
+  
+  if (orden === 'desc') {
+    exps.sort((a, b) => (b.totalIncidencias || 0) - (a.totalIncidencias || 0));
+  } else if (orden === 'asc') {
+    exps.sort((a, b) => (a.totalIncidencias || 0) - (b.totalIncidencias || 0));
+  } else {
+    // Por fecha - formato esperado: dd/mm/yyyy
+    exps.sort((a, b) => {
+      const fA = a.fecha ? a.fecha.split('/').reverse().join('-') : '';
+      const fB = b.fecha ? b.fecha.split('/').reverse().join('-') : '';
+      return fA.localeCompare(fB);
+    });
+  }
+  
+  const tbody = document.getElementById('tbodyExpPanel');
+  if (!tbody) return;
+  
+  tbody.innerHTML = exps.map((exp, idx) => {
+    const bg = idx % 2 === 0 ? '#fff' : '#f8fafc';
+    const bc = idx === exps.length - 1 ? 'transparent' : '#e2e8f0';
+    const cls = tipoCSSClass(exp.tipo);
+    return `<tr style="background:${bg};" onclick='abrirDetalle(${esJSON(exp)})'>
+      <td style="border-bottom:1px solid ${bc};"><span style="font-weight:600;font-size:13px;color:#94a3b8;">${idx + 1}</span></td>
+      <td style="border-bottom:1px solid ${bc};"><span style="font-weight:600;font-size:13px;">${exp.id}</span></td>
+      <td style="border-bottom:1px solid ${bc};"><span style="color:#718096;font-size:13px;">${exp.fecha}</span></td>
+      <td style="border-bottom:1px solid ${bc};"><span class="tipo-badge ${cls}">${exp.tipo || '—'}</span></td>
+      <td style="border-bottom:1px solid ${bc};text-align:center;"><span class="inc-badge" style="border-color:#dc2626;color:#dc2626;">${exp.totalIncidencias}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══ PANEL DETALLE TIPO EXPEDIENTE ══
+let tipoExpedienteActual = null;
+
+function abrirTipoPanel(tipo, datos) {
+  tipoExpedienteActual = { tipo, datos };
+  
+  const cfg = RUBROS_CFG[tipo] || { color: '#64748b' };
+  const col = cfg.color;
+  
+  // Header
+  document.getElementById('tpStripe').style.background = col;
+  document.getElementById('tpTipoName').textContent = tipo;
+  document.getElementById('tpTipoName').style.color = col;
+  
+  // KPIs
+  const total = datos.total || 0;
+  const completos = total - (datos.conIncidencias || 0);
+  const conInc = datos.conIncidencias || 0;
+  
+  document.getElementById('tpTotal').textContent = total;
+  document.getElementById('tpCompletos').textContent = completos;
+  document.getElementById('tpIncidencias').textContent = conInc;
+  
+  // Filtrar expedientes de este tipo
+  let expedientesTipo = [];
+  if (datosMostrados && datosMostrados.incidencias) {
+    expedientesTipo = datosMostrados.incidencias.filter(e => normalizarTipoExp(e.tipo) === tipo);
+  } else if (incidenciasAnuales.length) {
+    expedientesTipo = incidenciasAnuales.filter(e => normalizarTipoExp(e.tipo) === tipo);
+  }
+  
+  // Calcular áreas con incidencias para este tipo
+  const areasTotales = {};
+  Object.keys(AREAS_CFG).forEach(a => areasTotales[a] = 0);
+  
+  expedientesTipo.forEach(exp => {
+    const map = parsearAreas(exp.areas);
+    Object.entries(map).forEach(([area, n]) => {
+      if (areasTotales[area] !== undefined) areasTotales[area] += n;
+    });
+  });
+  
+  // Mostrar áreas con incidencias
+  const areasConInc = Object.entries(areasTotales).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  const areasSection = document.getElementById('tpAreasSection');
+  
+  if (areasConInc.length === 0) {
+    areasSection.style.display = 'none';
+  } else {
+    areasSection.style.display = 'block';
+    document.getElementById('tpAreasList').innerHTML = areasConInc.map(([nombre, n]) => {
+      const cfg = AREAS_CFG[nombre] || { color: '#64748b' };
+      return `<div class="tp-area-item">
+        <div class="tp-area-left">
+          <div class="tp-area-dot" style="background:${cfg.color}"></div>
+          <div class="tp-area-name">${nombre}</div>
+        </div>
+        <div class="tp-area-num" style="color:${cfg.color};border-color:${cfg.color}">${n}</div>
+      </div>`;
+    }).join('');
+  }
+  
+  // Mostrar expedientes con incidencias de este tipo
+  const expList = document.getElementById('tpExpList');
+  if (expedientesTipo.length === 0) {
+    expList.innerHTML = `<div class="tp-no-inc">
+      <div class="tp-no-inc-icon">✓</div>
+      Sin expedientes con incidencias de tipo ${tipo}
+    </div>`;
+  } else {
+    const sorted = [...expedientesTipo].sort((a, b) => (b.totalIncidencias || 0) - (a.totalIncidencias || 0));
+    expList.innerHTML = `<table class="tp-exp-table">
+      <thead>
+        <tr>
+          <th>ID Oportunidad</th>
+          <th>Fecha</th>
+          <th>Incidencias</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${sorted.map(exp => `<tr onclick='abrirDetalle(${esJSON(exp)})'>
+          <td><span class="tp-exp-id">${exp.id}</span></td>
+          <td><span class="tp-exp-fecha">${exp.fecha}</span></td>
+          <td style="text-align:center;"><span class="tp-exp-inc">${exp.totalIncidencias}</span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+  }
+  
+  // Abrir panel
+  document.getElementById('tipoPanelOverlay').classList.add('open');
+  document.getElementById('tipoPanel').classList.add('open');
+}
+
+function cerrarTipoPanel() {
+  document.getElementById('tipoPanelOverlay').classList.remove('open');
+  document.getElementById('tipoPanel').classList.remove('open');
+  tipoExpedienteActual = null;
+}
+
+function normalizarTipoExp(tipo) {
+  if (!tipo) return 'Normal';
+  const t = tipo.toLowerCase().trim();
+  if (t === 'normal') return 'Normal';
+  if (t.includes('col') || t.includes('cero')) return 'Colocación 0';
+  if (t.includes('renov')) return 'Renovación';
+  if (t.includes('reestr')) return 'Reestructura';
+  if (t.includes('amplia')) return 'Ampliación';
+  return 'Normal';
 }
 
 function abrirDetalle(exp) {
@@ -3757,8 +4774,11 @@ function htmlPanelProyectos(data) {
     <!-- Distribución por área — Gráfico de Pie -->
     ${htmlProyectosPieChart(kpis.porArea || {}, kpis.total || 0)}
 
-    <!-- Estado y Nivel de Riesgo -->
-    ${htmlProyectosEstadoRiesgo(kpis)}
+    <!-- Estado y Nivel de Riesgo - PREMIUM -->
+    ${htmlProyectosEstadoRiesgoPremium(kpis)}
+
+    <!-- Distribución por Tipo de Proyecto -->
+    ${htmlProyectosTipoDistribucion(proyectos)}
 
     <!-- Lista de proyectos -->
     ${htmlProyectosTabla(proyectos)}
@@ -4051,6 +5071,647 @@ function htmlProyectosPieChart(porArea, total) {
             <g class="labels-layer">${labels}</g>
           </svg>
           ${hoverScript}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SECCIÓN PREMIUM: ESTADO DE PROYECTOS + NIVEL DE RIESGO
+// Diseño glassmorphism igual que TESI
+// ══════════════════════════════════════════════════════════════════════════════
+
+function htmlProyectosEstadoRiesgoPremium(kpis) {
+  const { porEstado, total } = kpis;
+  
+  // Configuración de estados con colores premium
+  const ESTADOS_CFG = {
+    'Solicitud inicial':              { color: '#64748b', light: '#94a3b8', icon: '📋', order: 1 },
+    'Levantamiento de información':   { color: '#0ea5e9', light: '#38bdf8', icon: '🔍', order: 2 },
+    'En desarrollo':                  { color: '#f59e0b', light: '#fbbf24', icon: '⚙️', order: 3 },
+    'En pruebas':                     { color: '#d946ef', light: '#e879f9', icon: '🧪', order: 4 },
+    'En producción':                  { color: '#10b981', light: '#34d399', icon: '🚀', order: 5 },
+    'Completado':                     { color: '#22c55e', light: '#4ade80', icon: '✅', order: 6 },
+    'Pausado':                        { color: '#ef4444', light: '#f87171', icon: '⏸️', order: 7 },
+    'Cancelado':                      { color: '#9ca3af', light: '#d1d5db', icon: '❌', order: 8 }
+  };
+
+  // Ordenar estados
+  const estadosOrdenados = Object.entries(porEstado || {})
+    .filter(([_, count]) => count > 0)
+    .sort((a, b) => (ESTADOS_CFG[a[0]]?.order || 99) - (ESTADOS_CFG[b[0]]?.order || 99));
+
+  const maxCount = Math.max(...estadosOrdenados.map(([_, c]) => c), 1);
+
+  // Generar tarjetas de estado estilo TESI
+  const tarjetasEstado = estadosOrdenados.map(([estado, count], idx) => {
+    const cfg = ESTADOS_CFG[estado] || { color: '#64748b', light: '#94a3b8', icon: '📁' };
+    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+    const barWidth = (count / maxCount) * 100;
+    
+    return `
+      <div class="proy-estado-card" style="--estado-color: ${cfg.color}; --estado-light: ${cfg.light}; animation-delay: ${idx * 0.08}s;">
+        <div class="proy-estado-top">
+          <div class="proy-estado-icon">${cfg.icon}</div>
+          <div class="proy-estado-info">
+            <div class="proy-estado-name">${estado}</div>
+            <div class="proy-estado-sub">${pct}% del total</div>
+          </div>
+          <div class="proy-estado-num">${count}</div>
+        </div>
+        <div class="proy-estado-bar-wrap">
+          <div class="proy-estado-bar-track"></div>
+          <div class="proy-estado-bar-fill" style="width: ${barWidth}%;"></div>
+          <div class="proy-estado-bar-dot" style="left: ${barWidth}%;"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Datos de riesgo
+  const riesgoAlto = kpis.riesgoAlto || 0;
+  const riesgoMedio = kpis.riesgoMedio || 0;
+  const riesgoBajo = kpis.riesgoBajo || 0;
+  const totalRiesgo = riesgoAlto + riesgoMedio + riesgoBajo;
+
+  // Crear gráfico de riesgo estilo TESI (semicírculos como etapas de cierre)
+  const riesgoGauge = crearGaugeRiesgoPremium(riesgoAlto, riesgoMedio, riesgoBajo, totalRiesgo);
+
+  return `
+    <style>
+      /* ══ GRID DE ESTADO Y RIESGO ══ */
+      .proy-estado-riesgo-section {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 28px;
+        padding: 0 40px 40px;
+      }
+      
+      /* ══ CONTENEDOR ESTADO ══ */
+      .proy-estado-container {
+        background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,249,230,0.75) 100%);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.4);
+        border-radius: 18px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+        padding: 28px;
+        transition: all 0.3s ease;
+      }
+      .proy-estado-container:hover {
+        box-shadow: 0 12px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+        transform: translateY(-3px);
+      }
+      
+      .proy-estado-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(253,185,19,0.15);
+      }
+      .proy-estado-header-num {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #FDB913 0%, #f59e0b 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 800;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(253,185,19,0.35);
+      }
+      .proy-estado-header-text h4 {
+        font-size: 18px;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 0 0 2px;
+      }
+      .proy-estado-header-text p {
+        font-size: 12px;
+        color: #64748b;
+        margin: 0;
+      }
+      
+      .proy-estado-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      /* ══ TARJETA DE ESTADO INDIVIDUAL ══ */
+      .proy-estado-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.8) 100%);
+        border: 1px solid rgba(226,232,240,0.8);
+        border-left: 4px solid var(--estado-color);
+        border-radius: 12px;
+        padding: 16px 18px;
+        transition: all 0.25s ease;
+        animation: slideInEstado 0.5s ease both;
+      }
+      .proy-estado-card:hover {
+        transform: translateX(6px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        border-color: var(--estado-light);
+      }
+      
+      @keyframes slideInEstado {
+        from { opacity: 0; transform: translateX(-20px); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+      
+      .proy-estado-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .proy-estado-icon {
+        font-size: 20px;
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, var(--estado-light) 0%, var(--estado-color) 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--estado-color) 30%, transparent);
+      }
+      .proy-estado-info {
+        flex: 1;
+      }
+      .proy-estado-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
+        line-height: 1.2;
+      }
+      .proy-estado-sub {
+        font-size: 11px;
+        color: #64748b;
+        margin-top: 2px;
+      }
+      .proy-estado-num {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--estado-color);
+        line-height: 1;
+        text-shadow: 0 2px 8px color-mix(in srgb, var(--estado-color) 20%, transparent);
+      }
+      
+      /* Barra de progreso animada */
+      .proy-estado-bar-wrap {
+        position: relative;
+        height: 8px;
+        border-radius: 4px;
+        overflow: visible;
+      }
+      .proy-estado-bar-track {
+        position: absolute;
+        inset: 0;
+        background: #e2e8f0;
+        border-radius: 4px;
+      }
+      .proy-estado-bar-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background: linear-gradient(90deg, var(--estado-light), var(--estado-color));
+        border-radius: 4px;
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--estado-color) 40%, transparent);
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .proy-estado-bar-dot {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 14px;
+        height: 14px;
+        background: #fff;
+        border: 3px solid var(--estado-color);
+        border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      /* ══ CONTENEDOR RIESGO ══ */
+      .proy-riesgo-container {
+        background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,249,230,0.75) 100%);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.4);
+        border-radius: 18px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+        padding: 28px;
+        transition: all 0.3s ease;
+      }
+      .proy-riesgo-container:hover {
+        box-shadow: 0 12px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+        transform: translateY(-3px);
+      }
+      
+      .proy-riesgo-gauges {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 20px;
+      }
+    </style>
+    
+    <div class="proy-estado-riesgo-section">
+      <!-- Card Estados -->
+      <div class="proy-estado-container">
+        <div class="proy-estado-header">
+          <div class="proy-estado-header-num">02</div>
+          <div class="proy-estado-header-text">
+            <h4>Estado de Proyectos</h4>
+            <p>Distribución por fase del ciclo de vida</p>
+          </div>
+        </div>
+        <div class="proy-estado-grid">
+          ${tarjetasEstado || '<p style="color:#94A3B8;text-align:center;padding:20px;">Sin datos de estado</p>'}
+        </div>
+      </div>
+      
+      <!-- Card Riesgo -->
+      <div class="proy-riesgo-container">
+        <div class="proy-estado-header">
+          <div class="proy-estado-header-num">03</div>
+          <div class="proy-estado-header-text">
+            <h4>Nivel de Riesgo</h4>
+            <p>Clasificación de proyectos activos</p>
+          </div>
+        </div>
+        <div class="proy-riesgo-gauges">
+          ${riesgoGauge}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Crear gauge de riesgo estilo TESI (semicírculos como etapas de cierre)
+function crearGaugeRiesgoPremium(alto, medio, bajo, total) {
+  const RIESGO_CFG = [
+    { id: 'alto',  label: 'Alto',  val: alto,  col: '#ef4444', light: '#f87171', dark: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
+    { id: 'medio', label: 'Medio', val: medio, col: '#f59e0b', light: '#fbbf24', dark: '#d97706', bg: '#fffbeb', border: '#fde68a' },
+    { id: 'bajo',  label: 'Bajo',  val: bajo,  col: '#10b981', light: '#34d399', dark: '#059669', bg: '#f0fdf4', border: '#86efac' },
+  ];
+
+  // Parámetros del semicírculo
+  const R   = 60;
+  const SW  = 12;
+  const SZW = 180;
+  const SZH = 120;
+  const CX  = SZW / 2;
+  const CY  = SZH - 15;
+  const SEMI = parseFloat((Math.PI * R).toFixed(4));
+
+  const tarjetas = RIESGO_CFG.map(c => {
+    const pct = total > 0 ? Math.round((c.val / total) * 100) : 0;
+    const offset = SEMI - (SEMI * pct / 100);
+    
+    return `
+      <div class="proy-riesgo-gauge-card" style="--riesgo-color: ${c.col}; --riesgo-light: ${c.light}; --riesgo-bg: ${c.bg}; --riesgo-border: ${c.border};">
+        <svg viewBox="0 0 ${SZW} ${SZH}" width="${SZW}" height="${SZH}" class="proy-riesgo-svg">
+          <defs>
+            <linearGradient id="gR${c.id}" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="${c.light}"/>
+              <stop offset="100%" stop-color="${c.col}"/>
+            </linearGradient>
+            <filter id="glowR${c.id}" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          
+          <!-- Anillo decorativo exterior -->
+          <path d="M ${CX - R - SW - 6} ${CY} A ${R + SW + 6} ${R + SW + 6} 0 0 1 ${CX + R + SW + 6} ${CY}"
+                fill="none" stroke="${c.col}" stroke-width="8" opacity="0.08"/>
+          
+          <!-- Track -->
+          <path d="M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}"
+                fill="none" stroke="#e2e8f0" stroke-width="${SW}" stroke-linecap="round"/>
+          
+          <!-- Arco de progreso -->
+          <path d="M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}"
+                fill="none" stroke="url(#gR${c.id})" stroke-width="${SW}" stroke-linecap="round"
+                stroke-dasharray="${SEMI}" stroke-dashoffset="${offset}"
+                filter="url(#glowR${c.id})"/>
+          
+          <!-- Círculo central con número -->
+          <circle cx="${CX}" cy="${CY - 10}" r="28" fill="${c.bg}" stroke="${c.border}" stroke-width="2"/>
+          <text x="${CX}" y="${CY - 12}" text-anchor="middle" dominant-baseline="middle"
+                font-family="'IBM Plex Sans', sans-serif" font-size="24" font-weight="800" fill="${c.col}">${c.val}</text>
+          
+          <!-- Porcentaje debajo -->
+          <text x="${CX}" y="${CY + 10}" text-anchor="middle"
+                font-family="'IBM Plex Sans', sans-serif" font-size="14" font-weight="700" fill="${c.col}">${pct}%</text>
+        </svg>
+        
+        <div class="proy-riesgo-label">
+          <span class="proy-riesgo-dot"></span>
+          <span class="proy-riesgo-name">${c.label}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <style>
+      .proy-riesgo-gauge-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 16px;
+        background: var(--riesgo-bg);
+        border: 1px solid var(--riesgo-border);
+        border-radius: 16px;
+        transition: all 0.3s ease;
+      }
+      .proy-riesgo-gauge-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px color-mix(in srgb, var(--riesgo-color) 20%, transparent);
+      }
+      .proy-riesgo-svg {
+        display: block;
+      }
+      .proy-riesgo-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .proy-riesgo-dot {
+        width: 12px;
+        height: 12px;
+        background: var(--riesgo-color);
+        border-radius: 4px;
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--riesgo-color) 40%, transparent);
+      }
+      .proy-riesgo-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: #334155;
+      }
+    </style>
+    ${tarjetas}
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SECCIÓN 04: DISTRIBUCIÓN POR TIPO DE PROYECTO
+// ══════════════════════════════════════════════════════════════════════════════
+
+function htmlProyectosTipoDistribucion(proyectos) {
+  if (!proyectos || proyectos.length === 0) return '';
+  
+  // Contar por Tipo
+  const tipoCount = { 'Tren de Crédito': 0, 'Cumplimiento Normativo': 0 };
+  proyectos.forEach(p => {
+    const tipo = (p.tipo || '').toLowerCase();
+    if (tipo.includes('crédito') || tipo.includes('credito') || tipo.includes('tren')) {
+      tipoCount['Tren de Crédito']++;
+    } else if (tipo.includes('cumplimiento') || tipo.includes('normativo')) {
+      tipoCount['Cumplimiento Normativo']++;
+    }
+  });
+  
+  const totalTipos = tipoCount['Tren de Crédito'] + tipoCount['Cumplimiento Normativo'];
+  if (totalTipos === 0) return '';
+  
+  const pctCredito = Math.round((tipoCount['Tren de Crédito'] / totalTipos) * 100);
+  const pctCumplimiento = Math.round((tipoCount['Cumplimiento Normativo'] / totalTipos) * 100);
+  
+  // Configuración de tipos
+  const TIPOS_CFG = [
+    { 
+      key: 'Tren de Crédito', 
+      count: tipoCount['Tren de Crédito'], 
+      pct: pctCredito,
+      color: '#3b82f6', 
+      light: '#60a5fa', 
+      dark: '#2563eb',
+      bg: '#eff6ff',
+      border: '#bfdbfe',
+      icon: '🚂',
+      desc: 'Proyectos del proceso crediticio'
+    },
+    { 
+      key: 'Cumplimiento Normativo', 
+      count: tipoCount['Cumplimiento Normativo'], 
+      pct: pctCumplimiento,
+      color: '#8b5cf6', 
+      light: '#a78bfa', 
+      dark: '#7c3aed',
+      bg: '#f5f3ff',
+      border: '#ddd6fe',
+      icon: '📋',
+      desc: 'Proyectos regulatorios y de cumplimiento'
+    }
+  ];
+  
+  // Parámetros del semicírculo (mismo estilo que etapas de cierre TESI)
+  const R   = 72;
+  const SW  = 13;
+  const SZW = 220;
+  const SZH = 140;
+  const CX  = SZW / 2;
+  const CY  = SZH - 18;
+  const SEMI = parseFloat((Math.PI * R).toFixed(4));
+  
+  const tarjetas = TIPOS_CFG.map(t => {
+    const offset = SEMI - (SEMI * t.pct / 100);
+    
+    return `
+      <div class="proy-tipo-gauge-card" style="--tipo-color: ${t.color}; --tipo-light: ${t.light}; --tipo-bg: ${t.bg}; --tipo-border: ${t.border};">
+        <div class="proy-tipo-gauge-icon">${t.icon}</div>
+        
+        <svg viewBox="0 0 ${SZW} ${SZH}" width="${SZW}" height="${SZH}" class="proy-tipo-svg">
+          <defs>
+            <linearGradient id="gT${t.key.replace(/\s/g,'')}" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="${t.light}"/>
+              <stop offset="100%" stop-color="${t.color}"/>
+            </linearGradient>
+            <filter id="glowT${t.key.replace(/\s/g,'')}" x="-25%" y="-25%" width="150%" height="150%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <radialGradient id="cGT${t.key.replace(/\s/g,'')}" cx="38%" cy="32%" r="65%">
+              <stop offset="0%" stop-color="#3d4a5c"/>
+              <stop offset="100%" stop-color="#1e2533"/>
+            </radialGradient>
+          </defs>
+          
+          <!-- Anillos decorativos exteriores -->
+          <path d="M ${CX - R - SW - 5} ${CY} A ${R + SW + 5} ${R + SW + 5} 0 0 1 ${CX + R + SW + 5} ${CY}"
+                fill="none" stroke="${t.color}" stroke-width="10" opacity="0.07"/>
+          <path d="M ${CX - R - 2} ${CY} A ${R + 2} ${R + 2} 0 0 1 ${CX + R + 2} ${CY}"
+                fill="none" stroke="${t.color}" stroke-width="6" opacity="0.12"/>
+          
+          <!-- Track base -->
+          <path d="M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}"
+                fill="none" stroke="#e2e8f0" stroke-width="${SW}" stroke-linecap="round"/>
+          
+          <!-- Arco de progreso -->
+          <path d="M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}"
+                fill="none" stroke="url(#gT${t.key.replace(/\s/g,'')})" stroke-width="${SW}" stroke-linecap="round"
+                stroke-dasharray="${SEMI}" stroke-dashoffset="${offset}"
+                filter="url(#glowT${t.key.replace(/\s/g,'')})"/>
+          
+          <!-- Dot luminoso en la punta del arco -->
+          <circle cx="${CX - R}" cy="${CY}" r="${SW/2 + 2}" fill="${t.color}" opacity="0.9"/>
+          <circle cx="${CX - R}" cy="${CY}" r="${SW/2 + 5}" fill="none" stroke="#fff" stroke-width="2" opacity="0.4"/>
+          
+          <!-- Círculo central oscuro -->
+          <circle cx="${CX}" cy="${CY - 8}" r="${R - SW - 6}" fill="#253044"/>
+          <circle cx="${CX}" cy="${CY - 8}" r="${R - SW - 6}" fill="url(#cGT${t.key.replace(/\s/g,'')})"/>
+          <circle cx="${CX}" cy="${CY - 8}" r="${R - SW - 6}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
+          
+          <!-- Número central -->
+          <text x="${CX}" y="${CY - 14}" text-anchor="middle" dominant-baseline="middle"
+                font-family="'IBM Plex Sans', sans-serif" font-size="32" font-weight="800" fill="#fff">${t.count}</text>
+          
+          <!-- Porcentaje -->
+          <text x="${CX}" y="${CY + 8}" text-anchor="middle"
+                font-family="'IBM Plex Sans', sans-serif" font-size="16" font-weight="700" fill="${t.light}">${t.pct}%</text>
+        </svg>
+        
+        <div class="proy-tipo-gauge-info">
+          <div class="proy-tipo-gauge-name">${t.key}</div>
+          <div class="proy-tipo-gauge-desc">${t.desc}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <style>
+      .proy-tipo-section {
+        padding: 0 40px 40px;
+      }
+      .proy-tipo-container {
+        background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,249,230,0.75) 100%);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.4);
+        border-radius: 18px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+        padding: 28px;
+        transition: all 0.3s ease;
+      }
+      .proy-tipo-container:hover {
+        box-shadow: 0 12px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+        transform: translateY(-3px);
+      }
+      
+      .proy-tipo-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 28px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(253,185,19,0.15);
+      }
+      .proy-tipo-header-num {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #FDB913 0%, #f59e0b 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 800;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(253,185,19,0.35);
+      }
+      .proy-tipo-header-text h4 {
+        font-size: 18px;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 0 0 2px;
+      }
+      .proy-tipo-header-text p {
+        font-size: 12px;
+        color: #64748b;
+        margin: 0;
+      }
+      
+      .proy-tipo-gauges-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+      }
+      
+      .proy-tipo-gauge-card {
+        background: linear-gradient(135deg, var(--tipo-bg) 0%, rgba(255,255,255,0.9) 100%);
+        border: 2px solid var(--tipo-border);
+        border-radius: 20px;
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+      .proy-tipo-gauge-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--tipo-light), var(--tipo-color));
+      }
+      .proy-tipo-gauge-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 32px color-mix(in srgb, var(--tipo-color) 25%, transparent);
+        border-color: var(--tipo-color);
+      }
+      
+      .proy-tipo-gauge-icon {
+        font-size: 32px;
+        margin-bottom: 12px;
+      }
+      
+      .proy-tipo-svg {
+        display: block;
+        margin-bottom: 16px;
+      }
+      
+      .proy-tipo-gauge-info {
+        text-align: center;
+      }
+      .proy-tipo-gauge-name {
+        font-size: 16px;
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 4px;
+      }
+      .proy-tipo-gauge-desc {
+        font-size: 12px;
+        color: #64748b;
+      }
+    </style>
+    
+    <div class="proy-tipo-section">
+      <div class="proy-tipo-container">
+        <div class="proy-tipo-header">
+          <div class="proy-tipo-header-num">04</div>
+          <div class="proy-tipo-header-text">
+            <h4>Distribución por Tipo</h4>
+            <p>Clasificación de proyectos por categoría</p>
+          </div>
+        </div>
+        <div class="proy-tipo-gauges-grid">
+          ${tarjetas}
         </div>
       </div>
     </div>
@@ -4412,7 +6073,7 @@ function htmlProyectosTabla(proyectos) {
     return `
       <div class="proy-section">
         <div class="proy-sec-header">
-          <span class="proy-sec-num">02</span>
+          <span class="proy-sec-num">05</span>
           <div class="proy-sec-text">
             <h3>Lista de Proyectos</h3>
             <p>Detalle de todos los proyectos registrados</p>
@@ -4434,25 +6095,66 @@ function htmlProyectosTabla(proyectos) {
     return (a.proyecto || '').localeCompare(b.proyecto || '');
   });
 
+  // Función para formatear fecha
+  const formatFecha = (fecha) => {
+    if (!fecha) return '—';
+    if (typeof fecha === 'string') return fecha;
+    try {
+      return new Date(fecha).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch (e) {
+      return fecha;
+    }
+  };
+
+  // Función para obtener clase de Tipo
+  const getTipoClass = (tipo) => {
+    if (!tipo) return 'tipo-otro';
+    const t = tipo.toLowerCase();
+    if (t.includes('crédito') || t.includes('credito')) return 'tipo-credito';
+    if (t.includes('cumplimiento') || t.includes('normativo')) return 'tipo-cumplimiento';
+    return 'tipo-otro';
+  };
+
+  // Función para crear barra de avance
+  const barraAvance = (avance) => {
+    const pct = parseInt(avance) || 0;
+    let color = '#10b981'; // verde
+    if (pct < 30) color = '#ef4444'; // rojo
+    else if (pct < 70) color = '#f59e0b'; // amarillo
+    return `
+      <div class="proy-avance-wrap">
+        <div class="proy-avance-bar">
+          <div class="proy-avance-fill" style="width:${pct}%;background:${color};"></div>
+        </div>
+        <span class="proy-avance-num" style="color:${color};">${pct}%</span>
+      </div>
+    `;
+  };
+
   return `
     <div class="proy-section">
       <div class="proy-sec-header">
-        <span class="proy-sec-num">02</span>
+        <span class="proy-sec-num">05</span>
         <div class="proy-sec-text">
           <h3>Lista de Proyectos</h3>
           <p>${proyectos.length} proyectos registrados en el sistema</p>
         </div>
       </div>
       <div class="proy-tabla-wrap">
-        <table class="proy-tabla">
+        <table class="proy-tabla proy-tabla-full">
           <thead>
             <tr>
-              <th style="width:50px">#</th>
-              <th style="width:35%">Proyecto</th>
-              <th>Área Solicitante</th>
-              <th>Responsable</th>
-              <th>Estado</th>
-              <th>Riesgo</th>
+              <th style="width:45px;">No.</th>
+              <th style="min-width:160px;">Proyecto</th>
+              <th style="min-width:180px;">Descripción</th>
+              <th style="min-width:130px;">Área Solicitante</th>
+              <th style="min-width:120px;">Tipo</th>
+              <th style="min-width:130px;">Resp. Contraloría</th>
+              <th style="min-width:120px;">Solicitante</th>
+              <th style="width:80px;text-align:center;">Días</th>
+              <th style="min-width:110px;">Estado</th>
+              <th style="width:90px;">Riesgo</th>
+              <th style="width:100px;">Avance</th>
             </tr>
           </thead>
           <tbody>
@@ -4460,13 +6162,16 @@ function htmlProyectosTabla(proyectos) {
               const cfg = AREAS_PROYECTOS_CFG[p.areaSolicitante] || { color: '#64748b', bg: '#f8fafc' };
               const estadoClass = getEstadoClass(p.estado);
               const riesgoClass = getRiesgoClass(p.nivelRiesgo);
+              const tipoClass = getTipoClass(p.tipo);
               
               return `
                 <tr>
                   <td><span class="proy-tabla-num">${idx + 1}</span></td>
                   <td class="proy-tabla-proyecto">
                     <div class="proy-tabla-proyecto-nombre">${p.proyecto || p.id || '—'}</div>
-                    <div class="proy-tabla-proyecto-desc">${p.descripcion || ''}</div>
+                  </td>
+                  <td>
+                    <div class="proy-tabla-desc">${p.descripcion || '—'}</div>
                   </td>
                   <td>
                     <span class="proy-area-badge" style="background:${cfg.bg};color:${cfg.color};">
@@ -4474,7 +6179,12 @@ function htmlProyectosTabla(proyectos) {
                       ${p.areaSolicitante || '—'}
                     </span>
                   </td>
-                  <td style="font-size:13px;color:#475569;font-weight:500;">${p.responsable || '—'}</td>
+                  <td>
+                    <span class="proy-tipo-badge ${tipoClass}">${p.tipo || '—'}</span>
+                  </td>
+                  <td style="font-size:12px;color:#475569;font-weight:500;">${p.responsableContraloria || '—'}</td>
+                  <td style="font-size:12px;color:#475569;font-weight:500;">${p.solicitante || '—'}</td>
+                  <td style="text-align:center;font-weight:700;color:#1e293b;">${p.duracionDias || '—'}</td>
                   <td>
                     <span class="proy-estado-badge ${estadoClass}">
                       <span class="proy-estado-dot"></span>
@@ -4483,6 +6193,9 @@ function htmlProyectosTabla(proyectos) {
                   </td>
                   <td>
                     ${p.nivelRiesgo ? `<span class="tipo-badge ${riesgoClass}">${p.nivelRiesgo}</span>` : '<span style="color:#94a3b8;">—</span>'}
+                  </td>
+                  <td>
+                    ${barraAvance(p.avance)}
                   </td>
                 </tr>
               `;
