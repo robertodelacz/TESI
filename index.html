@@ -2031,12 +2031,18 @@ video { pointer-events:none; outline:none; }
   border-radius: 2px;
 }
 .proy-sec-num {
-  font-size: 14px;
+background: var(--yellow);
+  color: #000;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
   font-weight: 800;
-  color: rgba(253,185,19,0.55);
-  letter-spacing: 1px;
-  font-family: 'Inter', sans-serif;
-  padding-top: 4px;
+  font-size: 14px;
+  box-shadow: 0 4px 10px rgba(253, 185, 19, 0.3);
+  flex-shrink: 0;
 }
 .proy-sec-text h3 {
   font-size: 20px;
@@ -4786,6 +4792,8 @@ function htmlPanelProyectos(data) {
 }
 
 function htmlProyectosHero(kpis) {
+  const lottie = (url) => `<dotlottie-player src="${url}" background="transparent" speed="1" style="width:100px;height:100px;" loop autoplay></dotlottie-player>`;
+  
   return `
     <div class="proy-hero">
       <div class="proy-hero-header">
@@ -4797,16 +4805,25 @@ function htmlProyectosHero(kpis) {
       </div>
       <div class="proy-hero-kpis">
         <div class="proy-hero-kpi accent">
+          <div style="display:flex; justify-content:center; margin-bottom:10px;">
+            ${lottie('https://lottie.host/cd989437-547f-4e2c-9c5e-f81b12bb4e11/PebJtnzdsH.lottie')}
+          </div>
           <div class="proy-hero-kpi-value">${kpis.total || 0}</div>
           <div class="proy-hero-kpi-label">Proyectos Totales</div>
           <div class="proy-hero-kpi-sub">${kpis.enCurso || 0} en curso · ${kpis.completados || 0} completados</div>
         </div>
         <div class="proy-hero-kpi">
+          <div style="display:flex; justify-content:center; margin-bottom:10px;">
+            ${lottie('https://lottie.host/6daec8a3-679b-4cd7-b23d-412c7ff42865/REvc3rFKPq.lottie')}
+          </div>
           <div class="proy-hero-kpi-value">${kpis.avancePromedio || 0}<span style="font-size:28px;opacity:0.6;">%</span></div>
           <div class="proy-hero-kpi-label">Avance Promedio</div>
           <div class="proy-hero-kpi-sub">del portafolio general</div>
         </div>
         <div class="proy-hero-kpi">
+          <div style="display:flex; justify-content:center; margin-bottom:10px;">
+            ${lottie('https://lottie.host/5913ad1e-c30a-4113-9f24-0a93039c7971/hplG3OGQHQ.lottie')}
+          </div>
           <div class="proy-hero-kpi-value">${kpis.duracionPromedio || 0}</div>
           <div class="proy-hero-kpi-label">Días Promedio</div>
           <div class="proy-hero-kpi-sub">duración por proyecto</div>
@@ -4815,7 +4832,6 @@ function htmlProyectosHero(kpis) {
     </div>
   `;
 }
-
 function htmlProyectosPieChart(porArea, total) {
   const areas = Object.entries(porArea)
     .filter(([_, v]) => v.total > 0)
@@ -5105,29 +5121,30 @@ function htmlProyectosEstadoRiesgoPremium(kpis) {
   const maxCount = Math.max(...estadosOrdenados.map(([_, c]) => c), 1);
 
   // Generar tarjetas de estado estilo TESI
-  const tarjetasEstado = estadosOrdenados.map(([estado, count], idx) => {
-    const cfg = ESTADOS_CFG[estado] || { color: '#64748b', light: '#94a3b8', icon: '📁' };
+const tarjetasEstado = estadosOrdenados.map(([estado, count], idx) => {
+    const cfg = ESTADOS_CFG[estado] || { color: '#64748b' };
     const pct = total > 0 ? Math.round((count / total) * 100) : 0;
     const barWidth = (count / maxCount) * 100;
     
     return `
-      <div class="proy-estado-card" style="--estado-color: ${cfg.color}; --estado-light: ${cfg.light}; animation-delay: ${idx * 0.08}s;">
-        <div class="proy-estado-top">
-          <div class="proy-estado-icon">${cfg.icon}</div>
-          <div class="proy-estado-info">
-            <div class="proy-estado-name">${estado}</div>
-            <div class="proy-estado-sub">${pct}% del total</div>
-          </div>
-          <div class="proy-estado-num">${count}</div>
+      <div class="proy-estado-card" style="--estado-color: ${cfg.color}; border-left:none;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+          <span style="font-size:13px; font-weight:800; color:#1e293b; flex:1;">${estado.toUpperCase()}</span>
         </div>
-        <div class="proy-estado-bar-wrap">
-          <div class="proy-estado-bar-track"></div>
-          <div class="proy-estado-bar-fill" style="width: ${barWidth}%;"></div>
-          <div class="proy-estado-bar-dot" style="left: ${barWidth}%;"></div>
+        <div style="display:flex; align-items:center; gap:15px;">
+          <div style="width:40px; height:40px; background:${cfg.color}; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:16px; flex-shrink:0; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+            ${count}
+          </div>
+          <div style="flex:1; height:24px; background:#e2e8f0; border-radius:12px; position:relative; overflow:hidden;">
+            <div style="width:${barWidth}%; height:100%; background:linear-gradient(90deg, ${cfg.light}, ${cfg.color}); border-radius:12px;"></div>
+          </div>
+          <div style="width:45px; text-align:right; font-weight:800; color:#64748b; font-size:14px;">
+            ${pct}%
+          </div>
         </div>
       </div>
     `;
-  }).join('');
+}).join('');
 
   // Datos de riesgo
   const riesgoAlto = kpis.riesgoAlto || 0;
