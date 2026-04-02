@@ -787,9 +787,7 @@ body {
 .kpi-box,
 .rtype-card,
 .cgauge-card,
-.proy-tipo-chart,
-.tipo-cumplimiento,
-.tipo-credito {
+.proy-tipo-chart {
   background:    var(--card-bg) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -2324,6 +2322,21 @@ video { pointer-events:none; outline:none; }
   letter-spacing: 0.3px;
   text-transform: uppercase;
   white-space: nowrap;
+}
+.tipo-credito {
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+  border-radius: 6px !important;
+}
+.tipo-cumplimiento {
+  color: #6d28d9;
+  border: 1px solid #c4b5fd;
+  border-radius: 6px !important;
+}
+.tipo-otro {
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px !important;
 }
 
 /* ══ TABLA FULL WIDTH CON SCROLL ══ */
@@ -5385,8 +5398,8 @@ function htmlProyectosTipoDistribucion(proyectos) {
       color: '#3b82f6', 
       light: '#60a5fa', 
       dark: '#2563eb',
-      bg: '#eff6ff',
-      border: '#bfdbfe',
+      bg: 'linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,249,230,0.75) 100%)',
+      border: 'rgba(255,255,255,0.4)',
       icon: '🚂',
       desc: 'Proyectos del proceso crediticio'
     },
@@ -5397,8 +5410,8 @@ function htmlProyectosTipoDistribucion(proyectos) {
       color: '#8b5cf6', 
       light: '#a78bfa', 
       dark: '#7c3aed',
-      bg: '#f5f3ff',
-      border: '#ddd6fe',
+      bg: 'linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,249,230,0.75) 100%)',
+      border: 'rgba(255,255,255,0.4)',
       icon: '📋',
       desc: 'Proyectos regulatorios y de cumplimiento'
     }
@@ -5538,15 +5551,18 @@ function htmlProyectosTipoDistribucion(proyectos) {
       }
       
       .proy-tipo-gauge-card {
-        background: linear-gradient(135deg, var(--tipo-bg) 0%, rgba(255,255,255,0.9) 100%);
-        border: 2px solid var(--tipo-border);
-        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,249,230,0.75) 100%);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.4);
+        border-radius: 18px;
         padding: 28px;
         display: flex;
         flex-direction: column;
         align-items: center;
         position: relative;
         overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
         transition: all 0.3s ease;
       }
       .proy-tipo-gauge-card::before {
@@ -5555,13 +5571,14 @@ function htmlProyectosTipoDistribucion(proyectos) {
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, var(--tipo-light), var(--tipo-color));
+        height: 3px;
+        background: var(--yellow, #FDB913);
+        border-radius: 18px 18px 0 0;
       }
       .proy-tipo-gauge-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 12px 32px color-mix(in srgb, var(--tipo-color) 25%, transparent);
-        border-color: var(--tipo-color);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+        border-color: rgba(255,255,255,0.4);
       }
       
       .proy-tipo-gauge-icon {
