@@ -1031,21 +1031,7 @@ canvas { display:block !important; position:relative; z-index:1; }
 .doughnut-center-label { font-size:9px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:1px; margin-bottom:2px; }
 .doughnut-center-num   { font-size:32px; font-weight:800; color:var(--text); line-height:1; letter-spacing:-1px; }
 
-/* ══ PERIODO CARD ══ */
-.periodo-card {
-  padding:18px 24px; margin-bottom:24px;
-  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
-  transition: box-shadow 0.25s ease;
-}
 
-/* ══ REPORTE WRAP ══ */
-.reporte-wrap {
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-.reporte-wrap.visible { opacity:1; transform:translateY(0); }
 
 /* ══ CHART PANEL ══ */
 .chart-panel {
@@ -1879,14 +1865,7 @@ video { pointer-events:none; outline:none; }
 /* ══ SECCIÓN ══ */
 .rep-section { padding:36px 40px; border-bottom:1px solid rgba(253,185,19,0.10); }
 .rep-section:last-child { border-bottom:none; }
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 14px;
-  justify-content: center;
-  margin-top: 10px;
-  position: relative;
-  z-index: 2;
-}
+
 .legend-item {
   display: flex;
   align-items: center;
@@ -2312,32 +2291,7 @@ video { pointer-events:none; outline:none; }
   color: #334155;
 }
 
-/* ══ BADGES DE TIPO ══ */
-.proy-tipo-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.tipo-credito {
-  color: #1d4ed8;
-  border: 1px solid #93c5fd;
-  border-radius: 6px !important;
-}
-.tipo-cumplimiento {
-  color: #6d28d9;
-  border: 1px solid #c4b5fd;
-  border-radius: 6px !important;
-}
-.tipo-otro {
-  color: #475569;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px !important;
-}
+
 
 /* ══ TABLA FULL WIDTH CON SCROLL ══ */
 .proy-tabla-full {
@@ -2756,8 +2710,8 @@ const ICONOS_CIERRE = {
 
 const ICONOS_PROYECTOS = {
   totales: 'https://lottie.host/cd989437-547f-4e2c-9c5e-f81b12bb4e11/PebJtnzdsH.lottie',
-  avance:  'https://lottie.host/6030d648-0322-45f5-95ec-6e33259a4978/9RwhMWkg5B.lottie',
-  dias:    'https://lottie.host/b6f82305-c5f3-4512-ad8f-9ec00d4b8cd3/lKekbqjn6i.lottie'
+  avance:  'https://lottie.host/2fd96e0c-a553-422c-a361-103e55f5d88b/yu6ESuKVCQ.lottie',
+  dias:    'https://lottie.host/59b2f153-d5e0-4bea-91bf-d96236dd79a4/sYyO9FpGiQ.lottie'
 };
 
 const ICONO_VIGNETTE = 'https://cdn-icons-mp4.freepik.com/512/11201/11201834.mp4';
@@ -5400,7 +5354,6 @@ function htmlProyectosTipoDistribucion(proyectos) {
       dark: '#2563eb',
       bg: 'linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,249,230,0.75) 100%)',
       border: 'rgba(255,255,255,0.4)',
-      icon: '🚂',
       desc: 'Proyectos del proceso crediticio'
     },
     { 
@@ -5412,7 +5365,6 @@ function htmlProyectosTipoDistribucion(proyectos) {
       dark: '#7c3aed',
       bg: 'linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,249,230,0.75) 100%)',
       border: 'rgba(255,255,255,0.4)',
-      icon: '📋',
       desc: 'Proyectos regulatorios y de cumplimiento'
     }
   ];
@@ -5431,9 +5383,8 @@ function htmlProyectosTipoDistribucion(proyectos) {
     
     return `
       <div class="proy-tipo-gauge-card" style="--tipo-color: ${t.color}; --tipo-light: ${t.light}; --tipo-bg: ${t.bg}; --tipo-border: ${t.border};">
-        <div class="proy-tipo-gauge-icon">${t.icon}</div>
-        
-        <svg viewBox="0 0 ${SZW} ${SZH}" width="${SZW}" height="${SZH}" class="proy-tipo-svg">
+       
+        <svg viewBox="0 0 ${SZW} ${SZH}" style="width: 100%; height: auto; max-width: 280px; display: block; margin: 0 auto;" class="proy-tipo-svg">
           <defs>
             <linearGradient id="gT${t.key.replace(/\s/g,'')}" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stop-color="${t.light}"/>
@@ -5476,12 +5427,11 @@ function htmlProyectosTipoDistribucion(proyectos) {
           
           <!-- Número central -->
           <text x="${CX}" y="${CY - 14}" text-anchor="middle" dominant-baseline="middle"
-                font-family="'IBM Plex Sans', sans-serif" font-size="32" font-weight="800" fill="#fff">${t.count}</text>
-          
+                font-family="'IBM Plex Sans', sans-serif" font-size="30" font-weight="800" fill="#fff">${t.count}</text>
           <!-- Porcentaje -->
-          <text x="${CX}" y="${CY + 8}" text-anchor="middle"
-                font-family="'IBM Plex Sans', sans-serif" font-size="16" font-weight="700" fill="${t.light}">${t.pct}%</text>
-        </svg>
+          <text x="${CX}" y="${CY + 10}" text-anchor="middle" dominant-baseline="middle"
+                font-family="'IBM Plex Sans', sans-serif" font-size="19" font-weight="700" fill="${t.light}">${t.pct}%</text>
+             </svg>
         
         <div class="proy-tipo-gauge-info">
           <div class="proy-tipo-gauge-name">${t.key}</div>
@@ -5581,14 +5531,14 @@ function htmlProyectosTipoDistribucion(proyectos) {
         border-color: rgba(255,255,255,0.4);
       }
       
-      .proy-tipo-gauge-icon {
-        font-size: 32px;
-        margin-bottom: 12px;
-      }
-      
       .proy-tipo-svg {
         display: block;
         margin-bottom: 16px;
+        width: 100%;
+        height: auto;
+        max-width: 280px;
+        margin-left: auto;
+        margin-right: auto;
       }
       
       .proy-tipo-gauge-info {
@@ -5626,17 +5576,6 @@ function htmlProyectosTipoDistribucion(proyectos) {
 function htmlProyectosEstadoRiesgo(kpis) {
   const { porEstado, total } = kpis;
   
-  // Configuración de estados con colores y orden
-  const ESTADOS_CONFIG = {
-    'Solicitud inicial': { color: '#94A3B8', icon: '📋', order: 1 },
-    'Levantamiento de información': { color: '#60A5FA', icon: '🔍', order: 2 },
-    'En desarrollo': { color: '#3B82F6', icon: '⚙️', order: 3 },
-    'En pruebas': { color: '#8B5CF6', icon: '🧪', order: 4 },
-    'En producción': { color: '#10B981', icon: '🚀', order: 5 },
-    'Completado': { color: '#059669', icon: '✅', order: 6 },
-    'Pausado': { color: '#F59E0B', icon: '⏸️', order: 7 },
-    'Cancelado': { color: '#EF4444', icon: '❌', order: 8 }
-  };
 
   // Ordenar estados
   const estadosOrdenados = Object.entries(porEstado || {})
