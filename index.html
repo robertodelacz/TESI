@@ -786,7 +786,10 @@ body {
 /* ── Base compartida — SOLO tarjetas de datos ── */
 .kpi-box,
 .rtype-card,
-.cgauge-card {
+.cgauge-card,
+.proy-tipo-chart,
+.tipo-cumplimiento,
+.tipo-credito {
   background:    var(--card-bg) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -932,13 +935,7 @@ body {
   color: #1E293B;
 }
 
-/* Delta indicator abajo */
-.kpi-delta {
-  margin-top: 4px;
-}
 
-@keyframes numPop { from{opacity:0;transform:scale(0.82);} to{opacity:1;transform:scale(1);} }
-.num-pop { animation:numPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
 
 /* ══ RTYPE CARD — ajustes específicos ══ */
 .rtype-grid {
@@ -1000,7 +997,7 @@ body {
 .cgauge-title { font-size:15px; font-weight:800; letter-spacing:-0.3px; margin-bottom:6px; }
 .cgauge-sub {
   display: inline-block;
-  font-size: 10px; font-weight: 700;
+  font-size: 16px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 1px;
   padding: 3px 10px; border-radius: 20px; border: 1px solid;
 }
@@ -1328,7 +1325,7 @@ canvas { display:block !important; position:relative; z-index:1; }
   margin-top: 8px;
   padding: 3px 10px;
   border-radius: 20px;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.2px;
   font-family: 'Inter', sans-serif;
@@ -2016,10 +2013,10 @@ video { pointer-events:none; outline:none; }
 
 .proy-sec-header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 28px;
+  align-items: center;
+  justify-content: flex-start; 
+  gap: 14px; 
+  margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid rgba(253,185,19,0.18);
   position: relative;
@@ -2292,17 +2289,6 @@ video { pointer-events:none; outline:none; }
 .proy-empty-icon { font-size: 56px; margin-bottom: 20px; opacity: 0.4; }
 .proy-empty-text { font-size: 15px; font-weight: 500; }
 
-/* ══ GRÁFICO DE TIPOS DE PROYECTO ══ */
-.proy-tipo-chart {
-  display: flex;
-  justify-content: center;
-  gap: 60px;
-  padding: 28px 20px;
-  margin-bottom: 24px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-}
 .proy-tipo-item {
   display: flex;
   flex-direction: column;
@@ -2338,21 +2324,6 @@ video { pointer-events:none; outline:none; }
   letter-spacing: 0.3px;
   text-transform: uppercase;
   white-space: nowrap;
-}
-.tipo-credito {
-  background: #dbeafe;
-  color: #1d4ed8;
-  border: 1px solid #93c5fd;
-}
-.tipo-cumplimiento {
-  background: #ede9fe;
-  color: #6d28d9;
-  border: 1px solid #c4b5fd;
-}
-.tipo-otro {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
 }
 
 /* ══ TABLA FULL WIDTH CON SCROLL ══ */
@@ -3214,7 +3185,7 @@ function renderReporte(datos, nombreMes, anio, datosPrev, nombreMesPrev) {
       htmlRubros(datos.conteoPorTipo, datos.incidencias||[], `${nombreMes} ${anio}`) +
       htmlDistribucion(totArea, totalIncs, `${nombreMes} ${anio}`) +
       htmlExpedientes(datos.incidencias||[]) +
-      htmlEtapasCierre(datos.etapasCierre, datos.sinIncidencias, `${nombreMes} ${anio}`) +
+      htmlEtapasCierre(datos, `${nombreMes} ${anio}`) +
       htmlDetalleAreas(datos.incidencias||[], totArea);
 
     // ✦ 80ms para que el layout quede pintado antes de que Chart.js mida los contenedores
@@ -3891,42 +3862,47 @@ function htmlExpedientesPanel(incidencias) {
   </div>`;
 }
 
-function htmlEtapasCierre(etapas, completos, label) {
-  if (!etapas) return '';
-  const e1  = etapas['1a Revision'] || 0;
-  const e2  = etapas['2a Revision'] || 0;
-  const ef  = etapas['Final']       || 0;
-  const tot = e1 + e2 + ef;
+// Le pasaremos el objeto 'datos' completo para tener acceso al total y a las incidencias
+function htmlEtapasCierre(datos, label) {
+  if (!datos || !datos.etapasCierre) return '';
+  
+  // 1. Extraemos los valores de las etapas (solo de los completos)
+  const e1 = datos.etapasCierre['1a Revision'] || 0;
+  const e2 = datos.etapasCierre['2a Revision'] || 0;
+  const ef = datos.etapasCierre['Final']       || 0;
+  
+  // 2. Extraemos los que NO se solventaron (el total de expedientes con incidencias)
+  const noSolventados = datos.conIncidencias || 0;
+  
+  // 3. El Universo Total (El 100% de la muestra)
+  const totalUniverso = datos.total || 1; // Prevenir división por cero
 
-  // Colores que codifican eficiencia
+  // 4. Configuración visual: El destino del 100% de los expedientes
   const CFG = [
     { id:'e1', label:'1ª Revisión',    sub:'Óptimo',   val:e1, col:'#10b981', light:'#34d399', dark:'#065f46', bg:'#f0fdf4', border:'#86efac' },
-    { id:'e2', label:'2ª Revisión',    sub:'Cumple', val:e2, col:'#f59e0b', light:'#fbbf24', dark:'#92400e', bg:'#fffbeb', border:'#fde68a' },
-    { id:'ef', label:'Revisión Final', sub:'Alerta',  val:ef, col:'#ef4444', light:'#f87171', dark:'#991b1b', bg:'#fef2f2', border:'#fecaca' },
+    { id:'e2', label:'2ª Revisión',    sub:'Aceptable',val:e2, col:'#f59e0b', light:'#fbbf24', dark:'#92400e', bg:'#fffbeb', border:'#fde68a' },
+    { id:'ef', label:'Revisión Final', sub:'Retraso',  val:ef, col:'#f97316', light:'#fb923c', dark:'#c2410c', bg:'#fff7ed', border:'#ffedd5' }, // Naranja
+    { id:'ep', label:'No Solventados', sub:'Crítico',  val:noSolventados, col:'#ef4444', light:'#f87171', dark:'#991b1b', bg:'#fef2f2', border:'#fecaca' } // Rojo
   ];
 
-  // ── Semicírculo SVG (180°) ──
-  // Proporciones corregidas para que el círculo central no corte el texto
-  const R   = 72;    // radio del arco
-  const SW  = 13;    // grosor del arco
-  const SZW = 220;   // ancho viewBox — más espacio para anillos deco exteriores
-  const SZH = 140;   // alto viewBox — suficiente para el círculo completo
+  // Geometría del semicírculo
+  const R   = 72;    
+  const SW  = 13;    
+  const SZW = 220;   
+  const SZH = 140;   
   const CX  = SZW / 2;
-  const CY  = SZH - 18; // base del semicírculo — deja margen inferior para marcadores
-  const Ri  = R - SW - 6; // radio del círculo central interior
-  // Semicircunferencia = π × r
+  const CY  = SZH - 18; 
+  const Ri  = R - SW - 6; 
   const SEMI = parseFloat((Math.PI * R).toFixed(4));
 
   const tarjetas = CFG.map(c => {
     const safeId = c.id;
-    const pct    = tot > 0 ? Math.round((c.val / tot) * 100) : 0;
-    // dashoffset para semicírculo: 0 = lleno, SEMI = vacío
+    // EL CÁLCULO MÁGICO: El porcentaje ahora es sobre el TOTAL de la muestra
+    const pct    = Math.round((c.val / totalUniverso) * 100);
     const targetOff = parseFloat((SEMI * (1 - pct / 100)).toFixed(4));
 
     const svgSemi =
-      '<svg viewBox="0 0 ' + SZW + ' ' + SZH + '" width="' + SZW + '" height="' + SZH + '"' +
-        ' xmlns="http://www.w3.org/2000/svg"' +
-        ' style="display:block;filter:drop-shadow(0 6px 16px rgba(0,0,0,0.10));">' +
+      '<svg viewBox="0 0 ' + SZW + ' ' + SZH + '" width="100%" height="auto" style="max-width: 250px; display:block; margin: 0 auto; filter:drop-shadow(0 6px 16px rgba(0,0,0,0.10));" xmlns="http://www.w3.org/2000/svg">' +
         '<defs>' +
           '<linearGradient id="sg' + safeId + '" x1="0%" y1="0%" x2="100%" y2="0%">' +
             '<stop offset="0%"   stop-color="' + c.light + '"/>' +
@@ -3942,88 +3918,37 @@ function htmlEtapasCierre(etapas, completos, label) {
           '</radialGradient>' +
         '</defs>' +
 
-        // Anillos deco exteriores (igual que donas KPI)
-        '<path d="M ' + (CX - R - SW - 8) + ',' + CY +
-          ' A ' + (R + SW + 8) + ',' + (R + SW + 8) + ' 0 0,1 ' + (CX + R + SW + 8) + ',' + CY + '"' +
-          ' fill="none" stroke="' + c.col + '" stroke-width="12" opacity="0.09"/>' +
-        '<path d="M ' + (CX - R - 2) + ',' + CY +
-          ' A ' + (R + 2) + ',' + (R + 2) + ' 0 0,1 ' + (CX + R + 2) + ',' + CY + '"' +
-          ' fill="none" stroke="' + c.col + '" stroke-width="8" opacity="0.16"/>' +
-
-        // Track gris (semicírculo completo)
-        '<path d="M ' + (CX - R) + ',' + CY +
-          ' A ' + R + ',' + R + ' 0 0,1 ' + (CX + R) + ',' + CY + '"' +
-          ' fill="none" stroke="#e2e8f0" stroke-width="' + SW + '" stroke-linecap="round"/>' +
-
-        // Arco de progreso animado
-        '<path id="sgArc' + safeId + '"' +
-          ' d="M ' + (CX - R) + ',' + CY +
-          ' A ' + R + ',' + R + ' 0 0,1 ' + (CX + R) + ',' + CY + '"' +
-          ' fill="none"' +
-          ' stroke="url(#sg' + safeId + ')"' +
-          ' stroke-width="' + SW + '"' +
-          ' stroke-linecap="round"' +
-          ' stroke-dasharray="' + SEMI + '"' +
-          ' stroke-dashoffset="' + SEMI + '"' +
-          ' filter="url(#sgGlw' + safeId + ')"/>' +
-
-        // Dot luminoso al final del arco — se mueve con la animación vía JS
-        // Empieza en el punto de inicio (extremo izquierdo, 180°)
-        '<circle id="sgDot' + safeId + '"' +
-          ' cx="' + (CX - R) + '" cy="' + CY + '" r="' + (SW / 2 + 1) + '"' +
-          ' fill="' + c.col + '"' +
-          ' opacity="0">' +
-        '</circle>' +
-        // Halo exterior del dot (anillo blanco semitransparente)
-        '<circle id="sgDotHalo' + safeId + '"' +
-          ' cx="' + (CX - R) + '" cy="' + CY + '" r="' + (SW / 2 + 4) + '"' +
-          ' fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55"' +
-          ' opacity="0">' +
-        '</circle>' +
-
-        // Círculo central oscuro — radio Ri da espacio suficiente para dos líneas de texto
+        '<path d="M ' + (CX - R - SW - 8) + ',' + CY + ' A ' + (R + SW + 8) + ',' + (R + SW + 8) + ' 0 0,1 ' + (CX + R + SW + 8) + ',' + CY + '" fill="none" stroke="' + c.col + '" stroke-width="12" opacity="0.09"/>' +
+        '<path d="M ' + (CX - R - 2) + ',' + CY + ' A ' + (R + 2) + ',' + (R + 2) + ' 0 0,1 ' + (CX + R + 2) + ',' + CY + '" fill="none" stroke="' + c.col + '" stroke-width="8" opacity="0.16"/>' +
+        '<path d="M ' + (CX - R) + ',' + CY + ' A ' + R + ',' + R + ' 0 0,1 ' + (CX + R) + ',' + CY + '" fill="none" stroke="#e2e8f0" stroke-width="' + SW + '" stroke-linecap="round"/>' +
+        '<path id="sgArc' + safeId + '" d="M ' + (CX - R) + ',' + CY + ' A ' + R + ',' + R + ' 0 0,1 ' + (CX + R) + ',' + CY + '" fill="none" stroke="url(#sg' + safeId + ')" stroke-width="' + SW + '" stroke-linecap="round" stroke-dasharray="' + SEMI + '" stroke-dashoffset="' + targetOff + '" filter="url(#sgGlw' + safeId + ')"/>' +
+        
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + Ri + '" fill="#253044"/>' +
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + Ri + '" fill="url(#sgCtr' + safeId + ')"/>' +
-        '<circle cx="' + CX + '" cy="' + CY + '" r="' + Ri + '"' +
-          ' fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>' +
+        '<circle cx="' + CX + '" cy="' + CY + '" r="' + Ri + '" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>' +
 
-        // Número — centrado en el tercio superior del semicírculo
-        '<text x="' + CX + '" y="' + (CY - 14) + '"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="30" font-weight="800"' +
-          ' fill="#fff" text-anchor="middle" dominant-baseline="middle">' + c.val + '</text>' +
+        '<text x="' + CX + '" y="' + (CY - 14) + '" font-family="IBM Plex Sans, sans-serif" font-size="30" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="middle">' + c.val + '</text>' +
+        '<text id="sgPct' + safeId + '" x="' + CX + '" y="' + (CY + 10) + '" font-family="IBM Plex Sans, sans-serif" font-size="19" font-weight="700" fill="' + c.light + '" text-anchor="middle" dominant-baseline="middle">' + pct + '%</text>' +
 
-        // Porcentaje animado — justo debajo del número
-        '<text id="sgPct' + safeId + '" x="' + CX + '" y="' + (CY + 10) + '"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="19" font-weight="700"' +
-          ' fill="' + c.light + '" text-anchor="middle" dominant-baseline="middle">0%</text>' +
-
-        // Marcadores 0% y 100% en los extremos del arco
-        '<text x="' + (CX - R - SW + 2) + '" y="' + (CY + 18) + '"' +
-          ' font-family="Inter, sans-serif" font-size="12" font-weight="600"' +
-          ' fill="#94a3b8" text-anchor="middle">0%</text>' +
-        '<text x="' + (CX + R + SW - 2) + '" y="' + (CY + 18) + '"' +
-          ' font-family="Inter, sans-serif" font-size="12" font-weight="600"' +
-          ' fill="#94a3b8" text-anchor="middle">100%</text>' +
+        '<text x="' + (CX - R - SW + 2) + '" y="' + (CY + 18) + '" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#94a3b8" text-anchor="middle">0%</text>' +
+        '<text x="' + (CX + R + SW - 2) + '" y="' + (CY + 18) + '" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#94a3b8" text-anchor="middle">100%</text>' +
       '</svg>';
 
-    return '<div class="cgauge-card" style="--col:' + c.col + ';"' +
-        ' data-id="' + safeId + '" data-pct="' + pct + '" data-semi="' + SEMI + '">' +
+    return '<div class="cgauge-card" style="--col:' + c.col + ';">' +
       '<div style="height:3px;background:' + c.col + ';border-radius:18px 18px 0 0;"></div>' +
       '<div class="cgauge-body">' +
         svgSemi +
         '<div class="cgauge-label">' +
           '<div class="cgauge-title" style="color:' + c.col + ';">' + c.label + '</div>' +
-          '<div class="cgauge-sub" style="background:' + c.bg + ';color:' + c.dark + ';border-color:' + c.border + ';">' +
-            c.sub +
-          '</div>' +
+          '<div class="cgauge-sub" style="background:' + c.bg + ';color:' + c.dark + ';border-color:' + c.border + ';">' + c.sub + '</div>' +
         '</div>' +
       '</div>' +
     '</div>';
   }).join('');
 
   return '<div class="rep-section">' +
-    '<div class="sec-titulo">' + secTitulo(4, 'Cierre de Incidencias por Etapa', 'Eficiencia del proceso de resolución — expedientes cerrados por revisión', label || '') + '</div>' +
-    '<div class="cgauge-grid">' + tarjetas + '</div>' +
+    '<div class="sec-titulo">' + secTitulo(4, 'Efectividad de Cumplimiento Global', 'Destino del 100% de los expedientes evaluados en el período', label || '') + '</div>' +
+    '<div class="cgauge-grid" style="grid-template-columns: repeat(4, 1fr);">' + tarjetas + '</div>' +
   '</div>';
 }
 
@@ -4887,7 +4812,7 @@ function htmlProyectosHero(kpis) {
             <div class="kpi-icon-wrap">${lottie(ICONOS_PROYECTOS.totales)}</div>
             <div class="kpi-label">Proyectos Totales</div>
             <div class="kpi-num num-pop">${kpis.total || 0}</div>
-            <div class="kpi-delta" style="color:#64748b; background:rgba(100,116,139,0.1); border-radius:12px; padding:4px 12px;">
+            <div class="kpi-delta" style="color:#64748b; background:rgba(100,116,139,0.1); font-size: 14px; border-radius:12px; padding:4px 12px;">
               ${kpis.enCurso || 0} en curso · ${kpis.completados || 0} completados
             </div>
           </div>
@@ -4899,7 +4824,7 @@ function htmlProyectosHero(kpis) {
             <div class="kpi-icon-wrap">${lottie(ICONOS_PROYECTOS.avance)}</div>
             <div class="kpi-label">Avance Promedio</div>
             <div class="kpi-num num-pop">${kpis.avancePromedio || 0}<span style="font-size:24px;opacity:0.6;letter-spacing:0;color:#3b82f6;">%</span></div>
-            <div class="kpi-delta" style="color:#64748b; background:rgba(100,116,139,0.1); border-radius:12px; padding:4px 12px;">
+            <div class="kpi-delta" style="color:#64748b; background:rgba(100,116,139,0.1); font-size: 14px; border-radius:12px; padding:4px 12px;">
               del portafolio general
             </div>
           </div>
@@ -4911,7 +4836,7 @@ function htmlProyectosHero(kpis) {
             <div class="kpi-icon-wrap">${lottie(ICONOS_PROYECTOS.dias)}</div>
             <div class="kpi-label">Días Promedio</div>
             <div class="kpi-num num-pop">${kpis.duracionPromedio || 0}</div>
-            <div class="kpi-delta" style="color:#64748b; background:rgba(100,116,139,0.1); border-radius:12px; padding:4px 12px;">
+            <div class="kpi-delta" style="color:#64748b; background:rgba(100,116,139,0.1); font-size: 14px; border-radius:12px; padding:4px 12px;">
               duración por proyecto
             </div>
           </div>
@@ -5361,9 +5286,9 @@ function htmlProyectosEstadoRiesgoPremium(kpis) {
 // ============================================================================
 function crearGaugeRiesgoPremium(alto, medio, bajo, total) {
   const CFG = [
-    { id: 'rAlto',  label: 'Riesgo Alto',  sub: 'Crítico', val: alto,  col: '#ef4444', light: '#f87171', dark: '#991b1b', bg: '#fef2f2', border: '#fecaca' },
-    { id: 'rMedio', label: 'Riesgo Medio', sub: 'Alerta',  val: medio, col: '#f59e0b', light: '#fbbf24', dark: '#92400e', bg: '#fffbeb', border: '#fde68a' },
-    { id: 'rBajo',  label: 'Riesgo Bajo',  sub: 'Normal',  val: bajo,  col: '#10b981', light: '#34d399', dark: '#065f46', bg: '#f0fdf4', border: '#86efac' }
+    { id: 'rAlto',  label: 'Riesgo Alto',  val: alto,  col: '#ef4444', light: '#f87171', dark: '#991b1b', bg: '#fef2f2', border: '#fecaca' },
+    { id: 'rMedio', label: 'Riesgo Medio', val: medio, col: '#f59e0b', light: '#fbbf24', dark: '#92400e', bg: '#fffbeb', border: '#fde68a' },
+    { id: 'rBajo',  label: 'Riesgo Bajo',  val: bajo,  col: '#10b981', light: '#34d399', dark: '#065f46', bg: '#f0fdf4', border: '#86efac' }
   ];
 
   const R   = 72;
@@ -5413,13 +5338,13 @@ function crearGaugeRiesgoPremium(alto, medio, bajo, total) {
         '<text x="' + (CX + R + SW - 2) + '" y="' + (CY + 18) + '" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#94a3b8" text-anchor="middle">100%</text>' +
       '</svg>';
 
+    // AQUÍ ES DONDE SE ELIMINÓ LA ETIQUETA .cgauge-sub
     return '<div class="cgauge-card" style="--col:' + c.col + ';">' +
       '<div style="height:3px;background:' + c.col + ';border-radius:18px 18px 0 0;"></div>' +
       '<div class="cgauge-body">' +
         svgSemi +
         '<div class="cgauge-label">' +
-          '<div class="cgauge-title" style="color:' + c.col + ';">' + c.label + '</div>' +
-          '<div class="cgauge-sub" style="background:' + c.bg + ';color:' + c.dark + ';border-color:' + c.border + ';">' + c.sub + '</div>' +
+          '<div class="cgauge-title" style="color:' + c.col + '; margin-top: 8px;">' + c.label + '</div>' +
         '</div>' +
       '</div>' +
     '</div>';
