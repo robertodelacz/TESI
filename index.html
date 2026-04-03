@@ -3764,22 +3764,40 @@ function htmlDistribucion(totArea, totalIncs, label) {
     '</tr>';
   }).join('');
 
-return '<div class="rep-section">' +
-  '<div class="sec-titulo">' + secTitulo(3, 'Distribución de Incidencias', 'Desglose por área responsable de las observaciones registradas', 'Período: ' + label) + '</div>' +
-  '<table class="tbl" style="table-layout:fixed;width:100%;">' +
-    '<thead><tr>' +
-      '<th style="width:32%;">Área</th>' +
-      '<th style="width:12%;text-align:center;">Total</th>' +
-      '<th style="width:56%;">Distribución</th>' +
-    '</tr></thead>' +
-    '<tbody>' + filas + '</tbody>' +
-    '<tfoot><tr>' +
-      '<td><strong style="font-size:14px;">Total general</strong></td>' +
-      '<td style="text-align:center;"><strong style="font-size:18px;">' + totalIncs + '</strong></td>' +
-      '<td><strong style="font-size:16px;">100%</strong></td>' +
-    '</tr></tfoot>' +
-  '</table>' +
-'</div>';
+return `
+    <div class="rep-section">
+      <div class="sec-titulo">${secTitulo(3, 'Distribución de Incidencias', 'Desglose por área responsable de las observaciones registradas', 'Período: ' + label)}</div>
+      <table class="tbl" style="table-layout:fixed;width:100%;">
+        <thead>
+          <tr>
+            <th style="width:32%;">Área</th>
+            <th style="width:12%;text-align:center;">Total</th>
+            <th style="width:56%;">Distribución</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filas}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td style="padding: 18px 20px;">
+              <span style="font-size: 15px; font-weight: 800; color: #1e293b; line-height: 1.2;">Total general</span>
+            </td>
+            <td style="text-align: center; padding: 10px 12px;">
+              <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 50%; border: 3px solid #334155; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; font-weight: 900; box-shadow: 0 4px 10px rgba(15,23,42,0.4); margin: 0 auto;">
+                ${totalIncs}
+              </div>
+            </td>
+            <td style="padding: 18px 20px;">
+              <div style="font-size: 16px; font-weight: 900; color: #1e293b; font-family: 'IBM Plex Sans', sans-serif;">
+                100%
+              </div>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  `;
 }
 
 function htmlExpedientes(incidencias) {
