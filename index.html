@@ -266,21 +266,17 @@ body {
 /* Cabecera de texto del panel */
 /* ── Header del panel selector ── */
 .pc-header {
-  display: grid;
-  grid-template-columns: 140px 1fr; /* Espacio optimizado para logo grande */
+  display: flex;
   align-items: center;
   gap: 28px;
   width: 100%;
-  max-width: 950px;
-  margin: 0;
-  margin-left: -150px;      
   text-align: left;
   position: relative;
   z-index: 1;
 }
 
 .pc-logo-wrap {
-  width: 125px; /* Tamaño aumentado */
+  width: 125px;
   height: 125px;
   background: #fff;
   border-radius: 18px;
@@ -289,10 +285,9 @@ body {
   justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
-  padding: 6px; /* Menos padding = más logo */
+  padding: 6px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.35);
   border: 1px solid rgba(253,185,19,0.30);
-  margin-top: 45px;
 }
 
 .pc-logo-img {
@@ -1608,6 +1603,10 @@ canvas { display:block !important; position:relative; z-index:1; }
 .prop-bar::after { content:""; position:absolute; top:0; left:-150%; width:150%; height:100%; background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%); animation:flow-light 2.5s infinite linear; }
 @keyframes flow-light { 0%{left:-150%} 60%{left:100%} 100%{left:100%} }
 video { pointer-events:none; outline:none; }
+@keyframes circlePulse {
+  0% { box-shadow: 0 0 0 0 var(--pulse-color); }
+  100% { box-shadow: 0 0 0 12px transparent; }
+}
 
 /* ══ ÁREAS ACORDEÓN ══ */
 .area-header-row { display:flex; align-items:center; gap:12px; padding:14px 18px; border-radius:10px; border:1px solid; cursor:pointer; transition:filter 0.15s,box-shadow 0.15s; margin-bottom:8px; user-select:none; }
@@ -2384,6 +2383,9 @@ video { pointer-events:none; outline:none; }
 .kpi-box.proy-totales .kpi-num { color: var(--yellow); }
 .kpi-box.proy-avance .kpi-num { color: #3b82f6; }
 .kpi-box.proy-dias .kpi-num { color: #10b981; }
+/* Franja y dots para tarjeta Por Vencer */
+.kpi-box[style*="--accent-color"]::before { background: #f59e0b; }
+.kpi-box[style*="--accent-color"] .kpi-dots span { background: #f59e0b; }
 
 /* ══ TAMAÑO PERSONALIZADO PARA LOTTIES DE PROYECTOS ══ */
 .kpi-box.proy-totales dotlottie-player,
@@ -2493,6 +2495,21 @@ video { pointer-events:none; outline:none; }
          onclick="sbNavegar('sec-proyectos',this)">
         <span class="sb-item-icon">📈</span>
         <span class="sb-item-label">Panel Proyectos</span>
+      </a>
+    </div>
+    <div class="sb-divider"></div>
+
+    <!-- MÓDULO CIBERSEGURIDAD -->
+    <div class="sb-module">
+      <div class="sb-module-header">
+        <span class="sb-module-icon">🛡️</span>
+        <span class="sb-module-label">Contraloría · CS</span>
+      </div>
+
+      <a class="sb-item" data-tip="Ciberseguridad"
+         onclick="sbNavegar('sec-ciberseguridad',this)">
+        <span class="sb-item-icon">🔒</span>
+        <span class="sb-item-label">Control Ciberseguridad</span>
       </a>
     </div>
 
@@ -2623,6 +2640,41 @@ video { pointer-events:none; outline:none; }
     </div>
     <div class="sp-sec-label">Desglose por área</div>
     <div id="spAreasList"></div>
+  </div>
+</div>
+<!-- ══ PANEL DETALLE ESTADO PROYECTO ══ -->
+<div class="tipo-panel-overlay" id="estadoPanelOverlay" onclick="cerrarEstadoPanel()"></div>
+<div class="tipo-panel" id="estadoPanel">
+  <div class="tp-header">
+    <div class="tp-header-stripe" id="epStripe"></div>
+    <button class="tp-close" onclick="cerrarEstadoPanel()">×</button>
+    <div class="tp-tipo-name" id="epEstadoName">—</div>
+    <div class="tp-tipo-sub" id="epEstadoSub">Proyectos en este estado</div>
+  </div>
+  <div class="tp-kpis" style="grid-template-columns: 1fr 1fr;">
+    <div class="tp-kpi">
+      <div class="tp-kpi-val gray" id="epTotal">0</div>
+      <div class="tp-kpi-label">Proyectos</div>
+    </div>
+    <div class="tp-kpi">
+      <div class="tp-kpi-val" style="color:#3b82f6;" id="epAreas">0</div>
+      <div class="tp-kpi-label">Áreas</div>
+    </div>
+  </div>
+  <div style="padding:0 28px 16px;">
+    <div id="epAreasList2" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
+  </div>
+  <div class="tp-section">
+    <div class="tp-sec-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      Proyectos en esta fase
+    </div>
+    <div id="epProyectosList"></div>
   </div>
 </div>
 
@@ -3379,8 +3431,10 @@ function htmlKPIs(total, completos, incidencias, pctC, pctI, label, prev, prevNo
         filter="url(#glow${safeId})"/>
 
       <circle id="dot${safeId}" cx="${CX}" cy="${CY - R_ARC}" r="${STROKE_W / 2 + 1}" fill="${color}" opacity="${esFijo ? 0 : 0}"/>
-      <circle id="dotHalo${safeId}" cx="${CX}" cy="${CY - R_ARC}" r="${STROKE_W / 2 + 4}" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55" opacity="${esFijo ? 0 : 0}"/>
-
+      <circle id="dotHalo${safeId}" cx="${CX}" cy="${CY - R_ARC}" r="${STROKE_W / 2 + 4}" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55" opacity="${esFijo ? 0 : 0}">
+        <animate attributeName="r" values="${STROKE_W / 2 + 4};${STROKE_W / 2 + 10};${STROKE_W / 2 + 4}" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="2s" repeatCount="indefinite"/>
+      </circle>
       <circle cx="${CX}" cy="${CY}" r="57" fill="#253044"/>
       <circle cx="${CX}" cy="${CY}" r="57" fill="url(#dkGrad${safeId})"/>
       <circle cx="${CX}" cy="${CY}" r="57" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
@@ -3530,7 +3584,10 @@ function htmlRubros(conteo, incs, label) {
           ' fill="' + col.main + '" opacity="0"/>' +
         '<circle id="dotHaloT' + safeT + '"' +
           ' cx="' + CX + '" cy="' + (CY - R) + '" r="' + (SW / 2 + 4) + '"' +
-          ' fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55" opacity="0"/>' +
+          ' fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55" opacity="0">' +
+          '<animate attributeName="r" values="' + (SW / 2 + 4) + ';' + (SW / 2 + 9) + ';' + (SW / 2 + 4) + '" dur="2s" repeatCount="indefinite"/>' +
+          '<animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="2s" repeatCount="indefinite"/>' +
+        '</circle>' +
         // Centro oscuro
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + (R - SW - 3) + '" fill="#253044"/>' +
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + (R - SW - 3) + '" fill="url(#cG' + safeT + ')"/>' +
@@ -3565,7 +3622,7 @@ function htmlRubros(conteo, incs, label) {
     const wOk   = ok  > 0 ? Math.max(8, Math.round((pctOk  / 100) * BW)) : 0;
     const wInc  = inc > 0 ? Math.max(8, Math.round((pctInc / 100) * BW)) : 0;
     const Y1    = 20;                       // Posición Y primera barra
-    const Y2    = 52;                       // Posición Y segunda barra
+    const Y2    = 72;                       // Posición Y segunda barra
 const barrasSVG =
       '<div class="rtype-bars-wrap">' +
       '<svg viewBox="0 0 ' + SVG_W + ' 68" width="100%" height="68"' +
@@ -3592,11 +3649,11 @@ const barrasSVG =
         // ── FILA COMPLETOS ──
         // Label encima de la barra
         '<text x="' + BAR_X + '" y="4"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="8" font-weight="700"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="10" font-weight="700"' +
           ' fill="#64748b" dominant-baseline="auto" letter-spacing="1">COMPLETOS</text>' +
         // Número izquierda — verde
         '<text x="' + NUM_X + '" y="' + Y1 + '"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="16" font-weight="800"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="18" font-weight="800"' +
           ' fill="#059669" dominant-baseline="middle">' + ok + '</text>' +
         // Track
         '<rect x="' + BAR_X + '" y="' + (Y1 - BH/2) + '" width="' + BW + '" height="' + BH + '"' +
@@ -3620,17 +3677,17 @@ const barrasSVG =
         '<circle cx="' + CIR_X + '" cy="' + Y1 + '" r="' + CIR_R + '"' +
           ' fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>' +
         '<text x="' + CIR_X + '" y="' + Y1 + '"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="10" font-weight="800"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="12" font-weight="800"' +
           ' fill="#fff" text-anchor="middle" dominant-baseline="middle">' + pctOk + '%</text>' +
 
         // ── FILA INCIDENCIAS ──
         // Label encima
         '<text x="' + BAR_X + '" y="' + (Y2 - BH/2 - 8) + '"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="8" font-weight="700"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="10" font-weight="700"' +
           ' fill="#64748b" dominant-baseline="auto" letter-spacing="1">CON INCIDENCIAS</text>' +
         // Número izquierda
         '<text x="' + NUM_X + '" y="' + Y2 + '"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="16" font-weight="800"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="18" font-weight="800"' +
           ' fill="#dc2626" dominant-baseline="middle">' + inc + '</text>' +
         // Track
         '<rect x="' + BAR_X + '" y="' + (Y2 - BH/2) + '" width="' + BW + '" height="' + BH + '"' +
@@ -3654,7 +3711,7 @@ const barrasSVG =
         '<circle cx="' + CIR_X + '" cy="' + Y2 + '" r="' + CIR_R + '"' +
           ' fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>' +
         '<text x="' + CIR_X + '" y="' + Y2 + '"' +
-          ' font-family="IBM Plex Sans, sans-serif" font-size="10" font-weight="800"' +
+          ' font-family="IBM Plex Sans, sans-serif" font-size="12" font-weight="800"' +
           ' fill="#fff" text-anchor="middle" dominant-baseline="middle">' + pctInc + '%</text>' +
 
       '</svg></div>';
@@ -3755,10 +3812,10 @@ function htmlDistribucion(totArea, totalIncs, label) {
         '</div>' +
       '</td>' +
       '<td style="border-bottom:1px solid #f1f5f9;text-align:center;padding:12px 12px;">' +
-        '<div style="width:46px;height:46px;background:linear-gradient(135deg,' + a.colorClaro + ',' + a.color + ');border-radius:50%;border:4px solid ' + a.colorOscuro + ';display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:900;">' + val + '</div>' +
+        '<div style="width:46px;height:46px;background:linear-gradient(135deg,' + a.colorClaro + ',' + a.color + ');border-radius:50%;border:4px solid ' + a.colorOscuro + ';display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:900;animation:circlePulse 1s ease-out infinite;--pulse-color:' + a.color + '50;">' + val + '</div>' +
       '</td>' +
       '<td style="border-bottom:1px solid #f1f5f9;padding:12px 18px;">' +
-        '<div style="font-size:11px;color:#94a3b8;font-weight:600;margin-bottom:8px;">' + val + ' incidencia' + (val !== 1 ? 's' : '') + '</div>' +
+        '<div style="font-size:13px;color:#94a3b8;font-weight:600;margin-bottom:8px;">' + val + ' incidencia' + (val !== 1 ? 's' : '') + '</div>' +
         barSVG +
       '</td>' +
     '</tr>';
@@ -3907,6 +3964,17 @@ function htmlEtapasCierre(datos, label) {
         '<path d="M ' + (CX - R - 2) + ',' + CY + ' A ' + (R + 2) + ',' + (R + 2) + ' 0 0,1 ' + (CX + R + 2) + ',' + CY + '" fill="none" stroke="' + c.col + '" stroke-width="8" opacity="0.16"/>' +
         '<path d="M ' + (CX - R) + ',' + CY + ' A ' + R + ',' + R + ' 0 0,1 ' + (CX + R) + ',' + CY + '" fill="none" stroke="#e2e8f0" stroke-width="' + SW + '" stroke-linecap="round"/>' +
         '<path id="sgArc' + safeId + '" d="M ' + (CX - R) + ',' + CY + ' A ' + R + ',' + R + ' 0 0,1 ' + (CX + R) + ',' + CY + '" fill="none" stroke="url(#sg' + safeId + ')" stroke-width="' + SW + '" stroke-linecap="round" stroke-dasharray="' + SEMI + '" stroke-dashoffset="' + targetOff + '" filter="url(#sgGlw' + safeId + ')"/>' +
+
+        (pct > 0 ? (function() {
+          var angle = Math.PI * (1 - pct / 100);
+          var dotX = (CX + R * Math.cos(angle)).toFixed(2);
+          var dotY = (CY - R * Math.sin(angle)).toFixed(2);
+          return '<circle cx="' + dotX + '" cy="' + dotY + '" r="' + (SW / 2 + 1) + '" fill="' + c.col + '"/>' +
+                 '<circle cx="' + dotX + '" cy="' + dotY + '" r="' + (SW / 2 + 4) + '" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55">' +
+                   '<animate attributeName="r" values="' + (SW / 2 + 4) + ';' + (SW / 2 + 10) + ';' + (SW / 2 + 4) + '" dur="1.8s" repeatCount="indefinite"/>' +
+                   '<animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="1.8s" repeatCount="indefinite"/>' +
+                 '</circle>';
+        })() : '') +
         
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + Ri + '" fill="#253044"/>' +
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + Ri + '" fill="url(#sgCtr' + safeId + ')"/>' +
@@ -4391,6 +4459,23 @@ const SEC_PANEL_CFG = {
       body.innerHTML  = htmlDetalleAreas(datosMostrados.incidencias || [], totArea);
     }
   },
+  'sec-ciberseguridad': {
+    icon: '🔒',
+    name: 'Control de Ciberseguridad',
+    sub:  'Seguimiento de proyectos y hallazgos de Contraloría Operativa',
+    render: (body) => {
+      body.innerHTML = htmlClockLoader('Cargando ciberseguridad', 'Obteniendo datos del sistema...');
+      google.script.run
+        .withSuccessHandler(data => {
+          body.innerHTML = htmlPanelCiberseguridad(data);
+        })
+        .withFailureHandler(err => {
+          body.innerHTML = `<div class="proy-empty"><div class="proy-empty-icon">❌</div><div class="proy-empty-text">Error al cargar: ${err.message || err}</div></div>`;
+        })
+        .getDatosCiberseguridad();
+    }
+  },
+
   'sec-proyectos': {
     icon: '📈',
     name: 'Panel de Proyectos',
@@ -4969,15 +5054,14 @@ function htmlProyectosPieChart(porArea, total) {
     const anchor = isRight ? 'start' : 'end';
     const tx = isRight ? ex + 16 : ex - 16;
     
-    labels += `
+      labels += `
       <g class="lbl-grp" data-idx="${idx}">
         <rect x="${isRight ? tx - 5 : tx - 180}" y="${sy - 28}" width="185" height="50" fill="transparent" rx="4"/>
-        <text x="${tx}" y="${sy - 12}" text-anchor="${anchor}" fill="${seg.main}" 
-              font-family="'IBM Plex Sans',sans-serif" font-size="18" font-weight="800">${String(idx + 1).padStart(2, '0')}</text>
-        <text x="${isRight ? tx + 38 : tx - 38}" y="${sy - 12}" text-anchor="${anchor}" fill="#1E293B" 
-              font-family="'IBM Plex Sans',sans-serif" font-size="15" font-weight="700" letter-spacing="0.5">${seg.nombre.toUpperCase()}</text>
-        <text x="${tx}" y="${sy + 12}" text-anchor="${anchor}" fill="#64748B" 
-              font-family="'Inter',sans-serif" font-size="12" font-weight="500">${seg.stats.total} proyecto${seg.stats.total !== 1 ? 's' : ''} · ${seg.stats.enCurso || 0} en curso</text>
+        <circle cx="${isRight ? tx + 1 : tx - 1}" cy="${sy - 12}" r="4" fill="${seg.main}"/>
+        <text x="${isRight ? tx + 12 : tx - 12}" y="${sy - 12}" text-anchor="${anchor}" fill="#1E293B" 
+              font-family="'IBM Plex Sans',sans-serif" font-size="18" font-weight="700" letter-spacing="0.5" dominant-baseline="middle">${seg.nombre.toUpperCase()}</text>
+        <text x="${tx}" y="${sy + 12}" text-anchor="${anchor}" fill="${seg.main}" 
+              font-family="'IBM Plex Sans',sans-serif" font-size="24" font-weight="800">${seg.stats.total} <tspan fill="#64748B" font-family="'Inter',sans-serif" font-size="16" font-weight="500">proyecto${seg.stats.total !== 1 ? 's' : ''}</tspan></text>
       </g>
     `;
   });
@@ -5160,12 +5244,14 @@ function htmlProyectosEstadoRiesgoPremium(kpis) {
           <div style="width:12px; height:12px; border-radius:50%; background:${cfg.color}; box-shadow:0 0 0 3px color-mix(in srgb, ${cfg.color} 20%, transparent); flex-shrink:0;"></div>
           <span style="font-size:14px; font-weight:700; color:#1e293b; line-height:1.2;">${estado}</span>
         </div>
-        <div style="width: 44px; height: 44px; background: linear-gradient(135deg, ${cfg.light}, ${cfg.color}); border-radius: 50%; border: 3px solid ${cfg.dark}; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; font-weight: 900; box-shadow: 0 4px 10px color-mix(in srgb, ${cfg.color} 40%, transparent); flex-shrink: 0;">
+        <div onclick="abrirEstadoPanel('${estado}', '${cfg.color}')" style="width: 44px; height: 44px; background: linear-gradient(135deg, ${cfg.light}, ${cfg.color}); border-radius: 50%; border: 3px solid ${cfg.dark}; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; font-weight: 900; box-shadow: 0 4px 10px color-mix(in srgb, ${cfg.color} 40%, transparent); flex-shrink: 0; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
+          onmouseenter="this.style.transform='scale(1.15)';this.style.boxShadow='0 6px 20px '+this.style.borderColor"
+          onmouseleave="this.style.transform='scale(1)';this.style.boxShadow=''">
           ${count}
         </div>
-        <div style="flex: 1; max-width: 450px;"> ${barSVG}
-        </div>
-      </div>
+      <div style="width:1px; height:32px; background:rgba(0,0,0,0.08); flex-shrink:0; margin:0 4px;"></div>
+      <div style="flex: 1; max-width: 450px;"> ${barSVG}
+      </div>      </div>
     `;
   }).join('');
 
@@ -5232,21 +5318,26 @@ function htmlProyectosEstadoRiesgoPremium(kpis) {
           ${filasEstado || '<p style="color:#94A3B8;text-align:center;padding:20px;">Sin datos de estado</p>'}
           
           ${total > 0 ? `
-          <div style="display:flex; align-items:center; gap:20px; padding: 18px 0 0 0; margin-top: 4px; border-top: 2px solid var(--yellow);">
+          <div
+            style="display:flex; align-items:center; gap:20px; padding: 18px 0 0 0; margin-top: 4px; border-top: 2px solid var(--yellow);">
             <div style="width: 170px; flex-shrink: 0; display:flex; align-items:center; gap:10px;">
               <span style="font-size:15px; font-weight:800; color:#1e293b; line-height:1.2;">Total general</span>
             </div>
-            
-            <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 50%; border: 3px solid #334155; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; font-weight: 900; box-shadow: 0 4px 10px rgba(15,23,42,0.4); flex-shrink: 0;">
+
+            <div
+              style="width: 44px; height: 44px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 50%; border: 3px solid #334155; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; font-weight: 900; box-shadow: 0 4px 10px rgba(15,23,42,0.4); flex-shrink: 0;">
               ${total}
             </div>
-            
-            <div style="flex: 1; max-width: 450px; display: flex; justify-content: flex-end;"> <div style="font-size: 15px; font-weight: 900; color: #1e293b; font-family: 'IBM Plex Sans', sans-serif;">
-                100%
-               </div>
+
+            <div style="width:1px; height:32px; background:rgba(0,0,0,0.08); flex-shrink:0; margin:0 4px;"></div>
+
+            <div
+              style="font-size: 16px; font-weight: 900; color: #1e293b; font-family: 'IBM Plex Sans', sans-serif; letter-spacing:-0.3px;">
+              100%
             </div>
           </div>
-          ` : ''}
+          </div>
+           ` : ''}
           
         </div>
       </div>
@@ -5313,7 +5404,8 @@ function crearGaugeRiesgoPremium(alto, medio, bajo, total) {
         '<path d="M ' + (CX - R - 2) + ',' + CY + ' A ' + (R + 2) + ',' + (R + 2) + ' 0 0,1 ' + (CX + R + 2) + ',' + CY + '" fill="none" stroke="' + c.col + '" stroke-width="8" opacity="0.16"/>' +
         '<path d="M ' + (CX - R) + ',' + CY + ' A ' + R + ',' + R + ' 0 0,1 ' + (CX + R) + ',' + CY + '" fill="none" stroke="#e2e8f0" stroke-width="' + SW + '" stroke-linecap="round"/>' +
         '<path d="M ' + (CX - R) + ',' + CY + ' A ' + R + ',' + R + ' 0 0,1 ' + (CX + R) + ',' + CY + '" fill="none" stroke="url(#sgR' + c.id + ')" stroke-width="' + SW + '" stroke-linecap="round" stroke-dasharray="' + SEMI + '" stroke-dashoffset="' + offset + '" filter="url(#sgGlwR' + c.id + ')"/>' +
-        (pct > 0 ? '<circle cx="' + dotX + '" cy="' + dotY + '" r="' + (SW / 2 + 1) + '" fill="' + c.col + '"></circle><circle cx="' + dotX + '" cy="' + dotY + '" r="' + (SW / 2 + 4) + '" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55"></circle>' : '') +
+        (pct > 0 ? '<circle cx="' + dotX + '" cy="' + dotY + '" r="' + (SW / 2 + 1) + '" fill="' + c.col + '"></circle><circle cx="' + dotX + '" cy="' + dotY + '" r="' + (SW / 2 + 4) + '" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55"><animate attributeName="r" values="' + (SW / 2 + 4) + ';' + (SW / 2 + 10) + ';' + (SW / 2 + 4) + '" dur="1.8s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="1.8s" repeatCount="indefinite"/></circle>' : '') +
+
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + Ri + '" fill="#253044"/>' +
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + Ri + '" fill="url(#sgCtrR' + c.id + ')"/>' +
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + Ri + '" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>' +
@@ -5435,8 +5527,16 @@ function htmlProyectosTipoDistribucion(proyectos) {
                 filter="url(#glowT${t.key.replace(/\s/g,'')})"/>
           
           <!-- Dot luminoso en la punta del arco -->
-          <circle cx="${CX - R}" cy="${CY}" r="${SW/2 + 2}" fill="${t.color}" opacity="0.9"/>
-          <circle cx="${CX - R}" cy="${CY}" r="${SW/2 + 5}" fill="none" stroke="#fff" stroke-width="2" opacity="0.4"/>
+          ${t.pct > 0 ? (() => {
+            const angle = Math.PI * (1 - t.pct / 100);
+            const dotX = (CX + R * Math.cos(angle)).toFixed(2);
+            const dotY = (CY - R * Math.sin(angle)).toFixed(2);
+            return `<circle cx="${dotX}" cy="${dotY}" r="${SW/2 + 2}" fill="${t.color}" opacity="0.9"/>
+                    <circle cx="${dotX}" cy="${dotY}" r="${SW/2 + 5}" fill="none" stroke="#fff" stroke-width="2" opacity="0.4">
+                      <animate attributeName="r" values="${SW/2 + 5};${SW/2 + 11};${SW/2 + 5}" dur="1.8s" repeatCount="indefinite"/>
+                      <animate attributeName="stroke-opacity" values="0.4;0;0.4" dur="1.8s" repeatCount="indefinite"/>
+                    </circle>`;
+          })() : ''}          
           
           <!-- Círculo central oscuro -->
           <circle cx="${CX}" cy="${CY - 8}" r="${R - SW - 6}" fill="#253044"/>
@@ -6090,6 +6190,365 @@ function getRiesgoClass(riesgo) {
   if (r.includes('medio')) return 'riesgo-medio';
   if (r.includes('bajo')) return 'riesgo-bajo';
   return '';
+}
+
+// ══ PANEL DETALLE ESTADO PROYECTO ══
+let datosProyectosCache = null;
+
+function abrirEstadoPanel(estado, color) {
+  document.getElementById('epStripe').style.background = color;
+  document.getElementById('epEstadoName').textContent = estado;
+  document.getElementById('epEstadoName').style.color = color;
+  document.getElementById('epTotal').textContent = '...';
+  document.getElementById('epProyectosList').innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;">Cargando...</div>';
+
+  document.getElementById('estadoPanelOverlay').classList.add('open');
+  document.getElementById('estadoPanel').classList.add('open');
+
+  function renderEstadoPanel(data) {
+    datosProyectosCache = data;
+    var proyectos = data.proyectos.filter(function(p) {
+      return p.estado === estado;
+    });
+
+    document.getElementById('epTotal').textContent = proyectos.length;
+
+    // Áreas únicas
+    var areasSet = {};
+    proyectos.forEach(function(p) {
+      var area = p.areaSolicitante || 'Sin área';
+      areasSet[area] = (areasSet[area] || 0) + 1;
+    });
+    var areasUnicas = Object.keys(areasSet);
+    document.getElementById('epAreas').textContent = areasUnicas.length;
+
+    // Listado de áreas
+    var areasHtml = areasUnicas.sort().map(function(area) {
+      var areaCfg = AREAS_PROYECTOS_CFG[area] || { color: '#64748b', bg: '#f8fafc' };
+      return '<span class="proy-area-badge" style="background:' + areaCfg.bg + ';color:' + areaCfg.color + ';margin:2px 4px 2px 0;">' +
+        '<span class="proy-area-badge-dot" style="background:' + areaCfg.color + '"></span>' +
+        area +
+      '</span>';
+    }).join('');
+    document.getElementById('epAreasList2').innerHTML = areasHtml;
+
+    var listEl = document.getElementById('epProyectosList');
+
+    if (proyectos.length === 0) {
+      listEl.innerHTML = '<div style="text-align:center;padding:32px;color:#94a3b8;font-size:14px;">Sin proyectos en este estado</div>';
+      return;
+    }
+
+    var sorted = proyectos.sort(function(a, b) {
+      return (b.avance || 0) - (a.avance || 0);
+    });
+
+    var html = '<table class="tp-exp-table">' +
+      '<thead><tr>' +
+        '<th>Proyecto</th>' +
+        '<th>Área</th>' +
+        '<th style="text-align:center;">Avance</th>' +
+      '</tr></thead><tbody>';
+
+    sorted.forEach(function(p) {
+      var areaCfg = AREAS_PROYECTOS_CFG[p.areaSolicitante] || { color: '#64748b', bg: '#f8fafc' };
+      var pct = parseInt(p.avance) || 0;
+      var barColor = pct >= 70 ? '#10b981' : pct >= 30 ? '#f59e0b' : '#ef4444';
+
+      html += '<tr>' +
+        '<td>' +
+          '<div style="font-weight:700;font-size:13px;color:#1e293b;">' + (p.proyecto || '—') + '</div>' +
+        '</td>' +
+        '<td>' +
+          '<span class="proy-area-badge" style="background:' + areaCfg.bg + ';color:' + areaCfg.color + ';">' +
+            '<span class="proy-area-badge-dot" style="background:' + areaCfg.color + '"></span>' +
+            (p.areaSolicitante || '—') +
+          '</span>' +
+        '</td>' +
+        '<td style="text-align:center;">' +
+          '<div style="display:flex;align-items:center;gap:6px;justify-content:center;">' +
+            '<div style="flex:1;max-width:60px;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;">' +
+              '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:3px;"></div>' +
+            '</div>' +
+            '<span style="font-size:12px;font-weight:800;color:' + barColor + ';min-width:32px;">' + pct + '%</span>' +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+    });
+
+    html += '</tbody></table>';
+    listEl.innerHTML = html;
+  }
+
+  if (datosProyectosCache) {
+    renderEstadoPanel(datosProyectosCache);
+  } else {
+    google.script.run
+      .withSuccessHandler(renderEstadoPanel)
+      .withFailureHandler(function(err) {
+        document.getElementById('epProyectosList').innerHTML =
+          '<div style="text-align:center;padding:20px;color:#ef4444;">Error: ' + (err.message || err) + '</div>';
+      })
+      .getDatosProyectos();
+  }
+}
+
+function cerrarEstadoPanel() {
+  document.getElementById('estadoPanelOverlay').classList.remove('open');
+  document.getElementById('estadoPanel').classList.remove('open');
+}
+
+// ════════════════════════════════════════════════════════════
+// PANEL DE CIBERSEGURIDAD — Contraloría CS
+// ════════════════════════════════════════════════════════════
+
+const ICONOS_CS = {
+  total:     'https://lottie.host/1feeb3f9-e4f4-420e-954e-439dee57dc1e/mo7TS5e9Tu.lottie',
+  avance:    'https://lottie.host/2fd96e0c-a553-422c-a361-103e55f5d88b/yu6ESuKVCQ.lottie',
+  hallazgos: 'https://lottie.host/53fa307c-591e-4c28-aec6-8dbe03d6886a/llkb0bI7xx.lottie',
+  vencer:    'https://lottie.host/59b2f153-d5e0-4bea-91bf-d96236dd79a4/sYyO9FpGiQ.lottie'
+};
+
+function htmlPanelCiberseguridad(data) {
+  if (!data || !data.proyectos) {
+    return '<div class="proy-empty"><div class="proy-empty-icon">📭</div><div class="proy-empty-text">No hay datos de ciberseguridad disponibles</div></div>';
+  }
+
+  var kpis = data.kpis;
+  var proyectos = data.proyectos;
+  var porVencer = data.proyectosPorVencer || [];
+
+  return htmlCSHero(kpis) +
+         htmlCSPorVencer(porVencer) +
+         '<div style="padding:0 48px 16px;">' +
+           '<button onclick="toggleCSTabla()" id="btnCSTabla" style="display:flex;align-items:center;gap:10px;width:100%;padding:16px 24px;background:linear-gradient(135deg,rgba(255,255,255,0.85),rgba(255,249,230,0.75));backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.4);border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,0.06),inset 0 1px 0 rgba(255,255,255,0.6);cursor:pointer;font-family:IBM Plex Sans,sans-serif;transition:all 0.25s ease;">' +
+             '<div style="width:32px;height:32px;background:linear-gradient(135deg,#FDB913,#f59e0b);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:800;box-shadow:0 2px 8px rgba(253,185,19,0.35);flex-shrink:0;" id="btnCSIcon">▼</div>' +
+             '<div style="flex:1;text-align:left;">' +
+               '<div style="font-size:14px;font-weight:700;color:#1e293b;">Ver todos los proyectos</div>' +
+               '<div style="font-size:11px;color:#64748b;margin-top:2px;">' + proyectos.length + ' proyectos de ciberseguridad registrados</div>' +
+             '</div>' +
+             '<div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;" id="btnCSLabel">Expandir</div>' +
+           '</button>' +
+         '</div>' +
+         '<div id="csTablaWrap" style="max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.4,0,0.2,1);">' +
+           htmlCSTabla(proyectos) +
+         '</div>';
+}
+
+function htmlCSHero(kpis) {
+  var lottie = function(s) { return '<dotlottie-player src="' + s + '" background="transparent" speed="1" loop autoplay></dotlottie-player>'; };
+  var dots = '<div class="kpi-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>';
+
+  return '<div class="proy-hero" style="padding-bottom: 28px;">' +
+      '<div class="proy-hero-header" style="margin-bottom: 0;">' +
+        '<div>' +
+          '<div class="proy-hero-title">Contraloría Operativa</div>' +
+          '<div class="proy-hero-name">Control de Ciberseguridad</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="kpi-section" style="padding-top: 28px;">' +
+      '<div class="kpi-row" style="grid-template-columns: repeat(4, 1fr);">' +
+
+        '<div class="kpi-box proy-totales">' +
+          '<div class="kpi-box-inner">' +
+            dots +
+            '<div class="kpi-icon-wrap">' + lottie(ICONOS_CS.total) + '</div>' +
+            '<div class="kpi-label">Proyectos</div>' +
+            '<div class="kpi-num num-pop">' + (kpis.total || 0) + '</div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="kpi-box proy-avance">' +
+          '<div class="kpi-box-inner">' +
+            dots +
+            '<div class="kpi-icon-wrap">' + lottie(ICONOS_CS.avance) + '</div>' +
+            '<div class="kpi-label">Avance Promedio</div>' +
+            '<div class="kpi-num num-pop">' + (kpis.avancePromedio || 0) + '<span style="font-size:24px;opacity:0.6;letter-spacing:0;color:#3b82f6;">%</span></div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="kpi-box incidencias">' +
+          '<div class="kpi-box-inner">' +
+            dots +
+            '<div class="kpi-icon-wrap">' + lottie(ICONOS_CS.hallazgos) + '</div>' +
+            '<div class="kpi-label">Hallazgos</div>' +
+            '<div class="kpi-num num-pop">' + (kpis.hallazgos || 0) + '</div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="kpi-box" style="--accent-color:#f59e0b;">' +
+          '<div class="kpi-box-inner">' +
+            dots +
+            '<div class="kpi-icon-wrap">' + lottie(ICONOS_CS.vencer) + '</div>' +
+            '<div class="kpi-label">Por Vencer</div>' +
+            '<div class="kpi-num num-pop" style="color:#f59e0b;">' + (kpis.porVencer || 0) + '</div>' +
+            '<div class="kpi-delta" style="color:#92400e;background:rgba(245,158,11,0.12);font-size:12px;border-radius:12px;padding:4px 12px;">próximos 30 días</div>' +
+          '</div>' +
+        '</div>' +
+
+      '</div>' +
+    '</div>';
+}
+
+function htmlCSPorVencer(porVencer) {
+  if (!porVencer || porVencer.length === 0) {
+    return '<div class="proy-section">' +
+      '<div class="proy-sec-header">' +
+        '<span class="proy-sec-num">01</span>' +
+        '<div class="proy-sec-text">' +
+          '<h3>Proyectos por Vencer</h3>' +
+          '<p>Próximos 30 días</p>' +
+        '</div>' +
+      '</div>' +
+      '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:24px;text-align:center;">' +
+        '<span style="font-size:24px;">✓</span>' +
+        '<div style="font-size:14px;font-weight:700;color:#059669;margin-top:8px;">Sin proyectos próximos a vencer</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  var filas = porVencer.map(function(p, idx) {
+    var bg = idx % 2 === 0 ? '#fff' : '#f8fafc';
+    var pct = parseInt(p.avance) || 0;
+    var barColor = pct >= 70 ? '#10b981' : pct >= 30 ? '#f59e0b' : '#ef4444';
+
+    return '<tr style="background:' + bg + ';">' +
+      '<td style="border-bottom:1px solid #f1f5f9;">' +
+        '<div style="font-weight:700;font-size:13px;color:#1e293b;">' + (p.proyecto || '—') + '</div>' +
+      '</td>' +
+      '<td style="border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;">' + (p.responsable || '—') + '</td>' +
+      '<td style="border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;">' + (p.fechaFin || '—') + '</td>' +
+      '<td style="border-bottom:1px solid #f1f5f9;text-align:center;">' +
+        '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;font-weight:700;color:#b45309;">' +
+          (p.vencimiento || '—') +
+        '</span>' +
+      '</td>' +
+      '<td style="border-bottom:1px solid #f1f5f9;">' +
+        '<div style="display:flex;align-items:center;gap:6px;">' +
+          '<div style="flex:1;max-width:60px;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;">' +
+            '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:3px;"></div>' +
+          '</div>' +
+          '<span style="font-size:12px;font-weight:800;color:' + barColor + ';">' + pct + '%</span>' +
+        '</div>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  return '<div class="proy-section">' +
+    '<div class="proy-sec-header">' +
+      '<span class="proy-sec-num">01</span>' +
+      '<div class="proy-sec-text">' +
+        '<h3>Proyectos por Vencer</h3>' +
+        '<p>' + porVencer.length + ' proyecto' + (porVencer.length !== 1 ? 's' : '') + ' con vencimiento en los próximos 30 días</p>' +
+      '</div>' +
+    '</div>' +
+    '<div class="proy-tabla-wrap">' +
+      '<table class="proy-tabla">' +
+        '<thead><tr>' +
+          '<th>Proyecto</th>' +
+          '<th>Responsable</th>' +
+          '<th>Fecha Fin</th>' +
+          '<th style="text-align:center;">Vencimiento</th>' +
+          '<th>Avance</th>' +
+        '</tr></thead>' +
+        '<tbody>' + filas + '</tbody>' +
+      '</table>' +
+    '</div>' +
+  '</div>';
+}
+
+function htmlCSTabla(proyectos) {
+  if (!proyectos || proyectos.length === 0) {
+    return '<div class="proy-section"><div class="proy-empty"><div class="proy-empty-icon">📭</div><div class="proy-empty-text">Sin proyectos registrados</div></div></div>';
+  }
+
+  var sorted = proyectos.sort(function(a, b) {
+    return (b.hallazgos || 0) - (a.hallazgos || 0);
+  });
+
+  var filas = sorted.map(function(p, idx) {
+    var bg = idx % 2 === 0 ? '#fff' : '#f8fafc';
+    var pct = parseInt(p.avance) || 0;
+    var barColor = pct >= 70 ? '#10b981' : pct >= 30 ? '#f59e0b' : '#ef4444';
+    var hallazgosColor = (p.hallazgos || 0) > 0 ? '#dc2626' : '#059669';
+    var hallazgosBg = (p.hallazgos || 0) > 0 ? '#fef2f2' : '#f0fdf4';
+    var hallazgosBorder = (p.hallazgos || 0) > 0 ? '#fecaca' : '#bbf7d0';
+
+    var estatusClass = getEstadoClass(p.estatus);
+
+    return '<tr style="background:' + bg + ';">' +
+      '<td style="border-bottom:1px solid #f1f5f9;">' +
+        '<div style="font-weight:700;font-size:13px;color:#1e293b;margin-bottom:2px;">' + (p.proyecto || '—') + '</div>' +
+        '<div style="font-size:11px;color:#94a3b8;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.descripcion || '') + '</div>' +
+      '</td>' +
+      '<td style="border-bottom:1px solid #f1f5f9;font-size:12px;color:#475569;">' + (p.responsable || '—') + '</td>' +
+      '<td style="border-bottom:1px solid #f1f5f9;font-size:12px;color:#475569;">' + (p.fechaInicio || '—') + '</td>' +
+      '<td style="border-bottom:1px solid #f1f5f9;font-size:12px;color:#475569;">' + (p.fechaFin || '—') + '</td>' +
+      '<td style="border-bottom:1px solid #f1f5f9;">' +
+        '<div style="display:flex;align-items:center;gap:6px;">' +
+          '<div style="flex:1;max-width:60px;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;">' +
+            '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:3px;"></div>' +
+          '</div>' +
+          '<span style="font-size:12px;font-weight:800;color:' + barColor + ';">' + pct + '%</span>' +
+        '</div>' +
+      '</td>' +
+      '<td style="border-bottom:1px solid #f1f5f9;">' +
+        '<span class="proy-estado-badge ' + estatusClass + '">' +
+          '<span class="proy-estado-dot"></span>' +
+          (p.estatus || '—') +
+        '</span>' +
+      '</td>' +
+      '<td style="border-bottom:1px solid #f1f5f9;text-align:center;">' +
+        '<span style="display:inline-flex;align-items:center;justify-content:center;min-width:32px;padding:4px 10px;background:' + hallazgosBg + ';border:2px solid ' + hallazgosBorder + ';border-radius:8px;font-weight:800;color:' + hallazgosColor + ';font-size:14px;">' +
+          (p.hallazgos || 0) +
+        '</span>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  return '<div class="proy-section">' +
+    '<div class="proy-sec-header">' +
+      '<span class="proy-sec-num">02</span>' +
+      '<div class="proy-sec-text">' +
+        '<h3>Todos los Proyectos</h3>' +
+        '<p>' + proyectos.length + ' proyectos de ciberseguridad registrados</p>' +
+      '</div>' +
+    '</div>' +
+    '<div class="proy-tabla-wrap" style="overflow-x:auto;">' +
+      '<table class="proy-tabla" style="min-width:900px;">' +
+        '<thead><tr>' +
+          '<th style="min-width:200px;">Proyecto</th>' +
+          '<th>Responsable</th>' +
+          '<th>F. Inicio</th>' +
+          '<th>F. Fin</th>' +
+          '<th>Avance</th>' +
+          '<th>Estatus</th>' +
+          '<th style="text-align:center;">Hallazgos</th>' +
+        '</tr></thead>' +
+        '<tbody>' + filas + '</tbody>' +
+      '</table>' +
+    '</div>' +
+  '</div>';
+}
+
+// ══ TOGGLE TABLA CIBERSEGURIDAD ══
+function toggleCSTabla() {
+  var wrap = document.getElementById('csTablaWrap');
+  var icon = document.getElementById('btnCSIcon');
+  var label = document.getElementById('btnCSLabel');
+  var abierto = wrap.style.maxHeight !== '0px' && wrap.style.maxHeight !== '';
+  
+  if (abierto) {
+    wrap.style.maxHeight = '0px';
+    icon.textContent = '▼';
+    label.textContent = 'Expandir';
+  } else {
+    wrap.style.maxHeight = wrap.scrollHeight + 'px';
+    icon.textContent = '▲';
+    label.textContent = 'Colapsar';
+  }
 }
 </script>
 </body>
