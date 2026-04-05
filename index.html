@@ -35,10 +35,9 @@ body {
   min-height: 100vh;
 }
 
-/* ══ SIDEBAR — full height desde top:0, sin site-header ══ */
 :root {
-  --sb-w:      68px;
-  --sb-w-open: 248px;
+  --sb-w:      72px;
+  --sb-w-open: 260px;
 }
 .app-layout { display:flex; min-height:100vh; }
 
@@ -46,76 +45,206 @@ body {
   position: fixed;
   top: 0; left: 0; bottom: 0;
   width: var(--sb-w);
-  background: linear-gradient(180deg, #0d1420 0%, #111827 100%);
-  border-right: 1px solid rgba(253,185,19,0.12);
-  box-shadow: 4px 0 32px rgba(0,0,0,0.35);
+  background: linear-gradient(180deg, #080d17 0%, #0d1420 40%, #111827 100%);
+  border-right: 1px solid rgba(253,185,19,0.10);
+  box-shadow: 4px 0 40px rgba(0,0,0,0.50);
   z-index: 200;
   display: flex;
   flex-direction: column;
   gap: 0;
-  overflow: hidden;
-  transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+  overflow-x: hidden;
+  overflow-y: auto;
+  transition: width 0.35s cubic-bezier(0.4,0,0.2,1);
 }
 .sidebar:hover,
 .sidebar.open { width: var(--sb-w-open); }
+
+/* Scrollbar premium */
+.sidebar::-webkit-scrollbar { width: 0; }
+.sidebar:hover::-webkit-scrollbar { width: 3px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(253,185,19,0.20); border-radius: 3px; }
+.sidebar::-webkit-scrollbar-thumb:hover { background: rgba(253,185,19,0.40); }
 
 /* ── Brand / Logo ── */
 .sb-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 18px 14px 16px;
-  border-bottom: 1px solid rgba(253,185,19,0.10);
+  gap: 14px;
+  padding: 20px 16px 18px;
+  border-bottom: 1px solid rgba(253,185,19,0.08);
   flex-shrink: 0;
   overflow: hidden;
-  min-height: 72px;
+  min-height: 76px;
+  position: relative;
+}
+.sb-brand::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 15%; right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(253,185,19,0.25), transparent);
 }
 .sb-logo-wrap {
-  width: 70px; height: 70px;
+  width: 42px; height: 42px;
   background: #fff;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.30);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.40), 0 0 0 1px rgba(253,185,19,0.15);
+  transition: transform 0.3s, box-shadow 0.3s;
 }
-.sb-logo-img { max-width: 36px; max-height: 36px; object-fit: contain; }
+.sidebar:hover .sb-logo-wrap {
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.50), 0 0 0 1px rgba(253,185,19,0.30);
+}
+.sb-logo-img { max-width: 30px; max-height: 30px; object-fit: contain; }
 .sb-brand-text {
   opacity: 0;
-  transition: opacity 0.2s 0.08s;
+  transition: opacity 0.25s 0.1s;
   white-space: nowrap;
   overflow: hidden;
 }
 .sidebar:hover .sb-brand-text,
 .sidebar.open  .sb-brand-text { opacity: 1; }
 .sb-brand-name {
-  font-size: 14px; font-weight: 800;
+  font-size: 15px; font-weight: 800;
   color: #fff; letter-spacing: -0.3px;
 }
 .sb-brand-sub {
-  font-size: 9px; font-weight: 700;
-  color: rgba(253,185,19,0.60);
-  text-transform: uppercase; letter-spacing: 1.2px;
-  margin-top: 2px;
+  font-size: 10px; font-weight: 700;
+  color: rgba(253,185,19,0.50);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  margin-top: 3px;
 }
 
 /* ── Módulo ── */
-.sb-module { display:flex; flex-direction:column; flex:1; padding-top:8px; overflow:hidden; }
+.sb-module { display:flex; flex-direction:column; flex:0 0 auto; padding-top:6px; padding-bottom:6px; overflow:visible; }
 .sb-module-header {
   display:flex; align-items:center; gap:12px;
-  padding: 10px 22px 6px;
+  padding: 8px 22px 6px;
   overflow: hidden;
 }
-.sb-module-icon  { font-size:13px; flex-shrink:0; width:24px; text-align:center; opacity:0.5; }
+.sb-module-icon { font-size:12px; flex-shrink:0; width:24px; text-align:center; opacity:0.4; }
 .sb-module-label {
-  font-size:10px; font-weight:800;
-  text-transform:uppercase; letter-spacing:1.8px;
-  color:rgba(253,185,19,0.55);
+  font-size:9px; font-weight:800;
+  text-transform:uppercase; letter-spacing:2px;
+  color:rgba(253,185,19,0.45);
   white-space:nowrap; opacity:0;
-  transition:opacity 0.2s 0.1s;
+  transition:opacity 0.25s 0.12s;
 }
 .sidebar:hover .sb-module-label,
 .sidebar.open  .sb-module-label { opacity:1; }
+
+/* ── Items ── */
+.sb-item {
+  display:flex; align-items:center; gap:14px;
+  padding: 9px 22px;
+  margin: 1px 8px;
+  border-radius: 8px;
+  cursor:pointer; white-space:nowrap; overflow:hidden;
+  border-left: none;
+  transition: background 0.2s, transform 0.2s;
+  text-decoration:none; position:relative;
+}
+.sb-item:hover {
+  background: rgba(255,255,255,0.06);
+  transform: translateX(2px);
+}
+.sb-item.active {
+  background: rgba(253,185,19,0.10);
+  position: relative;
+}
+.sb-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 25%; bottom: 25%;
+  width: 3px;
+  background: var(--yellow);
+  border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 8px rgba(253,185,19,0.40);
+}
+.sb-item-icon {
+  font-size:15px; flex-shrink:0; width:24px; text-align:center;
+  transition: transform 0.25s;
+}
+.sb-item:hover .sb-item-icon { transform:scale(1.15) rotate(-3deg); }
+.sb-item-label {
+  font-size:12px; font-weight:600;
+  color:rgba(255,255,255,0.60);
+  white-space:nowrap; opacity:0;
+  transition: opacity 0.25s 0.1s, color 0.2s;
+}
+.sidebar:hover .sb-item-label,
+.sidebar.open  .sb-item-label { opacity:1; }
+.sb-item:hover .sb-item-label { color: rgba(255,255,255,0.90); }
+.sb-item.active .sb-item-label { color:#fff; font-weight:700; }
+
+.sb-item.hidden-item { opacity:0.30; pointer-events:none; }
+.sb-hidden-badge {
+  font-size:7px; font-weight:800;
+  background:rgba(255,255,255,0.08);
+  color:rgba(255,255,255,0.40);
+  padding:2px 5px; border-radius:3px; letter-spacing:0.5px;
+  white-space:nowrap; opacity:0;
+  transition:opacity 0.2s 0.08s;
+}
+.sidebar:hover .sb-hidden-badge,
+.sidebar.open  .sb-hidden-badge { opacity:1; }
+
+/* Tooltip modo colapsado */
+.sb-item::after {
+  content:attr(data-tip);
+  position:absolute; left:calc(var(--sb-w) + 10px); top:50%;
+  transform:translateY(-50%) scale(0.9);
+  background: linear-gradient(135deg, #1e2533, #253044);
+  color:#fff;
+  font-size:11px; font-weight:600;
+  padding:6px 14px; border-radius:8px;
+  white-space:nowrap; pointer-events:none;
+  opacity:0; transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.45), 0 0 0 1px rgba(253,185,19,0.10);
+  z-index:300;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.sidebar:not(:hover):not(.open) .sb-item:hover::after {
+  opacity:1;
+  transform:translateY(-50%) scale(1);
+}
+
+.sb-divider {
+  height:1px;
+  background: linear-gradient(90deg, transparent 10%, rgba(255,255,255,0.06) 50%, transparent 90%);
+  margin:4px 16px;
+  flex-shrink:0;
+}
+
+/* ── Footer del sidebar ── */
+.sb-footer {
+  padding: 16px 22px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  flex-shrink: 0;
+  overflow: hidden;
+  margin-top: auto;
+  position: relative;
+}
+.sb-footer::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 15%; right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(253,185,19,0.15), transparent);
+}
+.sb-fecha {
+  font-size:9px; font-weight:600;
+  color:rgba(255,255,255,0.20);
+  font-family:'Inter',sans-serif;
+  white-space:nowrap;
+  opacity:0; transition:opacity 0.25s;
+}
+.sidebar:hover .sb-fecha,
+.sidebar.open  .sb-fecha { opacity:1; }
 
 /* ── Items ── */
 .sb-item {
@@ -986,12 +1115,12 @@ body {
 .cgauge-card:nth-child(1){ animation-delay:0.05s; }
 .cgauge-card:nth-child(2){ animation-delay:0.12s; }
 .cgauge-card:nth-child(3){ animation-delay:0.19s; }
-.cgauge-body { padding:20px 18px 18px; display:flex; flex-direction:column; align-items:stretch; gap:14px; }
+.cgauge-body { padding:clamp(12px, 1.5vw, 20px) clamp(10px, 1.2vw, 18px) clamp(10px, 1.2vw, 18px); display:flex; flex-direction:column; align-items:stretch; gap:clamp(8px, 1vw, 14px); }
 .cgauge-label { text-align:center; align-self:center; }
-.cgauge-title { font-size:15px; font-weight:800; letter-spacing:-0.3px; margin-bottom:6px; }
+.cgauge-title { font-size:clamp(12px, 1.1vw, 15px); font-weight:800; letter-spacing:-0.3px; margin-bottom:6px; }
 .cgauge-sub {
   display: inline-block;
-  font-size: 16px; font-weight: 700;
+  font-size: clamp(9px, 0.9vw, 16px); font-weight: 700;
   text-transform: uppercase; letter-spacing: 1px;
   padding: 3px 10px; border-radius: 20px; border: 1px solid;
 }
@@ -1234,26 +1363,6 @@ canvas { display:block !important; position:relative; z-index:1; }
   letter-spacing: -0.2px;
   white-space: nowrap;
 }
-
-/* ══ RUBROS ══ */
-.rubros-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:20px; }
-.rubro-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:14px 12px; text-align:center; cursor:pointer; transition:all 0.25s ease; position:relative; overflow:hidden; user-select:none; }
-.rubro-card:hover { box-shadow:0 8px 24px rgba(0,0,0,0.09); transform:translateY(-3px); }
-.rubro-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
-.rubro-card.normal::before     { background:var(--yellow); }
-.rubro-card.col0::before       { background:#64748b; }
-.rubro-card.renovacion::before { background:#06b6d4; }
-.rubro-card.reestruc::before   { background:#f97316; }
-.rubro-card.ampliacion::before { background:#a855f7; }
-.rubro-nombre  { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:10px; }
-.rubro-total   { font-size:28px; font-weight:800; line-height:1; letter-spacing:-1px; margin-bottom:2px; }
-.rubro-card.normal .rubro-total     { color:var(--yellow); }
-.rubro-card.col0 .rubro-total       { color:#64748b; }
-.rubro-card.renovacion .rubro-total { color:#06b6d4; }
-.rubro-card.reestruc .rubro-total   { color:#f97316; }
-.rubro-card.ampliacion .rubro-total { color:#a855f7; }
-.rubro-inc-badge { display:inline-flex; align-items:center; gap:4px; background:#fef2f2; border:1px solid #fecaca; border-radius:4px; padding:3px 8px; font-size:10px; font-weight:700; color:#dc2626; }
-.rubro-inc-badge.cero { background:#f0fdf4; border-color:#bbf7d0; color:#059669; }
 
 
 /* ══ KPI DELTA — ticker bursátil ══ */
@@ -2414,7 +2523,7 @@ video { pointer-events:none; outline:none; }
       </div>
       <div class="sb-brand-text">
         <div class="sb-brand-name">Cualli</div>
-        <div class="sb-brand-sub">TESI · Control</div>
+        <div class="sb-brand-sub">Panel de Control</div>
       </div>
     </div>
 
@@ -2738,21 +2847,12 @@ const ICONOS_KPI = {
   incidencias: 'https://lottie.host/61521474-d22f-4343-846e-8b0d8fcc66cd/Ls48KmaclD.lottie'
 };
 
-const ICONOS_CIERRE = {
-  e1: 'https://cdn-icons-mp4.freepik.com/512/16678/16678351.mp4',
-  e2: 'https://cdn-icons-mp4.freepik.com/512/13311/13311714.mp4',
-  ef: 'https://cdn-icons-mp4.freepik.com/512/13311/13311745.mp4'
-};
-
 const ICONOS_PROYECTOS = {
   totales: 'https://lottie.host/cd989437-547f-4e2c-9c5e-f81b12bb4e11/PebJtnzdsH.lottie',
   avance:  'https://lottie.host/2fd96e0c-a553-422c-a361-103e55f5d88b/yu6ESuKVCQ.lottie',
   dias:    'https://lottie.host/59b2f153-d5e0-4bea-91bf-d96236dd79a4/sYyO9FpGiQ.lottie'
 };
 
-const ICONO_VIGNETTE = 'https://cdn-icons-mp4.freepik.com/512/11201/11201834.mp4';
-const vMini = (src, sz, op) =>
-  `<video autoplay loop muted playsinline style="width:${sz}px;height:${sz}px;object-fit:cover;border-radius:50%;opacity:${op};flex-shrink:0;"><source src="${src}" type="video/mp4"></video>`;
 
 const RUBROS_CFG = {
   'Normal':       { cls:'normal',     label:'Normal / Originación', emoji:'🏠', color:'#FDB913' },
@@ -2760,14 +2860,6 @@ const RUBROS_CFG = {
   'Renovación':   { cls:'renovacion', label:'Renovación',           emoji:'🔄', color:'#06b6d4' },
   'Reestructura': { cls:'reestruc',   label:'Reestructura',         emoji:'🔧', color:'#f97316' },
   'Ampliación':   { cls:'ampliacion', label:'Ampliación',           emoji:'📈', color:'#a855f7' }
-};
-
-const COLORES_AREA = {
-  'Comercial': { bg:'#fff7ed', border:'#fed7aa', texto:'#c2410c' },
-  'Cartera':   { bg:'#fdf2f8', border:'#fbcfe8', texto:'#be185d' },
-  'Crédito':   { bg:'#ecfeff', border:'#a5f3fc', texto:'#0e7490' },
-  'Jurídico':  { bg:'#f7fee7', border:'#d9f99d', texto:'#3f6212' },
-  'PLD':       { bg:'#faf5ff', border:'#e9d5ff', texto:'#7c3aed' }
 };
 
 const MESES_L = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -4003,8 +4095,8 @@ function htmlEtapasCierre(datos, label) {
         '<text x="' + CX + '" y="' + (CY - 14) + '" font-family="IBM Plex Sans, sans-serif" font-size="30" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="middle">' + c.val + '</text>' +
         '<text id="sgPct' + safeId + '" x="' + CX + '" y="' + (CY + 10) + '" font-family="IBM Plex Sans, sans-serif" font-size="19" font-weight="700" fill="' + c.light + '" text-anchor="middle" dominant-baseline="middle">' + pct + '%</text>' +
 
-        '<text x="' + (CX - R - SW + 2) + '" y="' + (CY + 18) + '" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#94a3b8" text-anchor="middle">0%</text>' +
-        '<text x="' + (CX + R + SW - 2) + '" y="' + (CY + 18) + '" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#94a3b8" text-anchor="middle">100%</text>' +
+        '<text x="' + (CX - R - SW + 2) + '" y="' + (CY + 18) + '" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">0%</text>' +
+        '<text x="' + (CX + R + SW - 2) + '" y="' + (CY + 18) + '" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">100%</text>' +
       '</svg>';
 
     return '<div class="cgauge-card" style="--col:' + c.col + ';">' +
@@ -4101,51 +4193,6 @@ function htmlDetalleAreas(incidencias, totArea) {
 // ════════════════════════════════════════════════════════════
 function initCharts(datos) {
 
-  // Plugin de sombra — se define localmente (no se registra globalmente para evitar duplicados)
-  const shadowPlugin = {
-    id: 'shadowPlugin',
-    beforeDraw(chart) {
-      const ctx = chart.ctx;
-      ctx.save();
-      ctx.shadowColor   = 'rgba(0,0,0,0.15)';
-      ctx.shadowBlur    = 18;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 6;
-    },
-    afterDraw(chart) {
-      chart.ctx.restore();
-    }
-  };
-
-  // ── Configuración de etiquetas EXTERNA (fuera del arco) ──
-  // ✦ 'display: auto' deja que el plugin decida cuándo omitir si hay solapamiento
-  const externalLabels = {
-    display(ctx) {
-      const total = ctx.dataset.data.reduce((s, v) => s + v, 0);
-      const pct   = total > 0 ? Math.round((ctx.dataset.data[ctx.dataIndex] / total) * 100) : 0;
-      return pct >= 5; // Ocultar si el segmento es < 5% (evita solapamiento en segmentos chicos)
-    },
-    formatter(value, ctx) {
-      const total = ctx.dataset.data.reduce((s, v) => s + v, 0);
-      const pct   = total > 0 ? Math.round((value / total) * 100) : 0;
-      return pct + '%';
-    },
-    color:       '#fff',
-    font:        { family:'IBM Plex Sans', weight:'800', size:12 },
-    anchor:      'center',
-    align:       'center',
-    // Fondo con rounding para legibilidad sobre cualquier color
-    backgroundColor(ctx) {
-      const colors = ctx.dataset.backgroundColor;
-      return Array.isArray(colors) ? colors[ctx.dataIndex] : colors;
-    },
-    borderRadius: 4,
-    padding:      { top:3, bottom:3, left:6, right:6 },
-    // ✦ textShadowBlur da legibilidad sin necesitar borde blanco
-    textShadowBlur:  4,
-    textShadowColor: 'rgba(0,0,0,0.4)',
-    clip:            false,
-  };
 
   // ══════════════════════════════════════════════════════════
   // ANIMACIÓN SVG — stroke-dashoffset + countUp
@@ -4488,8 +4535,8 @@ const SEC_PANEL_CFG = {
     }
   },
   'sec-ciberseguridad': {
-    icon: '🔒',
-    name: 'Control de Ciberseguridad',
+    icon: 'https://cdn-icons-mp4.freepik.com/512/18113/18113621.mp4',
+    name: 'Panel de Ciberseguridad',
     sub:  'Seguimiento de proyectos y hallazgos de Contraloría Operativa',
     render: (body) => {
       body.innerHTML = htmlClockLoader('Cargando ciberseguridad', 'Obteniendo datos del sistema...');
@@ -4505,7 +4552,7 @@ const SEC_PANEL_CFG = {
   },
 
   'sec-proyectos': {
-    icon: '📈',
+    icon: 'https://cdn-icons-mp4.freepik.com/512/14313/14313933.mp4',
     name: 'Panel de Proyectos',
     sub:  'Gestión y seguimiento de proyectos de Contraloría',
     render: (body) => {
@@ -4528,7 +4575,11 @@ function sbNavegar(anclaId, itemEl) {
   if (cfg) {
     // ── Abrir panel full-screen ──
     const body = document.getElementById('secPanelBody');
-    document.getElementById('secPanelIcon').textContent = cfg.icon;
+    if (cfg.icon.startsWith('http')) {
+      document.getElementById('secPanelIcon').innerHTML = '<video autoplay loop muted playsinline style="width:48px;height:48px;object-fit:cover;border-radius:4px;"><source src="' + cfg.icon + '" type="video/mp4"></video>';
+    } else {
+      document.getElementById('secPanelIcon').textContent = cfg.icon;
+    }
     document.getElementById('secPanelName').textContent = cfg.name;
     document.getElementById('secPanelSub').textContent  = cfg.sub;
     body.innerHTML = htmlClockLoader('Cargando');
@@ -5272,10 +5323,18 @@ function htmlProyectosEstadoRiesgoPremium(kpis) {
           <div style="width:12px; height:12px; border-radius:50%; background:${cfg.color}; box-shadow:0 0 0 3px color-mix(in srgb, ${cfg.color} 20%, transparent); flex-shrink:0;"></div>
           <span style="font-size:14px; font-weight:700; color:#1e293b; line-height:1.2;">${estado}</span>
         </div>
-        <div onclick="abrirEstadoPanel('${estado}', '${cfg.color}')" style="width: 44px; height: 44px; background: linear-gradient(135deg, ${cfg.light}, ${cfg.color}); border-radius: 50%; border: 3px solid ${cfg.dark}; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; font-weight: 900; box-shadow: 0 4px 10px color-mix(in srgb, ${cfg.color} 40%, transparent); flex-shrink: 0; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
-          onmouseenter="this.style.transform='scale(1.15)';this.style.boxShadow='0 6px 20px '+this.style.borderColor"
-          onmouseleave="this.style.transform='scale(1)';this.style.boxShadow=''">
-          ${count}
+        <div class="area-circle-wrap" style="flex-shrink:0; width:54px; height:54px;">
+          <svg class="area-orbit orbit-cw" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="29" fill="none" stroke="${cfg.color}" stroke-width="2" stroke-dasharray="20 163" stroke-linecap="round" opacity="0.6"/>
+          </svg>
+          <svg class="area-orbit orbit-ccw" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="29" fill="none" stroke="${cfg.light}" stroke-width="2" stroke-dasharray="18 165" stroke-linecap="round" opacity="0.7"/>
+          </svg>
+          <div onclick="abrirEstadoPanel('${estado}', '${cfg.color}')" style="position:absolute;top:4px;left:4px;width:46px;height:46px;background:linear-gradient(135deg,${cfg.light},${cfg.color});border-radius:50%;border:3px solid ${cfg.dark};display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:900;box-shadow:0 4px 12px ${cfg.color}40;cursor:pointer;transition:transform 0.2s;"
+            onmouseenter="this.style.transform='scale(1.1)'"
+            onmouseleave="this.style.transform='scale(1)'">
+            ${count}
+          </div>
         </div>
       <div style="width:1px; height:32px; background:rgba(0,0,0,0.08); flex-shrink:0; margin:0 4px;"></div>
       <div style="flex: 1; max-width: 450px;"> ${barSVG}
@@ -5719,344 +5778,6 @@ function htmlProyectosTipoDistribucion(proyectos) {
   `;
 }
 
-function htmlProyectosEstadoRiesgo(kpis) {
-  const { porEstado, total } = kpis;
-  
-
-  // Ordenar estados
-  const estadosOrdenados = Object.entries(porEstado || {})
-    .filter(([_, count]) => count > 0)
-    .sort((a, b) => {
-      const orderA = ESTADOS_CONFIG[a[0]]?.order || 99;
-      const orderB = ESTADOS_CONFIG[b[0]]?.order || 99;
-      return orderA - orderB;
-    });
-
-  const maxCount = Math.max(...estadosOrdenados.map(([_, c]) => c), 1);
-
-  // Generar barras de estado
-  let barrasHtml = '';
-  estadosOrdenados.forEach(([estado, count], idx) => {
-    const config = ESTADOS_CONFIG[estado] || { color: '#64748B', icon: '📁' };
-    const pct = (count / maxCount) * 100;
-    const pctTotal = total > 0 ? Math.round((count / total) * 100) : 0;
-    
-    barrasHtml += `
-      <div class="estado-bar-row">
-        <div class="estado-bar-label">
-          <span class="estado-bar-icon">${config.icon}</span>
-          <span class="estado-bar-name">${estado}</span>
-        </div>
-        <div class="estado-bar-track">
-          <div class="estado-bar-fill" style="width: ${pct}%; background: linear-gradient(90deg, ${config.color}, ${config.color}dd);">
-            <span class="estado-bar-value">${count}</span>
-          </div>
-        </div>
-        <div class="estado-bar-pct">${pctTotal}%</div>
-      </div>
-    `;
-  });
-
-  // Datos de riesgo
-  const riesgoAlto = kpis.riesgoAlto || 0;
-  const riesgoMedio = kpis.riesgoMedio || 0;
-  const riesgoBajo = kpis.riesgoBajo || 0;
-  const totalRiesgo = riesgoAlto + riesgoMedio + riesgoBajo;
-
-  // Calcular ángulos para el gauge
-  const pctAlto = totalRiesgo > 0 ? (riesgoAlto / totalRiesgo) : 0;
-  const pctMedio = totalRiesgo > 0 ? (riesgoMedio / totalRiesgo) : 0;
-  const pctBajo = totalRiesgo > 0 ? (riesgoBajo / totalRiesgo) : 0;
-
-  // Score de riesgo (0-100, donde 100 es todo alto riesgo)
-  const riskScore = totalRiesgo > 0 
-    ? Math.round(((riesgoAlto * 100) + (riesgoMedio * 50) + (riesgoBajo * 0)) / totalRiesgo)
-    : 0;
-
-  // Gauge SVG semicircular
-  const gaugeHtml = createRiskGauge(riskScore, riesgoAlto, riesgoMedio, riesgoBajo, totalRiesgo);
-
-  return `
-    <style>
-      .estado-riesgo-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 30px;
-        margin-top: 20px;
-      }
-      @media (max-width: 900px) {
-        .estado-riesgo-grid { grid-template-columns: 1fr; }
-      }
-      
-      /* Barras de estado */
-      .estado-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 28px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-        border: 1px solid #E2E8F0;
-      }
-      .estado-card-title {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 24px;
-      }
-      .estado-card-num {
-        font-size: 14px;
-        font-weight: 800;
-        color: var(--yellow);
-        font-family: 'IBM Plex Sans', sans-serif;
-      }
-      .estado-card-text h4 {
-        font-size: 16px;
-        font-weight: 700;
-        color: #1E293B;
-        margin: 0;
-      }
-      .estado-card-text p {
-        font-size: 12px;
-        color: #64748B;
-        margin: 4px 0 0;
-      }
-      
-      .estado-bar-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 14px;
-      }
-      .estado-bar-row:last-child { margin-bottom: 0; }
-      
-      .estado-bar-label {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 180px;
-        flex-shrink: 0;
-      }
-      .estado-bar-icon { font-size: 16px; }
-      .estado-bar-name {
-        font-size: 13px;
-        font-weight: 600;
-        color: #334155;
-        white-space: nowrap;
-      }
-      
-      .estado-bar-track {
-        flex: 1;
-        height: 32px;
-        background: #F1F5F9;
-        border-radius: 8px;
-        overflow: hidden;
-        position: relative;
-      }
-      .estado-bar-fill {
-        height: 100%;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        padding-right: 12px;
-        min-width: 40px;
-        transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        box-shadow: inset 0 -2px 0 rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.15);
-      }
-      .estado-bar-value {
-        font-size: 14px;
-        font-weight: 800;
-        color: #fff;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-      }
-      .estado-bar-pct {
-        font-size: 13px;
-        font-weight: 700;
-        color: #64748B;
-        min-width: 40px;
-        text-align: right;
-      }
-      
-      /* Gauge de riesgo */
-      .riesgo-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 28px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-        border: 1px solid #E2E8F0;
-        display: flex;
-        flex-direction: column;
-      }
-      .riesgo-gauge-wrap {
-        display: flex;
-        justify-content: center;
-        margin: 10px 0 20px;
-      }
-      .riesgo-gauge-svg {
-        width: 260px;
-        height: 150px;
-      }
-      
-      .riesgo-legend {
-        display: flex;
-        justify-content: center;
-        gap: 24px;
-        flex-wrap: wrap;
-      }
-      .riesgo-legend-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 16px;
-        background: #F8FAFC;
-        border-radius: 10px;
-        border: 1px solid #E2E8F0;
-        transition: all 0.2s ease;
-      }
-      .riesgo-legend-item:hover {
-        background: #F1F5F9;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      }
-      .riesgo-legend-dot {
-        width: 14px;
-        height: 14px;
-        border-radius: 4px;
-        flex-shrink: 0;
-      }
-      .riesgo-legend-info {
-        display: flex;
-        flex-direction: column;
-      }
-      .riesgo-legend-label {
-        font-size: 12px;
-        font-weight: 600;
-        color: #64748B;
-      }
-      .riesgo-legend-value {
-        font-size: 20px;
-        font-weight: 800;
-        color: #1E293B;
-        line-height: 1.1;
-      }
-    </style>
-    
-    <div class="estado-riesgo-grid">
-      <!-- Card Estados -->
-      <div class="estado-card">
-        <div class="estado-card-title">
-          <span class="estado-card-num">02</span>
-          <div class="estado-card-text">
-            <h4>Estado de Proyectos</h4>
-            <p>Distribución por fase del ciclo de vida</p>
-          </div>
-        </div>
-        <div class="estado-bars">
-          ${barrasHtml || '<p style="color:#94A3B8;text-align:center;">Sin datos de estado</p>'}
-        </div>
-      </div>
-      
-      <!-- Card Riesgo -->
-      <div class="riesgo-card">
-        <div class="estado-card-title">
-          <span class="estado-card-num">03</span>
-          <div class="estado-card-text">
-            <h4>Nivel de Riesgo</h4>
-            <p>Clasificación de proyectos activos</p>
-          </div>
-        </div>
-        ${gaugeHtml}
-      </div>
-    </div>
-  `;
-}
-
-function createRiskGauge(score, alto, medio, bajo, total) {
-  
-  function miniDonut(value, totalVal, color, colorLight, label) {
-    const pct = totalVal > 0 ? Math.round((value / totalVal) * 100) : 0;
-    const radius = 36;
-    const stroke = 8;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (circumference * pct / 100);
-    
-    return `
-      <div class="riesgo-donut-item">
-        <svg class="riesgo-donut-svg" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="${radius}" fill="none" stroke="#E2E8F0" stroke-width="${stroke}"/>
-          <circle cx="50" cy="50" r="${radius}" fill="none" stroke="${color}" stroke-width="${stroke}"
-                  stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
-                  stroke-linecap="round" transform="rotate(-90 50 50)"
-                  style="filter: drop-shadow(0 2px 4px ${colorLight});"/>
-          <text x="50" y="46" text-anchor="middle" dominant-baseline="middle"
-                font-family="'IBM Plex Sans', sans-serif" font-size="22" font-weight="800" fill="${color}">${pct}</text>
-          <text x="50" y="62" text-anchor="middle"
-                font-family="'IBM Plex Sans', sans-serif" font-size="10" font-weight="600" fill="#94A3B8">%</text>
-        </svg>
-        <div class="riesgo-donut-label">
-          <span class="riesgo-donut-dot" style="background: ${color};"></span>
-          <span class="riesgo-donut-name">${label}</span>
-        </div>
-        <div class="riesgo-donut-count">${value} proyecto${value !== 1 ? 's' : ''}</div>
-      </div>
-    `;
-  }
-
-  return `
-    <style>
-      .riesgo-donuts-row {
-        display: flex;
-        justify-content: center;
-        gap: 32px;
-        padding: 20px 0;
-      }
-      .riesgo-donut-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-      }
-      .riesgo-donut-svg {
-        width: 100px;
-        height: 100px;
-      }
-      .riesgo-donut-label {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .riesgo-donut-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 3px;
-      }
-      .riesgo-donut-name {
-        font-size: 13px;
-        font-weight: 700;
-        color: #334155;
-      }
-      .riesgo-donut-count {
-        font-size: 12px;
-        font-weight: 500;
-        color: #64748B;
-      }
-    </style>
-    <div class="riesgo-donuts-row">
-      ${miniDonut(alto, total, '#EF4444', 'rgba(239,68,68,0.3)', 'Alto')}
-      ${miniDonut(medio, total, '#F59E0B', 'rgba(245,158,11,0.3)', 'Medio')}
-      ${miniDonut(bajo, total, '#10B981', 'rgba(16,185,129,0.3)', 'Bajo')}
-    </div>
-  `;
-}
-
-// Función auxiliar para oscurecer un color
-function darkenColor(hex, percent) {
-  const num = parseInt(hex.replace('#', ''), 16);
-  const amt = Math.round(2.55 * percent);
-  const R = Math.max((num >> 16) - amt, 0);
-  const G = Math.max((num >> 8 & 0x00FF) - amt, 0);
-  const B = Math.max((num & 0x0000FF) - amt, 0);
-  return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
-}
 
 function htmlProyectosTabla(proyectos) {
   if (!proyectos || proyectos.length === 0) {
