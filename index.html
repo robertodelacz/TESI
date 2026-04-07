@@ -360,7 +360,7 @@ body {
     0 1px 0 rgba(253,185,19,0.08) inset,
     0 20px 60px rgba(0,0,0,0.45),
     0 4px 16px rgba(0,0,0,0.30);
-  overflow: hidden;
+  overflow: visible;
   /* Textura de ruido sutil */
   background-image:
     url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"),
@@ -373,6 +373,7 @@ body {
   position: absolute;
   top: 0; left: 10%; right: 10%;
   height: 1px;
+  z-index: 0;
   background: linear-gradient(90deg,
     transparent 0%,
     rgba(253,185,19,0.50) 30%,
@@ -385,7 +386,7 @@ body {
 .periodo-card::after {
   content: '';
   position: absolute;
-  top: -40px; left: 50%;
+  top: 0; left: 50%;
   transform: translateX(-50%);
   width: 300px; height: 80px;
   background: radial-gradient(ellipse, rgba(253,185,19,0.07) 0%, transparent 70%);
@@ -462,149 +463,192 @@ body {
   z-index: 1;
 }
 
-/* Selectores estilo caja elegante */
+/* ══ CUSTOM DROPDOWN PREMIUM ══ */
 .select-wrap {
   position: relative;
   flex-shrink: 0;
 }
-.select-wrap::after {
-  content: '▾';
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 11px;
-  color: rgba(253,185,19,0.70);
+.select-wrap .custom-dropdown.open ~ .periodo-status,
+.pc-controls:has(.custom-dropdown.open) ~ .periodo-status {
+  opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s;
 }
-.select-wrap.loading::after {
-  opacity: 0;
-}
+
+/* Select nativo oculto */
 .periodo-select {
-  appearance: none;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(253,185,19,0.25);
-  border-radius: 10px;
-  padding: 12px 40px 12px 18px;
-  font-size: 16px;
+  display: none;
+}
+
+/* Trigger visible */
+.custom-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(253,185,19,0.20);
+  border-radius: 12px;
+  padding: 11px 16px;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  min-height: 46px;
+}
+.custom-trigger:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(253,185,19,0.40);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.20);
+}
+.custom-trigger.open {
+  background: rgba(253,185,19,0.08);
+  border-color: rgba(253,185,19,0.55);
+  box-shadow: 0 0 0 3px rgba(253,185,19,0.10), 0 8px 24px rgba(0,0,0,0.25);
+  border-radius: 12px 12px 0 0;
+}
+.ct-icon img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+}
+.ct-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.ct-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(253,185,19,0.55);
+  line-height: 1;
+  margin-bottom: 3px;
+}
+.ct-value {
+  font-size: 15px;
   font-weight: 700;
   color: #fff;
-  cursor: pointer;
-  font-family: 'IBM Plex Sans', sans-serif;
-  transition: all 0.2s;
-  outline: none;
   letter-spacing: -0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'IBM Plex Sans', sans-serif;
 }
-.periodo-select:hover {
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(253,185,19,0.45);
+.ct-arrow {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s;
+  color: rgba(253,185,19,0.60);
 }
-.periodo-select:focus {
-  background: rgba(253,185,19,0.07);
-  border-color: rgba(253,185,19,0.65);
-  box-shadow: 0 0 0 3px rgba(253,185,19,0.12);
+.custom-trigger.open .ct-arrow {
+  transform: rotate(180deg);
 }
-.periodo-select option { background: #1a2235; color: #fff; }
-.select-anio { min-width: 110px; }
-.select-mes  { min-width: 180px; }
 
-/* ══ LOADING STATE — Spinner elegante en selectores ══ */
-.select-wrap.loading .periodo-select {
-  background: linear-gradient(90deg, 
-    rgba(255,255,255,0.03) 0%, 
-    rgba(253,185,19,0.08) 50%, 
-    rgba(255,255,255,0.03) 100%);
+/* Dropdown panel */
+.custom-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, #1a2235 0%, #151d2e 100%);
+  border: 1px solid rgba(253,185,19,0.25);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  z-index: 999;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.45);
+}
+.custom-dropdown.open {
+  max-height: 320px;
+  opacity: 1;
+  overflow-y: auto;
+}
+.custom-dropdown::-webkit-scrollbar { width: 4px; }
+.custom-dropdown::-webkit-scrollbar-track { background: transparent; }
+.custom-dropdown::-webkit-scrollbar-thumb { background: rgba(253,185,19,0.25); border-radius: 4px; }
+
+/* Opciones */
+.cd-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  border-left: 3px solid transparent;
+}
+.cd-option:hover {
+  background: rgba(253,185,19,0.08);
+  border-left-color: rgba(253,185,19,0.40);
+}
+.cd-option.active {
+  background: rgba(253,185,19,0.12);
+  border-left-color: var(--yellow);
+}
+.cd-option-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.cd-option:hover .cd-option-dot,
+.cd-option.active .cd-option-dot {
+  background: var(--yellow);
+  box-shadow: 0 0 6px rgba(253,185,19,0.40);
+}
+.cd-option-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.65);
+  font-family: 'IBM Plex Sans', sans-serif;
+  transition: color 0.15s;
+}
+.cd-option:hover .cd-option-text { color: #fff; }
+.cd-option.active .cd-option-text { color: var(--yellow); font-weight: 700; }
+.cd-option-check {
+  margin-left: auto;
+  opacity: 0;
+  color: var(--yellow);
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+.cd-option.active .cd-option-check { opacity: 1; }
+.cd-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  margin: 4px 12px;
+}
+
+/* Loading state */
+.select-wrap.loading .custom-trigger {
+  pointer-events: none;
+}
+.select-wrap.loading .ct-value {
+  background: linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(253,185,19,0.15) 50%, rgba(255,255,255,0.1) 100%);
   background-size: 200% 100%;
   animation: selectShimmer 1.5s ease-in-out infinite;
-  pointer-events: none;
-  color: rgba(255,255,255,0.5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 @keyframes selectShimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
-
-/* Mini spinner circular dentro del select */
-.select-spinner {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  pointer-events: none;
-}
-.select-spinner svg {
-  width: 100%;
-  height: 100%;
-  animation: spinnerRotate 1s linear infinite;
-}
-.select-spinner circle {
-  fill: none;
-  stroke: var(--yellow);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-dasharray: 40;
-  stroke-dashoffset: 30;
-}
-@keyframes spinnerRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* ══ MES SELECCIONADO — Glow y animación ══ */
-.select-mes.selected {
-  animation: mesSelectedPulse 0.4s ease-out;
-  box-shadow: 0 0 0 3px rgba(253,185,19,0.25), 0 0 20px rgba(253,185,19,0.15);
-}
-@keyframes mesSelectedPulse {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(253,185,19,0.4); }
-  50% { transform: scale(1.02); box-shadow: 0 0 0 6px rgba(253,185,19,0.2); }
-  100% { transform: scale(1); box-shadow: 0 0 0 3px rgba(253,185,19,0.25), 0 0 20px rgba(253,185,19,0.15); }
-}
-
-/* ══ OPCIONES — Entrada animada ══ */
-.select-mes option {
-  animation: optionFadeIn 0.3s ease-out both;
-}
-.select-mes option:nth-child(1) { animation-delay: 0s; }
-.select-mes option:nth-child(2) { animation-delay: 0.03s; }
-.select-mes option:nth-child(3) { animation-delay: 0.06s; }
-.select-mes option:nth-child(4) { animation-delay: 0.09s; }
-.select-mes option:nth-child(5) { animation-delay: 0.12s; }
-.select-mes option:nth-child(6) { animation-delay: 0.15s; }
-.select-mes option:nth-child(7) { animation-delay: 0.18s; }
-.select-mes option:nth-child(8) { animation-delay: 0.21s; }
-.select-mes option:nth-child(9) { animation-delay: 0.24s; }
-.select-mes option:nth-child(10) { animation-delay: 0.27s; }
-.select-mes option:nth-child(11) { animation-delay: 0.30s; }
-.select-mes option:nth-child(12) { animation-delay: 0.33s; }
-.select-mes option:nth-child(13) { animation-delay: 0.36s; }
-@keyframes optionFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* Estado loaded — breve glow de confirmación */
-.select-wrap.loaded .periodo-select {
-  animation: loadedGlow 0.6s ease-out;
-}
-@keyframes loadedGlow {
-  0% { box-shadow: 0 0 0 0 rgba(253,185,19,0.5); }
-  50% { box-shadow: 0 0 12px 4px rgba(253,185,19,0.3); }
-  100% { box-shadow: none; }
-}
-
-.pc-sep-label {
-  font-size: 20px;
-  font-weight: 300;
-  color: rgba(255,255,255,0.20);
-  flex-shrink: 0;
-  user-select: none;
-}
-/* Mes opcional — highlight sutil cuando está en "Todo el año" */
-.select-mes option:first-child { font-style: italic; opacity: 0.7; }
+.select-anio { min-width: 130px; }
+.select-mes  { min-width: 200px; }
 
 /* Divisor entre selectores y botón */
 .pc-div {
@@ -669,108 +713,109 @@ body {
   z-index: 1;
 }
 
-/* ══ STATUS CHIP — PREMIUM ANIMADO ══ */
+/* ══ STATUS CHIP — REDISEÑO PREMIUM ══ */
 .status-chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  border-radius: 24px;
+  gap: 10px;
+  padding: 10px 20px;
+  border-radius: 30px;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
   position: relative;
   overflow: hidden;
-  animation: chipEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  transition: all 0.4s ease;
+  font-family: 'IBM Plex Sans', sans-serif;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes chipEnter {
-  0% { 
-    opacity: 0; 
-    transform: translateX(20px) scale(0.8); 
-  }
-  100% { 
-    opacity: 1; 
-    transform: translateX(0) scale(1); 
-  }
+/* Entrada animada */
+.status-chip.entering {
+  animation: chipSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes chipSlideIn {
+  0% { opacity: 0; transform: translateY(12px) scale(0.85); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+/* Salida animada */
+.status-chip.exiting {
+  animation: chipSlideOut 0.4s ease-in both;
+}
+@keyframes chipSlideOut {
+  0% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  100% { opacity: 0; transform: translateY(-8px) scale(0.9); filter: blur(3px); }
 }
 
 /* Estado: Cargando */
-.status-chip.cargando { 
-  background: linear-gradient(135deg, rgba(253,185,19,0.15) 0%, rgba(253,185,19,0.25) 100%);
-  border: 1px solid rgba(253,185,19,0.4);
-  color: #FDB913;
-  box-shadow: 0 0 20px rgba(253,185,19,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+.status-chip.cargando {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 1px solid rgba(253,185,19,0.35);
+  color: var(--yellow);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.30), 0 0 15px rgba(253,185,19,0.10), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 .status-chip.cargando::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(253,185,19,0.3), transparent);
-  animation: shimmerChip 1.5s infinite;
+  top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(253,185,19,0.15), transparent);
+  animation: chipShimmer 2s ease infinite;
 }
-@keyframes shimmerChip {
+@keyframes chipShimmer {
   0% { left: -100%; }
   100% { left: 100%; }
 }
 
 /* Estado: Cargado */
-.status-chip.cargado { 
-  background: linear-gradient(135deg, rgba(5,150,105,0.15) 0%, rgba(52,211,153,0.25) 100%);
-  border: 1px solid rgba(52,211,153,0.5);
+.status-chip.cargado {
+  background: linear-gradient(135deg, #0a1f1a 0%, #0d2818 100%);
+  border: 1px solid rgba(52,211,153,0.40);
   color: #34d399;
-  box-shadow: 0 0 20px rgba(52,211,153,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
-  animation: chipEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both, celebrateShake 0.5s ease 0.3s;
-}
-
-@keyframes celebrateShake {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-3px) rotate(-1deg); }
-  40% { transform: translateX(3px) rotate(1deg); }
-  60% { transform: translateX(-2px) rotate(-0.5deg); }
-  80% { transform: translateX(2px) rotate(0.5deg); }
+  box-shadow: 0 4px 20px rgba(0,0,0,0.30), 0 0 15px rgba(52,211,153,0.12), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
 /* Estado: Vacío */
-.status-chip.vacio { 
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.09);
-  color: rgba(255,255,255,0.35);
+.status-chip.vacio {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.30);
 }
 
-/* Spinner circular de progreso */
+/* Spinner premium — doble anillo */
 .status-spinner {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   position: relative;
   flex-shrink: 0;
 }
 .status-spinner svg {
   width: 100%;
   height: 100%;
-  animation: spinStatus 1s linear infinite;
 }
-.status-spinner circle {
+.status-spinner .spin-track {
   fill: none;
-  stroke: currentColor;
+  stroke: rgba(253,185,19,0.15);
+  stroke-width: 2;
+}
+.status-spinner .spin-arc {
+  fill: none;
+  stroke: var(--yellow);
   stroke-width: 2.5;
   stroke-linecap: round;
-  stroke-dasharray: 32;
-  stroke-dashoffset: 24;
+  stroke-dasharray: 28;
+  stroke-dashoffset: 20;
+  animation: spinArc 1s linear infinite;
+  transform-origin: center;
 }
-@keyframes spinStatus {
+@keyframes spinArc {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-/* Check animado */
+/* Check animado premium */
 .status-check {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   position: relative;
   flex-shrink: 0;
 }
@@ -778,14 +823,13 @@ body {
   width: 100%;
   height: 100%;
 }
-.status-check circle {
-  fill: currentColor;
-  opacity: 0.2;
-  animation: checkCirclePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+.status-check .check-bg {
+  fill: rgba(52,211,153,0.15);
+  animation: checkPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
-.status-check polyline {
+.status-check .check-mark {
   fill: none;
-  stroke: currentColor;
+  stroke: #34d399;
   stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -793,62 +837,37 @@ body {
   stroke-dashoffset: 20;
   animation: checkDraw 0.4s ease 0.2s forwards;
 }
-@keyframes checkCirclePop {
-  0% { transform: scale(0); opacity: 0; }
-  50% { transform: scale(1.2); opacity: 0.3; }
-  100% { transform: scale(1); opacity: 0.2; }
+@keyframes checkPop {
+  0% { r: 0; opacity: 0; }
+  60% { r: 9; opacity: 0.25; }
+  100% { r: 7.5; opacity: 0.15; }
 }
 @keyframes checkDraw {
   to { stroke-dashoffset: 0; }
 }
 
-/* Confetti particles */
-.status-confetti {
-  position: absolute;
-  top: 50%;
-  left: 20px;
-  pointer-events: none;
-}
-.status-confetti span {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  animation: confettiBurst 0.6s ease-out forwards;
-}
-.status-confetti span:nth-child(1) { background: #34d399; animation-delay: 0s; --angle: -30deg; --dist: 25px; }
-.status-confetti span:nth-child(2) { background: #fbbf24; animation-delay: 0.05s; --angle: -60deg; --dist: 20px; }
-.status-confetti span:nth-child(3) { background: #60a5fa; animation-delay: 0.1s; --angle: -90deg; --dist: 28px; }
-.status-confetti span:nth-child(4) { background: #f472b6; animation-delay: 0.08s; --angle: -120deg; --dist: 22px; }
-.status-confetti span:nth-child(5) { background: #a78bfa; animation-delay: 0.12s; --angle: -150deg; --dist: 26px; }
-.status-confetti span:nth-child(6) { background: #34d399; animation-delay: 0.03s; --angle: 30deg; --dist: 24px; }
-.status-confetti span:nth-child(7) { background: #fbbf24; animation-delay: 0.07s; --angle: 60deg; --dist: 30px; }
-.status-confetti span:nth-child(8) { background: #60a5fa; animation-delay: 0.11s; --angle: 90deg; --dist: 20px; }
-
-@keyframes confettiBurst {
-  0% {
-    transform: translate(0, 0) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(
-      calc(cos(var(--angle)) * var(--dist)),
-      calc(sin(var(--angle)) * var(--dist))
-    ) scale(0);
-    opacity: 0;
-  }
-}
-
-/* Texto con pulse en cargando */
+/* Texto */
 .status-text {
   position: relative;
+  font-size: 12px;
+  letter-spacing: 0.3px;
 }
 .status-chip.cargando .status-text {
-  animation: textPulse 1.5s ease-in-out infinite;
+  animation: textBreath 2s ease-in-out infinite;
 }
-@keyframes textPulse {
+@keyframes textBreath {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  50% { opacity: 0.5; }
+}
+
+/* Dot separador decorativo */
+.status-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.3;
+  flex-shrink: 0;
 }
 
 /* ── Contenedores — fondo blanco sólido, video no se cuela ── */
@@ -2635,22 +2654,41 @@ video { pointer-events:none; outline:none; }
     <div class="pc-controls">
 
       <!-- Año -->
-      <div class="select-wrap">
-        <select class="periodo-select select-anio" id="selectAnio" onchange="onCambioAnio()">
+      <div class="select-wrap select-anio" id="wrapAnio">
+        <select class="periodo-select" id="selectAnio" onchange="onCambioAnio()">
           <option value="2026">2026</option>
           <option value="2025">2025</option>
           <option value="2024">2024</option>
         </select>
+        <div class="custom-trigger" onclick="toggleDropdown('wrapAnio')">
+          <span class="ct-icon">
+            <img src="https://cdn-icons-png.freepik.com/512/2413/2413875.png?ga=GA1.1.711744155.1769975270" alt="Icono año"></span>
+          <div class="ct-text">
+            <span class="ct-label">Año</span>
+            <span class="ct-value" id="ctAnioValue">2026</span>
+          </div>
+          <span class="ct-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+        <div class="custom-dropdown" id="ddAnio"></div>
       </div>
 
       <!-- Separador visual -->
       <div class="pc-sep-label">·</div>
 
       <!-- Mes — opcional -->
-      <div class="select-wrap pc-mes-wrap">
-        <select class="periodo-select select-mes" id="selectMes" onchange="onCambioMes()">
+      <div class="select-wrap select-mes pc-mes-wrap" id="wrapMes">
+        <select class="periodo-select" id="selectMes" onchange="onCambioMes()">
           <option value="">Todo el año</option>
         </select>
+        <div class="custom-trigger" onclick="toggleDropdown('wrapMes')">
+          <span class="ct-icon">🗓️</span>
+          <div class="ct-text">
+            <span class="ct-label">Mes</span>
+            <span class="ct-value" id="ctMesValue">Todo el año</span>
+          </div>
+          <span class="ct-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+        <div class="custom-dropdown" id="ddMes"></div>
       </div>
 
       <div class="pc-div"></div>
@@ -2932,6 +2970,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mesesConDatos.length > 0) {
       document.getElementById('selectMes').value = String(mesesConDatos[0]);
     }
+    var ctMes = document.getElementById('ctMesValue');
+    if (ctMes) {
+      var mesSelect = document.getElementById('selectMes');
+      var opt = mesSelect.options[mesSelect.selectedIndex];
+      ctMes.textContent = opt ? opt.textContent : 'Todo el año';
+    }
     verReporte();
   });
 });
@@ -3205,59 +3249,84 @@ window.switchVistaAnio = function(vista) {
   document.getElementById(vista==='resumen' ? 'btnResumen' : 'btnTimeline').classList.add('active');
 };
 
-function setStatus(tipo, texto) {
+function setStatus(tipo, texto, autoRevert) {
   const chip = document.getElementById('statusChip');
   const prevTipo = chip.dataset.tipo || '';
-  
-  // Forzar re-animación
-  chip.style.animation = 'none';
-  void chip.offsetWidth;
-  chip.style.animation = '';
-  
-  chip.dataset.tipo = tipo;
-  chip.className = `status-chip ${tipo}`;
-  
-  if (tipo === 'cargando') {
-    // Spinner circular + texto con pulse
-    chip.innerHTML = `
-      <div class="status-spinner">
-        <svg viewBox="0 0 16 16">
-          <circle cx="8" cy="8" r="6"/>
-        </svg>
-      </div>
-      <span class="status-text">${texto}</span>
-    `;
-  } else if (tipo === 'cargado') {
-    // Check animado + confetti
-    chip.innerHTML = `
-      <div class="status-check">
-        <svg viewBox="0 0 16 16">
-          <circle cx="8" cy="8" r="7"/>
-          <polyline points="4,8 7,11 12,5"/>
-        </svg>
-      </div>
-      <span class="status-text">${texto}</span>
-      ${prevTipo === 'cargando' ? `
-        <div class="status-confetti">
-          <span></span><span></span><span></span><span></span>
-          <span></span><span></span><span></span><span></span>
-        </div>
-      ` : ''}
-    `;
-    
-    // Limpiar confetti después de la animación
-    if (prevTipo === 'cargando') {
-      setTimeout(() => {
-        const confetti = chip.querySelector('.status-confetti');
-        if (confetti) confetti.remove();
-      }, 700);
-    }
-  } else {
-    // Vacío - solo texto
-    chip.innerHTML = `<span class="status-text">${texto}</span>`;
-  }
-}
 
+  // Cancelar cualquier timer previo
+  if (window._statusTimer) {
+    clearTimeout(window._statusTimer);
+    window._statusTimer = null;
+  }
+
+  // Animación de salida → esperar → entrada nueva
+  chip.classList.add('exiting');
+  chip.classList.remove('entering');
+
+  setTimeout(() => {
+    chip.dataset.tipo = tipo;
+    chip.className = 'status-chip ' + tipo;
+
+    if (tipo === 'cargando') {
+      chip.innerHTML =
+        '<div class="status-spinner">' +
+          '<svg viewBox="0 0 18 18">' +
+            '<circle class="spin-track" cx="9" cy="9" r="7"/>' +
+            '<circle class="spin-arc" cx="9" cy="9" r="7"/>' +
+          '</svg>' +
+        '</div>' +
+        '<span class="status-text">' + texto + '</span>';
+
+    } else if (tipo === 'cargado') {
+      chip.innerHTML =
+        '<div class="status-check">' +
+          '<svg viewBox="0 0 18 18">' +
+            '<circle class="check-bg" cx="9" cy="9" r="7.5"/>' +
+            '<polyline class="check-mark" points="5,9 8,12 13,6"/>' +
+          '</svg>' +
+        '</div>' +
+        '<span class="status-text">' + texto + '</span>';
+
+    } else {
+      chip.innerHTML =
+        '<span class="status-text">' + texto + '</span>';
+    }
+
+    // Animación de entrada
+    chip.classList.remove('exiting');
+    chip.classList.add('entering');
+
+    // Auto-revert: después de N segundos, volver al estado del período
+    if (autoRevert || tipo === 'cargado') {
+      window._statusTimer = setTimeout(() => {
+        var anio = document.getElementById('selectAnio').value;
+        var mesSelect = document.getElementById('selectMes');
+        var mesVal = mesSelect.value;
+        var mesNombre = mesVal ? mesSelect.options[mesSelect.selectedIndex].textContent : '';
+        var revertText = mesNombre ? mesNombre + ' ' + anio : 'Año ' + anio;
+
+        // Salida suave
+        chip.classList.add('exiting');
+        chip.classList.remove('entering');
+
+        setTimeout(() => {
+          chip.dataset.tipo = 'cargado';
+          chip.className = 'status-chip cargado';
+          chip.innerHTML =
+            '<div class="status-check">' +
+              '<svg viewBox="0 0 18 18">' +
+                '<circle class="check-bg" cx="9" cy="9" r="7.5"/>' +
+                '<polyline class="check-mark" points="5,9 8,12 13,6"/>' +
+              '</svg>' +
+            '</div>' +
+            '<span class="status-text">' + revertText + '</span>';
+          chip.classList.remove('exiting');
+          chip.classList.add('entering');
+        }, 400);
+      }, 3000);
+    }
+  }, prevTipo ? 300 : 0);
+}
 // ════════════════════════════════════
 // RENDER PRINCIPAL
 // ════════════════════════════════════
@@ -6452,6 +6521,101 @@ function cerrarKPIPanel() {
   document.getElementById('kpiPanelOverlay').classList.remove('open');
   document.getElementById('kpiPanel').classList.remove('open');
 }
+
+
+// ══════════════════════════════════════════════════════════
+// CUSTOM DROPDOWN PREMIUM
+// ══════════════════════════════════════════════════════════
+
+function toggleDropdown(wrapId) {
+  var wrap = document.getElementById(wrapId);
+  var trigger = wrap.querySelector('.custom-trigger');
+  var dropdown = wrap.querySelector('.custom-dropdown');
+  var isOpen = dropdown.classList.contains('open');
+  var statusChip = document.getElementById('statusChip');
+
+  // Cerrar todos primero
+  document.querySelectorAll('.custom-dropdown.open').forEach(function(dd) {
+    dd.classList.remove('open');
+    dd.closest('.select-wrap').querySelector('.custom-trigger').classList.remove('open');
+  });
+  if (statusChip) statusChip.style.opacity = '1';
+
+  if (!isOpen) {
+    // Construir opciones desde el select nativo
+    var select = wrap.querySelector('select');
+    var html = '';
+    Array.from(select.options).forEach(function(opt, idx) {
+      var isActive = opt.value === select.value;
+      var isFirst = idx === 0 && wrapId === 'wrapMes';
+      html += '<div class="cd-option' + (isActive ? ' active' : '') + '"' +
+        ' data-value="' + opt.value + '"' +
+        ' onclick="selectOption(\'' + wrapId + '\', \'' + opt.value + '\', this)">' +
+        '<span class="cd-option-dot"></span>' +
+        '<span class="cd-option-text"' + (isFirst ? ' style="font-style:italic;opacity:0.7;"' : '') + '>' + opt.textContent + '</span>' +
+        '<span class="cd-option-check">✓</span>' +
+      '</div>';
+      if (isFirst) html += '<div class="cd-divider"></div>';
+    });
+    dropdown.innerHTML = html;
+    trigger.classList.add('open');
+    dropdown.classList.add('open');
+    if (statusChip) statusChip.style.opacity = '0';
+  }
+}
+
+function selectOption(wrapId, value, optionEl) {
+  var wrap = document.getElementById(wrapId);
+  var select = wrap.querySelector('select');
+  var trigger = wrap.querySelector('.custom-trigger');
+  var dropdown = wrap.querySelector('.custom-dropdown');
+  var valueDisplay = trigger.querySelector('.ct-value');
+
+  // Actualizar select nativo
+  select.value = value;
+
+  // Actualizar texto visible
+  var selectedOption = select.options[select.selectedIndex];
+  valueDisplay.textContent = selectedOption ? selectedOption.textContent : value;
+
+  // Actualizar estado activo
+  dropdown.querySelectorAll('.cd-option').forEach(function(o) {
+    o.classList.remove('active');
+  });
+  optionEl.classList.add('active');
+
+  // Cerrar dropdown
+  trigger.classList.remove('open');
+  dropdown.classList.remove('open');
+
+  // Disparar el onchange del select nativo
+  select.dispatchEvent(new Event('change'));
+}
+
+// Cerrar dropdown al hacer click fuera
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.select-wrap')) {
+    document.querySelectorAll('.custom-dropdown.open').forEach(function(dd) {
+      dd.classList.remove('open');
+      dd.closest('.select-wrap').querySelector('.custom-trigger').classList.remove('open');
+    });
+    var statusChip = document.getElementById('statusChip');
+    if (statusChip) statusChip.style.opacity = '1';
+  }
+});
+
+// Sincronizar el display cuando JS cambia el select programáticamente
+var origPoblarMeses = poblarMeses;
+poblarMeses = function(anio) {
+  origPoblarMeses(anio);
+  // Actualizar display del mes
+  var mesSelect = document.getElementById('selectMes');
+  var ctMes = document.getElementById('ctMesValue');
+  if (ctMes && mesSelect) {
+    var opt = mesSelect.options[mesSelect.selectedIndex];
+    ctMes.textContent = opt ? opt.textContent : 'Todo el año';
+  }
+};
 
 </script>
 </body>
