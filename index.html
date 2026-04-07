@@ -2771,6 +2771,35 @@ video { pointer-events:none; outline:none; }
   </div>
 </div>
 
+<!-- ══ PANEL DETALLE KPI EXPEDIENTES ══ -->
+<div class="tipo-panel-overlay" id="kpiPanelOverlay" onclick="cerrarKPIPanel()"></div>
+<div class="tipo-panel" id="kpiPanel">
+  <div class="tp-header">
+    <div class="tp-header-stripe" id="kpStripe"></div>
+    <button class="tp-close" onclick="cerrarKPIPanel()">×</button>
+    <div class="tp-tipo-name" id="kpName">—</div>
+    <div class="tp-tipo-sub" id="kpSub">Detalle de expedientes</div>
+  </div>
+  <div class="tp-kpis" style="grid-template-columns:1fr;">
+    <div class="tp-kpi">
+      <div class="tp-kpi-val gray" id="kpTotal">0</div>
+      <div class="tp-kpi-label">Total Expedientes</div>
+    </div>
+  </div>
+  <div class="tp-section">
+    <div class="tp-sec-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      Listado de expedientes
+    </div>
+    <div id="kpExpList"></div>
+  </div>
+</div>
+
 <!-- ══ PANEL DETALLE TIPO EXPEDIENTE ══ -->
 <div class="tipo-panel-overlay" id="tipoPanelOverlay" onclick="cerrarTipoPanel()"></div>
 <div class="tipo-panel" id="tipoPanel">
@@ -3553,7 +3582,7 @@ function htmlKPIs(total, completos, incidencias, pctC, pctI, label, prev, prevNo
           ${delta(total, prev?.total, false)}
         </div>
       </div>
-      <div class="kpi-box completos">
+      <div class="kpi-box completos" onclick="abrirKPIPanel('completos')" style="cursor:pointer;">
         <div class="kpi-box-inner">
           <div class="kpi-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
           <div class="kpi-icon-wrap">${lottie(ICONOS_KPI.completos)}</div>
@@ -3562,7 +3591,7 @@ function htmlKPIs(total, completos, incidencias, pctC, pctI, label, prev, prevNo
           ${delta(completos, prev?.sinIncidencias, false)}
         </div>
       </div>
-      <div class="kpi-box incidencias">
+      <div class="kpi-box incidencias" onclick="abrirKPIPanel('incidencias')" style="cursor:pointer;">
         <div class="kpi-box-inner">
           <div class="kpi-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
           <div class="kpi-icon-wrap">${lottie(ICONOS_KPI.incidencias)}</div>
@@ -5309,11 +5338,31 @@ function htmlProyectosEstadoRiesgoPremium(kpis) {
             '<feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/>' +
             '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>' +
           '</filter>' +
+          '<linearGradient id="shL1' + safeN + '" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="' + Math.round(BW * 0.4) + '" y2="0">' +
+            '<stop offset="0%" stop-color="rgba(255,255,255,0)"/>' +
+            '<stop offset="50%" stop-color="rgba(255,255,255,0.35)"/>' +
+            '<stop offset="100%" stop-color="rgba(255,255,255,0)"/>' +
+            '<animate attributeName="x1" values="-' + Math.round(BW * 0.4) + ';' + BW + '" dur="3s" repeatCount="indefinite"/>' +
+            '<animate attributeName="x2" values="0;' + Math.round(BW * 1.4) + '" dur="3s" repeatCount="indefinite"/>' +
+          '</linearGradient>' +
+          '<linearGradient id="shL2' + safeN + '" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="' + Math.round(BW * 0.25) + '" y2="0">' +
+            '<stop offset="0%" stop-color="rgba(255,255,255,0)"/>' +
+            '<stop offset="50%" stop-color="rgba(255,255,255,0.2)"/>' +
+            '<stop offset="100%" stop-color="rgba(255,255,255,0)"/>' +
+            '<animate attributeName="x1" values="-' + Math.round(BW * 0.25) + ';' + BW + '" dur="1.8s" repeatCount="indefinite"/>' +
+            '<animate attributeName="x2" values="0;' + Math.round(BW * 1.25) + '" dur="1.8s" repeatCount="indefinite"/>' +
+          '</linearGradient>' +
+          '<clipPath id="barClip' + safeN + '">' +
+            '<rect x="0" y="' + (CY - BH/2) + '" width="' + wBar + '" height="' + BH + '" rx="' + R_PILL + '" ry="' + R_PILL + '"/>' +
+          '</clipPath>' +
         '</defs>' +
         '<rect x="0" y="' + (CY - BH/2) + '" width="' + BW + '" height="' + BH + '" rx="' + R_PILL + '" ry="' + R_PILL + '" fill="#e2e8f0"/>' +
         '<rect id="bArea' + safeN + '" x="0" y="' + (CY - BH/2) + '" width="' + wBar + '" height="' + BH + '" rx="' + R_PILL + '" ry="' + R_PILL + '" fill="url(#gA' + safeN + ')" filter="url(#fA' + safeN + ')"/>' +
+        '<rect x="0" y="' + (CY - BH/2) + '" width="' + BW + '" height="' + BH + '" rx="' + R_PILL + '" ry="' + R_PILL + '" fill="url(#shL1' + safeN + ')" clip-path="url(#barClip' + safeN + ')" pointer-events="none"/>' +
+        '<rect x="0" y="' + (CY - BH/2) + '" width="' + BW + '" height="' + BH + '" rx="' + R_PILL + '" ry="' + R_PILL + '" fill="url(#shL2' + safeN + ')" clip-path="url(#barClip' + safeN + ')" pointer-events="none"/>' +
         '<rect x="0" y="' + (CY - BH/2) + '" width="' + BW + '" height="' + Math.round(BH * 0.38) + '" rx="' + R_PILL + '" ry="' + R_PILL + '" fill="rgba(255,255,255,0.22)" pointer-events="none"/>' +
-        '<text id="pctA' + safeN + '" x="' + (wBar - R_PILL - 4) + '" y="' + CY + '" font-family="IBM Plex Sans, sans-serif" font-size="14" font-weight="800" fill="rgba(255,255,255,0.95)" text-anchor="end" dominant-baseline="middle">' + pct + '%</text>' +
+        '<text x="' + (wBar - R_PILL - 3) + '" y="' + (CY + 1) + '" font-family="IBM Plex Sans, sans-serif" font-size="14" font-weight="800" fill="' + cfg.dark + '" text-anchor="end" dominant-baseline="middle">' + pct + '%</text>' +
+        '<text id="pctA' + safeN + '" x="' + (wBar - R_PILL - 4) + '" y="' + CY + '" font-family="IBM Plex Sans, sans-serif" font-size="14" font-weight="800" fill="#ffffff" text-anchor="end" dominant-baseline="middle">' + pct + '%</text>' +
         '<circle id="dotA' + safeN + '" cx="' + wBar + '" cy="' + CY + '" r="' + DOT_R + '" fill="#fff" stroke="' + cfg.color + '" stroke-width="3.5"/>' +
       '</svg>';
 
@@ -5323,18 +5372,10 @@ function htmlProyectosEstadoRiesgoPremium(kpis) {
           <div style="width:12px; height:12px; border-radius:50%; background:${cfg.color}; box-shadow:0 0 0 3px color-mix(in srgb, ${cfg.color} 20%, transparent); flex-shrink:0;"></div>
           <span style="font-size:14px; font-weight:700; color:#1e293b; line-height:1.2;">${estado}</span>
         </div>
-        <div class="area-circle-wrap" style="flex-shrink:0; width:54px; height:54px;">
-          <svg class="area-orbit orbit-cw" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="32" cy="32" r="29" fill="none" stroke="${cfg.color}" stroke-width="2" stroke-dasharray="20 163" stroke-linecap="round" opacity="0.6"/>
-          </svg>
-          <svg class="area-orbit orbit-ccw" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="32" cy="32" r="29" fill="none" stroke="${cfg.light}" stroke-width="2" stroke-dasharray="18 165" stroke-linecap="round" opacity="0.7"/>
-          </svg>
-          <div onclick="abrirEstadoPanel('${estado}', '${cfg.color}')" style="position:absolute;top:4px;left:4px;width:46px;height:46px;background:linear-gradient(135deg,${cfg.light},${cfg.color});border-radius:50%;border:3px solid ${cfg.dark};display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:900;box-shadow:0 4px 12px ${cfg.color}40;cursor:pointer;transition:transform 0.2s;"
-            onmouseenter="this.style.transform='scale(1.1)'"
-            onmouseleave="this.style.transform='scale(1)'">
-            ${count}
-          </div>
+        <div class="area-circle-wrap" style="flex-shrink:0;width:54px;height:54px;">
+          <svg class="area-orbit orbit-cw" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="none" stroke="${cfg.color}" stroke-width="2" stroke-dasharray="20 163" stroke-linecap="round" opacity="0.6"></circle></svg>
+          <svg class="area-orbit orbit-ccw" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="none" stroke="${cfg.light}" stroke-width="1.5" stroke-dasharray="12 170" stroke-linecap="round" opacity="0.4"></circle></svg>
+          <div onclick="abrirEstadoPanel('${estado}', '${cfg.color}')" style="position:absolute;top:4px;left:4px;width:46px;height:46px;background:linear-gradient(135deg,${cfg.light},${cfg.color});border-radius:50%;border:3px solid ${cfg.dark};display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:900;box-shadow:0 4px 12px ${cfg.color}40;cursor:pointer;transition:transform 0.2s;" onmouseenter="this.style.transform='scale(1.1)'" onmouseleave="this.style.transform='scale(1)'">${count}</div>
         </div>
       <div style="width:1px; height:32px; background:rgba(0,0,0,0.08); flex-shrink:0; margin:0 4px;"></div>
       <div style="flex: 1; max-width: 450px;"> ${barSVG}
@@ -6299,6 +6340,119 @@ function toggleCSTabla() {
     label.textContent = 'Colapsar';
   }
 }
+
+// ══ PANEL DETALLE KPI — COMPLETOS E INCIDENCIAS ══
+function abrirKPIPanel(tipo) {
+  var datos = datosMostrados;
+  var anio = parseInt(document.getElementById('selectAnio').value);
+  var mes = document.getElementById('selectMes').value;
+
+  var expedientes = [];
+
+  if (tipo === 'completos') {
+    document.getElementById('kpStripe').style.background = '#10B981';
+    document.getElementById('kpName').textContent = 'Expedientes Sin Incidencias';
+    document.getElementById('kpName').style.color = '#10B981';
+    document.getElementById('kpSub').textContent = 'Expedientes completados sin observaciones';
+
+    if (datos && datos.completosUniverso) {
+      // Reporte mensual
+      expedientes = datos.completosUniverso.map(function(exp) {
+        return {
+          id: exp.id,
+          fecha: exp.fecha,
+          tipo: exp.tipo || ''
+        };
+      });
+    } else if (!mes && CACHE[anio]) {
+      // Reporte anual
+      Object.values(CACHE[anio]).forEach(function(d) {
+        if (d.completosUniverso) {
+          d.completosUniverso.forEach(function(exp) {
+            expedientes.push({
+              id: exp.id,
+              fecha: exp.fecha,
+              tipo: exp.tipo || ''
+            });
+          });
+        }
+      });
+    }
+
+  } else {
+    document.getElementById('kpStripe').style.background = '#EF4444';
+    document.getElementById('kpName').textContent = 'Expedientes Con Incidencias';
+    document.getElementById('kpName').style.color = '#EF4444';
+    document.getElementById('kpSub').textContent = 'Expedientes con observaciones pendientes';
+
+    if (datos && datos.incidencias) {
+      expedientes = datos.incidencias.map(function(exp) {
+        return {
+          id: exp.id,
+          fecha: exp.fecha,
+          tipo: exp.tipo || ''
+        };
+      });
+    } else if (!mes && incidenciasAnuales && incidenciasAnuales.length) {
+      expedientes = incidenciasAnuales.map(function(exp) {
+        return {
+          id: exp.id,
+          fecha: exp.fecha,
+          tipo: exp.tipo || ''
+        };
+      });
+    }
+  }
+
+  // Ordenar por tipo y luego por fecha
+expedientes.sort(function(a, b) {
+  var fA = a.fecha ? a.fecha.split('/').reverse().join('-') : '';
+  var fB = b.fecha ? b.fecha.split('/').reverse().join('-') : '';
+
+  if (fA !== fB) {
+    return fA.localeCompare(fB);
+  }
+
+  return (a.tipo || '').localeCompare(b.tipo || '');
+});
+  document.getElementById('kpTotal').textContent = expedientes.length;
+  document.getElementById('kpTotal').style.color = tipo === 'completos' ? '#10B981' : '#EF4444';
+
+  var listEl = document.getElementById('kpExpList');
+
+  if (expedientes.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;padding:32px;color:#94a3b8;font-size:14px;">Sin expedientes</div>';
+  } else {
+    var html = '<table class="tp-exp-table"><thead><tr>' +
+      '<th>ID Oportunidad</th>' +
+      '<th>Tipo</th>' +
+      '<th>Fecha de Firma</th>' +
+      '</tr></thead><tbody>';
+
+    expedientes.forEach(function(exp) {
+      var cls = tipoCSSClass(exp.tipo);
+      html += '<tr>' +
+        '<td><span class="tp-exp-id">' + (exp.id || '—') + '</span></td>' +
+        '<td>' + (exp.tipo
+          ? '<span class="tipo-badge ' + cls + '">' + exp.tipo + '</span>'
+          : '<span style="color:#94a3b8;">—</span>') + '</td>' +
+        '<td><span class="tp-exp-fecha">' + (exp.fecha || '—') + '</span></td>' +
+      '</tr>';
+    });
+
+    html += '</tbody></table>';
+    listEl.innerHTML = html;
+  }
+
+  document.getElementById('kpiPanelOverlay').classList.add('open');
+  document.getElementById('kpiPanel').classList.add('open');
+}
+
+function cerrarKPIPanel() {
+  document.getElementById('kpiPanelOverlay').classList.remove('open');
+  document.getElementById('kpiPanel').classList.remove('open');
+}
+
 </script>
 </body>
 </html>
