@@ -6,10 +6,6 @@
 <title>TESI · Control de Calidad · Financiera Cualli</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- ✦ Chart.js SIN el bundle que auto-registra DataLabels -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<!-- ✦ DataLabels como plugin separado, se registra manualmente UNA sola vez -->
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <!-- ✦ dotLottie Player para animaciones Lottie -->
 <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
 
@@ -2561,10 +2557,10 @@ video { pointer-events:none; outline:none; }
         <span class="sb-item-label">Resumen General</span>
       </a>
 
-      <a class="sb-item" data-tip="Expedientes por Tipo"
-         onclick="sbNavegar('sec-tipos',this)">
-        <span class="sb-item-icon">🗂️</span>
-        <span class="sb-item-label">Expedientes por Tipo</span>
+      <a class="sb-item" data-tip="Cierre por Etapa"
+         onclick="sbNavegar('sec-cierre',this)">
+        <span class="sb-item-icon">🏁</span>
+        <span class="sb-item-label">Cierre por Etapa</span>
       </a>
 
       <a class="sb-item" data-tip="Distribución de Áreas"
@@ -2573,10 +2569,10 @@ video { pointer-events:none; outline:none; }
         <span class="sb-item-label">Distribución Áreas</span>
       </a>
 
-      <a class="sb-item" data-tip="Cierre por Etapa"
-         onclick="sbNavegar('sec-cierre',this)">
-        <span class="sb-item-icon">🏁</span>
-        <span class="sb-item-label">Cierre por Etapa</span>
+      <a class="sb-item" data-tip="Expedientes por Tipo"
+         onclick="sbNavegar('sec-tipos',this)">
+        <span class="sb-item-icon">🗂️</span>
+        <span class="sb-item-label">Expedientes por Tipo</span>
       </a>
 
       <div class="sb-divider"></div>
@@ -2891,7 +2887,6 @@ video { pointer-events:none; outline:none; }
 //   se importa como ChartDataLabels (variable global del CDN)
 //   y se registra una única vez aquí.
 // ════════════════════════════════════════════════════════════
-Chart.register(ChartDataLabels);
 
 // ════════════════════════════════════
 // CONFIG
@@ -3375,10 +3370,10 @@ function renderReporte(datos, nombreMes, anio, datosPrev, nombreMesPrev) {
   requestAnimationFrame(() => {
     cont.innerHTML =
       htmlKPIs(datos.total, datos.sinIncidencias, datos.conIncidencias, pctC, pctI, `${nombreMes} ${anio}`, datosPrev, nombreMesPrev) +
-      htmlRubros(datos.conteoPorTipo, datos.incidencias||[], `${nombreMes} ${anio}`) +
-      htmlDistribucion(totArea, totalIncs, `${nombreMes} ${anio}`) +
-      htmlExpedientes(datos.incidencias||[]) +
       htmlEtapasCierre(datos, `${nombreMes} ${anio}`) +
+      htmlDistribucion(totArea, totalIncs, `${nombreMes} ${anio}`) +
+      htmlRubros(datos.conteoPorTipo, datos.incidencias||[], `${nombreMes} ${anio}`) +
+      htmlExpedientes(datos.incidencias||[]) +
       htmlDetalleAreas(datos.incidencias||[], totArea);
 
     // ✦ 80ms para que el layout quede pintado antes de que Chart.js mida los contenedores
@@ -3388,9 +3383,18 @@ function renderReporte(datos, nombreMes, anio, datosPrev, nombreMesPrev) {
 
 // Inyectar IDs de ancla en las secciones tras renderizar
 function inyectarAnclas() {
-  const secciones = document.querySelectorAll('.kpi-section, .rep-section');
-  const ids = ['sec-resumen','sec-tipos','sec-distribucion','sec-incidencias','sec-cierre','sec-detalle'];
-  secciones.forEach((sec, i) => { if (ids[i]) sec.id = ids[i]; });
+  const kpiSec = document.querySelector('.kpi-section');
+  if (kpiSec) kpiSec.id = 'sec-resumen';
+
+  document.querySelectorAll('.rep-section').forEach(sec => {
+    const html = sec.innerHTML;
+    if (html.includes('Efectividad de Cumplimiento')) sec.id = 'sec-cierre';
+    else if (html.includes('Expedientes por Tipo')) sec.id = 'sec-tipos';
+    else if (html.includes('Distribución de Incidencias')) sec.id = 'sec-distribucion';
+    else if (html.includes('Expedientes con Incidencias')) sec.id = 'sec-incidencias';
+    else if (html.includes('Detalle por Área')) sec.id = 'sec-detalle';
+  });
+
   ['sec-incidencias','sec-detalle'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
@@ -3916,7 +3920,7 @@ const barrasSVG =
   }).join('');
 
   return '<div class="rep-section">' +
-    '<div class="sec-titulo">' + secTitulo(2, 'Expedientes por Tipo', 'Distribución del universo evaluado por tipo de colocación', label) + '</div>' +
+    '<div class="sec-titulo">' + secTitulo(4, 'Expedientes por Tipo', 'Distribución del universo evaluado por tipo de colocación', label) + '</div>' +
     '<div class="rtype-grid" id="rtypeGrid">' + tarjetas + '</div>' +
   '</div>';
 }
@@ -4239,7 +4243,7 @@ if (solv && (solv.diasPromedio > 0 || solv.pasivoCalidad > 0)) {
   var colorsRes = getGaugeColors('#10b981');
   var colorsPas = getGaugeColors(pasColor);
 
-  var renderGaugeDesign = function(id, val, pct, colors) {
+var renderGaugeDesign = function(id, val, pct, colors) {
     var R = 72, SW = 13, SZW = 220, SZH = 140;
     var CX = SZW / 2, CY = SZH - 18, Ri = R - SW - 6;
     var SEMI = parseFloat((Math.PI * R).toFixed(4));
@@ -4249,7 +4253,7 @@ if (solv && (solv.diasPromedio > 0 || solv.pasivoCalidad > 0)) {
     var dotY = (CY - R * Math.sin(angle)).toFixed(2);
 
     return `
-      <svg viewBox="0 0 ${SZW} ${SZH}" style="width:100%; max-width:260px; height:auto; display:block; margin:0 auto; filter:drop-shadow(0 8px 20px rgba(0,0,0,0.12));">
+      <svg viewBox="0 0 ${SZW} ${SZH}" style="width:200px !important; max-width:200px !important; height:auto !important; display:block; margin:0 auto; filter:drop-shadow(0 8px 20px rgba(0,0,0,0.12));">
         <defs>
           <linearGradient id="grad${id}" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stop-color="${colors.light}"/><stop offset="100%" stop-color="${colors.col}"/>
@@ -4267,11 +4271,12 @@ if (solv && (solv.diasPromedio > 0 || solv.pasivoCalidad > 0)) {
         <path d="M ${CX-R},${CY} A ${R},${R} 0 0,1 ${CX+R},${CY}" fill="none" stroke="url(#grad${id})" stroke-width="${SW}" stroke-linecap="round" stroke-dasharray="${SEMI}" stroke-dashoffset="${targetOff}" filter="url(#glow${id})"/>
         ${pct > 0 ? `<circle cx="${dotX}" cy="${dotY}" r="${SW/2+1}" fill="${colors.col}"/><circle cx="${dotX}" cy="${dotY}" r="${SW/2+4}" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55"><animate attributeName="r" values="${SW/2+4};${SW/2+10};${SW/2+4}" dur="1.8s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="1.8s" repeatCount="indefinite"/></circle>` : ''}
         <circle cx="${CX}" cy="${CY}" r="${Ri}" fill="url(#ctr${id})"/>
-        <text x="${CX}" y="${CY - 12}" font-family="sans-serif" font-size="32" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="middle">${val}</text>
-        <text x="${CX}" y="${CY + 12}" font-family="sans-serif" font-size="18" font-weight="700" fill="${colors.light}" text-anchor="middle" dominant-baseline="middle">${pct}%</text>
+        <text x="${CX}" y="${CY - 14}" font-family="IBM Plex Sans, sans-serif" font-size="30" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="middle">${val}</text>
+        <text x="${CX}" y="${CY + 10}" font-family="IBM Plex Sans, sans-serif" font-size="19" font-weight="700" fill="${colors.light}" text-anchor="middle" dominant-baseline="middle">${pct}%</text>
+        <text x="${CX - R - SW + 2}" y="${CY + 18}" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">0%</text>
+        <text x="${CX + R + SW - 2}" y="${CY + 18}" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">100%</text>
       </svg>`;
   };
-
   solventacionHTML = `
     <div style="margin-top:28px; padding-top:28px; border-top:1px solid rgba(253,185,19,0.12); font-family: sans-serif;">
       
@@ -4282,8 +4287,10 @@ if (solv && (solv.diasPromedio > 0 || solv.pasivoCalidad > 0)) {
 
       <div style="display:grid; grid-template-columns: 1.2fr 110px 1.2fr; gap:0; align-items:stretch;">
 
-        <div style="background:${glassStyle.bg}; border:${glassStyle.border}; backdrop-filter:${glassStyle.blur}; border-radius:20px 0 0 20px; padding:35px 25px; text-align:center;">
-          <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px;">
+        <div class="cgauge-card" style="border-radius:20px 0 0 20px !important; display:flex; flex-direction:column; overflow:hidden; padding:0;">
+          <div style="height:3px; background:${colorsRes.col}; flex-shrink:0;"></div>
+          <div style="padding:32px 25px; text-align:center; flex:1;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px;">
             <div style="width:24px; height:24px; background:rgba(16,185,129,0.1); border-radius:6px; display:flex; align-items:center; justify-content:center; color:#10b981; font-size:12px;">✓</div>
             <span style="font-size:11px; font-weight:800; color:#059669; text-transform:uppercase; letter-spacing:1.5px;">Resueltas</span>
           </div>
@@ -4291,6 +4298,7 @@ if (solv && (solv.diasPromedio > 0 || solv.pasivoCalidad > 0)) {
           <div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; margin-top:15px; letter-spacing:1px;">incidencias</div>
           <div style="height:1px; background:rgba(0,0,0,0.06); margin:20px 0;"></div>
           <div style="font-size:13px; font-weight:600; color:#475569;">🕒 Tiempo promedio: <span style="color:${velColor}; font-weight:900; font-size:16px;">${solv.diasPromedio} días</span></div>
+          </div>
         </div>
 
         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; background:#0f1623; color:#fff; z-index:2; box-shadow:0 0 30px rgba(0,0,0,0.25);">
@@ -4299,8 +4307,10 @@ if (solv && (solv.diasPromedio > 0 || solv.pasivoCalidad > 0)) {
           <div style="font-size:9px; color:rgba(255,255,255,0.4); font-weight:700; text-transform:uppercase; margin-top:5px;">incidencias</div>
         </div>
 
-        <div style="background:${glassStyle.bg}; border:${glassStyle.border}; backdrop-filter:${glassStyle.blur}; border-radius:0 20px 20px 0; padding:35px 25px; text-align:center;">
-          <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px;">
+        <div class="cgauge-card" style="border-radius:0 20px 20px 0 !important; display:flex; flex-direction:column; overflow:hidden; padding:0;">
+          <div style="height:3px; background:${colorsPas.col}; flex-shrink:0;"></div>
+          <div style="padding:32px 25px; text-align:center; flex:1;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px;">
             <div style="width:24px;height:24px;background:rgba(239,68,68,0.12);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;">✗</div>
             <span style="font-size:10px;font-weight:800;color:' + pasColor + ';text-transform:uppercase;letter-spacing:1.5px;">Sin Solventar</span>
           </div>
@@ -4309,6 +4319,7 @@ if (solv && (solv.diasPromedio > 0 || solv.pasivoCalidad > 0)) {
           <div style="height:1px; background:rgba(0,0,0,0.06); margin:20px 0;"></div>
           <div style="font-size:12px; font-weight:600; color:#475569; margin-bottom:4px;">🕒 Tiempo transcurrido sin solventar:</div>
           <div style="font-size:17px; font-weight:900; color:${solv.diasPromedioPasivo > 0 ? diasPasColor : '#94a3b8'};">${solv.diasPromedioPasivo || 0} días</div>
+          </div>
         </div>
 
       </div>
@@ -4316,7 +4327,7 @@ if (solv && (solv.diasPromedio > 0 || solv.pasivoCalidad > 0)) {
 }
 
     return '<div class="rep-section">' +
-    '<div class="sec-titulo">' + secTitulo(4, 'Efectividad de Cumplimiento Global', 'Destino del 100% de los expedientes evaluados en el período', label || '') + '</div>' +
+    '<div class="sec-titulo">' + secTitulo(2, 'Efectividad de Cumplimiento Global', 'Destino del 100% de los expedientes evaluados en el período', label || '') + '</div>' +
     '<div class="cgauge-grid" style="grid-template-columns: repeat(4, 1fr);">' + tarjetas + '</div>' +
     solventacionHTML +
   '</div>';
@@ -4814,7 +4825,7 @@ function cerrarSecPanel() {
 
 // Actualizar item activo al hacer scroll
 window.addEventListener('scroll', () => {
-  const anclas = ['sec-resumen','sec-tipos','sec-distribucion','sec-cierre'];
+  const anclas = ['sec-resumen','sec-cierre','sec-distribucion','sec-tipos'];
   let activa = anclas[0];
   anclas.forEach(id => {
     const el = document.getElementById(id);
