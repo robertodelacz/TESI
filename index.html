@@ -4209,9 +4209,116 @@ function htmlEtapasCierre(datos, label) {
     '</div>';
   }).join('');
 
-  return '<div class="rep-section">' +
+var solventacionHTML = '';
+var solv = datos.solventacion;
+
+if (solv && (solv.diasPromedio > 0 || solv.pasivoCalidad > 0)) {
+  // 1. Lógica de negocio (Sin cambios)
+  var totalIncidencias = (solv.totalIncResueltas || 0) + (solv.pasivoCalidad || 0);
+  var porcResueltas = totalIncidencias > 0 ? Math.round((solv.totalIncResueltas / totalIncidencias) * 100) : 0;
+  var porcPasivo = totalIncidencias > 0 ? Math.round((solv.pasivoCalidad / totalIncidencias) * 100) : 0;
+
+  var velColor = solv.diasPorIncidencia <= 1 ? '#10b981' : solv.diasPorIncidencia <= 2.5 ? '#f59e0b' : '#ef4444';
+  var pasColor = solv.pasivoCalidad === 0 ? '#10b981' : solv.pasivoCalidad <= 10 ? '#f59e0b' : '#ef4444';
+  var diasPasColor = solv.diasPromedioPasivo <= 15 ? '#f59e0b' : '#ef4444';
+
+  // 2. Estilo Único: Amarillo Glassmorphism (Basado en tus otras tarjetas)
+  var glassStyle = {
+    bg: 'linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(253, 185, 19, 0.12))',
+    border: '1px solid rgba(253, 185, 19, 0.3)',
+    blur: 'blur(12px)'
+  };
+
+  // 3. Colores para el SVG (Basado en el estatus para el tacómetro)
+  var getGaugeColors = function(baseColor) {
+    if (baseColor === '#10b981') return { col: baseColor, light: '#34d399' };
+    if (baseColor === '#f59e0b') return { col: baseColor, light: '#fbbf24' };
+    return { col: baseColor, light: '#f87171' };
+  };
+
+  var colorsRes = getGaugeColors('#10b981');
+  var colorsPas = getGaugeColors(pasColor);
+
+  var renderGaugeDesign = function(id, val, pct, colors) {
+    var R = 72, SW = 13, SZW = 220, SZH = 140;
+    var CX = SZW / 2, CY = SZH - 18, Ri = R - SW - 6;
+    var SEMI = parseFloat((Math.PI * R).toFixed(4));
+    var targetOff = parseFloat((SEMI * (1 - pct / 100)).toFixed(4));
+    var angle = Math.PI * (1 - pct / 100);
+    var dotX = (CX + R * Math.cos(angle)).toFixed(2);
+    var dotY = (CY - R * Math.sin(angle)).toFixed(2);
+
+    return `
+      <svg viewBox="0 0 ${SZW} ${SZH}" style="width:100%; max-width:260px; height:auto; display:block; margin:0 auto; filter:drop-shadow(0 8px 20px rgba(0,0,0,0.12));">
+        <defs>
+          <linearGradient id="grad${id}" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="${colors.light}"/><stop offset="100%" stop-color="${colors.col}"/>
+          </linearGradient>
+          <filter id="glow${id}" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <radialGradient id="ctr${id}" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#3d4a5c"/><stop offset="100%" stop-color="#1e2533"/>
+          </radialGradient>
+        </defs>
+        <path d="M ${CX-R-SW-8},${CY} A ${R+SW+8},${R+SW+8} 0 0,1 ${CX+R+SW+8},${CY}" fill="none" stroke="${colors.col}" stroke-width="12" opacity="0.09"/>
+        <path d="M ${CX-R-2},${CY} A ${R+2},${R+2} 0 0,1 ${CX+R+2},${CY}" fill="none" stroke="${colors.col}" stroke-width="8" opacity="0.16"/>
+        <path d="M ${CX-R},${CY} A ${R},${R} 0 0,1 ${CX+R},${CY}" fill="none" stroke="#e2e8f0" stroke-width="${SW}" stroke-linecap="round"/>
+        <path d="M ${CX-R},${CY} A ${R},${R} 0 0,1 ${CX+R},${CY}" fill="none" stroke="url(#grad${id})" stroke-width="${SW}" stroke-linecap="round" stroke-dasharray="${SEMI}" stroke-dashoffset="${targetOff}" filter="url(#glow${id})"/>
+        ${pct > 0 ? `<circle cx="${dotX}" cy="${dotY}" r="${SW/2+1}" fill="${colors.col}"/><circle cx="${dotX}" cy="${dotY}" r="${SW/2+4}" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55"><animate attributeName="r" values="${SW/2+4};${SW/2+10};${SW/2+4}" dur="1.8s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="1.8s" repeatCount="indefinite"/></circle>` : ''}
+        <circle cx="${CX}" cy="${CY}" r="${Ri}" fill="url(#ctr${id})"/>
+        <text x="${CX}" y="${CY - 12}" font-family="sans-serif" font-size="32" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="middle">${val}</text>
+        <text x="${CX}" y="${CY + 12}" font-family="sans-serif" font-size="18" font-weight="700" fill="${colors.light}" text-anchor="middle" dominant-baseline="middle">${pct}%</text>
+      </svg>`;
+  };
+
+  solventacionHTML = `
+    <div style="margin-top:28px; padding-top:28px; border-top:1px solid rgba(253,185,19,0.12); font-family: sans-serif;">
+      
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:28px;">
+        <div style="width:28px; height:28px; background:linear-gradient(135deg,#FDB913,#f59e0b); border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#fff;">⚡</div>
+        <div style="font-size:16px; font-weight:800; color:#0f1623; letter-spacing:-0.3px;">Solventación vs Pasivo</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1.2fr 110px 1.2fr; gap:0; align-items:stretch;">
+
+        <div style="background:${glassStyle.bg}; border:${glassStyle.border}; backdrop-filter:${glassStyle.blur}; border-radius:20px 0 0 20px; padding:35px 25px; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px;">
+            <div style="width:24px; height:24px; background:rgba(16,185,129,0.1); border-radius:6px; display:flex; align-items:center; justify-content:center; color:#10b981; font-size:12px;">✓</div>
+            <span style="font-size:11px; font-weight:800; color:#059669; text-transform:uppercase; letter-spacing:1.5px;">Resueltas</span>
+          </div>
+          ${renderGaugeDesign('res', solv.totalIncResueltas, porcResueltas, colorsRes)}
+          <div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; margin-top:15px; letter-spacing:1px;">incidencias</div>
+          <div style="height:1px; background:rgba(0,0,0,0.06); margin:20px 0;"></div>
+          <div style="font-size:13px; font-weight:600; color:#475569;">🕒 Tiempo promedio: <span style="color:${velColor}; font-weight:900; font-size:16px;">${solv.diasPromedio} días</span></div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; background:#0f1623; color:#fff; z-index:2; box-shadow:0 0 30px rgba(0,0,0,0.25);">
+          <div style="font-size:10px; font-weight:800; color:#FDB913; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;">Total</div>
+          <div style="font-size:42px; font-weight:900; line-height:1;">${totalIncidencias}</div>
+          <div style="font-size:9px; color:rgba(255,255,255,0.4); font-weight:700; text-transform:uppercase; margin-top:5px;">incidencias</div>
+        </div>
+
+        <div style="background:${glassStyle.bg}; border:${glassStyle.border}; backdrop-filter:${glassStyle.blur}; border-radius:0 20px 20px 0; padding:35px 25px; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px;">
+            <div style="width:24px;height:24px;background:rgba(239,68,68,0.12);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;">✗</div>
+            <span style="font-size:10px;font-weight:800;color:' + pasColor + ';text-transform:uppercase;letter-spacing:1.5px;">Sin Solventar</span>
+          </div>
+          ${renderGaugeDesign('pas', solv.pasivoCalidad, porcPasivo, colorsPas)}
+          <div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; margin-top:15px; letter-spacing:1px;">incidencias</div>
+          <div style="height:1px; background:rgba(0,0,0,0.06); margin:20px 0;"></div>
+          <div style="font-size:12px; font-weight:600; color:#475569; margin-bottom:4px;">🕒 Tiempo transcurrido sin solventar:</div>
+          <div style="font-size:17px; font-weight:900; color:${solv.diasPromedioPasivo > 0 ? diasPasColor : '#94a3b8'};">${solv.diasPromedioPasivo || 0} días</div>
+        </div>
+
+      </div>
+    </div>`;
+}
+
+    return '<div class="rep-section">' +
     '<div class="sec-titulo">' + secTitulo(4, 'Efectividad de Cumplimiento Global', 'Destino del 100% de los expedientes evaluados en el período', label || '') + '</div>' +
     '<div class="cgauge-grid" style="grid-template-columns: repeat(4, 1fr);">' + tarjetas + '</div>' +
+    solventacionHTML +
   '</div>';
 }
 
