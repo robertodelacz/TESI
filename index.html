@@ -4158,7 +4158,7 @@ function htmlEtapasCierre(datos, label) {
     const targetOff = parseFloat((SEMI * (1 - pct / 100)).toFixed(4));
 
     const svgSemi =
-      '<svg viewBox="0 0 ' + SZW + ' ' + SZH + '" style="width:100%; height:auto; display:block; margin:0 auto; filter:drop-shadow(0 6px 16px rgba(0,0,0,0.10));" xmlns="http://www.w3.org/2000/svg">' +
+      '<svg viewBox="0 0 ' + SZW + ' ' + SZH + '" style="width:100%; height:auto; display:block; margin:0 auto; transform: scale(1.15); filter:drop-shadow(0 6px 16px rgba(0,0,0,0.10));" xmlns="http://www.w3.org/2000/svg">' +
         '<defs>' +
           '<linearGradient id="sg' + safeId + '" x1="0%" y1="0%" x2="100%" y2="0%">' +
             '<stop offset="0%"   stop-color="' + c.light + '"/>' +
@@ -4177,14 +4177,14 @@ function htmlEtapasCierre(datos, label) {
         '<path d="M ' + (CX - R - SW - 8) + ',' + CY + ' A ' + (R + SW + 8) + ',' + (R + SW + 8) + ' 0 0,1 ' + (CX + R + SW + 8) + ',' + CY + '" fill="none" stroke="' + c.col + '" stroke-width="12" opacity="0.09"/>' +
         '<path d="M ' + (CX - R - 2) + ',' + CY + ' A ' + (R + 2) + ',' + (R + 2) + ' 0 0,1 ' + (CX + R + 2) + ',' + CY + '" fill="none" stroke="' + c.col + '" stroke-width="8" opacity="0.16"/>' +
         '<path d="M ' + (CX - R) + ',' + CY + ' A ' + R + ',' + R + ' 0 0,1 ' + (CX + R) + ',' + CY + '" fill="none" stroke="#e2e8f0" stroke-width="' + SW + '" stroke-linecap="round"/>' +
-        '<path id="sgArc' + safeId + '" d="M ' + (CX - R) + ',' + CY + ' A ' + R + ',' + R + ' 0 0,1 ' + (CX + R) + ',' + CY + '" fill="none" stroke="url(#sg' + safeId + ')" stroke-width="' + SW + '" stroke-linecap="round" stroke-dasharray="' + SEMI + '" stroke-dashoffset="' + targetOff + '" filter="url(#sgGlw' + safeId + ')"/>' +
+        '<path id="sgArc' + safeId + '" d="M ' + (CX - R) + ',' + CY + ' A ' + R + ',' + R + ' 0 0,1 ' + (CX + R) + ',' + CY + '" fill="none" stroke="url(#sg' + safeId + ')" stroke-width="' + SW + '" stroke-linecap="round" stroke-dasharray="' + SEMI + '" stroke-dashoffset="' + SEMI + '" filter="url(#sgGlw' + safeId + ')"/>' +
 
         (pct > 0 ? (function() {
           var angle = Math.PI * (1 - pct / 100);
           var dotX = (CX + R * Math.cos(angle)).toFixed(2);
           var dotY = (CY - R * Math.sin(angle)).toFixed(2);
-          return '<circle cx="' + dotX + '" cy="' + dotY + '" r="' + (SW / 2 + 1) + '" fill="' + c.col + '"/>' +
-                 '<circle cx="' + dotX + '" cy="' + dotY + '" r="' + (SW / 2 + 4) + '" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55">' +
+          return '<circle id="sgDot' + safeId + '" cx="' + dotX + '" cy="' + dotY + '" r="' + (SW / 2 + 1) + '" fill="' + c.col + '" opacity="0"/>' +
+                 '<circle id="sgDotHalo' + safeId + '" cx="' + dotX + '" cy="' + dotY + '" r="' + (SW / 2 + 4) + '" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55" opacity="0">' +
                    '<animate attributeName="r" values="' + (SW / 2 + 4) + ';' + (SW / 2 + 10) + ';' + (SW / 2 + 4) + '" dur="1.8s" repeatCount="indefinite"/>' +
                    '<animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="1.8s" repeatCount="indefinite"/>' +
                  '</circle>';
@@ -4195,13 +4195,13 @@ function htmlEtapasCierre(datos, label) {
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + Ri + '" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>' +
 
         '<text x="' + CX + '" y="' + (CY - 14) + '" font-family="IBM Plex Sans, sans-serif" font-size="30" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="middle">' + c.val + '</text>' +
-        '<text id="sgPct' + safeId + '" x="' + CX + '" y="' + (CY + 10) + '" font-family="IBM Plex Sans, sans-serif" font-size="19" font-weight="700" fill="' + c.light + '" text-anchor="middle" dominant-baseline="middle">' + pct + '%</text>' +
+        '<text id="sgPct' + safeId + '" x="' + CX + '" y="' + (CY + 10) + '" font-family="IBM Plex Sans, sans-serif" font-size="19" font-weight="700" fill="' + c.light + '" text-anchor="middle" dominant-baseline="middle">0%</text>' +
 
         '<text x="' + (CX - R - SW + 2) + '" y="' + (CY + 18) + '" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">0%</text>' +
         '<text x="' + (CX + R + SW - 2) + '" y="' + (CY + 18) + '" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">100%</text>' +
       '</svg>';
 
-    return '<div class="cgauge-card" style="--col:' + c.col + ';">' +
+    return '<div class="cgauge-card" data-id="' + safeId + '" data-pct="' + pct + '" data-semi="' + SEMI + '" style="--col:' + c.col + ';">' +
       '<div style="height:3px;background:' + c.col + ';border-radius:18px 18px 0 0;"></div>' +
       '<div class="cgauge-body">' +
         svgSemi +
@@ -4247,13 +4247,12 @@ var renderGaugeDesign = function(id, val, pct, colors) {
     var R = 72, SW = 13, SZW = 220, SZH = 140;
     var CX = SZW / 2, CY = SZH - 18, Ri = R - SW - 6;
     var SEMI = parseFloat((Math.PI * R).toFixed(4));
-    var targetOff = parseFloat((SEMI * (1 - pct / 100)).toFixed(4));
     var angle = Math.PI * (1 - pct / 100);
     var dotX = (CX + R * Math.cos(angle)).toFixed(2);
     var dotY = (CY - R * Math.sin(angle)).toFixed(2);
 
     return `
-      <svg viewBox="0 0 ${SZW} ${SZH}" style="width:200px !important; max-width:200px !important; height:auto !important; display:block; margin:0 auto; filter:drop-shadow(0 8px 20px rgba(0,0,0,0.12));">
+      <svg viewBox="0 0 ${SZW} ${SZH}" style="width:250px !important; max-width:250px !important; height:auto !important; display:block; margin:0 auto; filter:drop-shadow(0 8px 20px rgba(0,0,0,0.12));">
         <defs>
           <linearGradient id="grad${id}" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stop-color="${colors.light}"/><stop offset="100%" stop-color="${colors.col}"/>
@@ -4268,26 +4267,27 @@ var renderGaugeDesign = function(id, val, pct, colors) {
         <path d="M ${CX-R-SW-8},${CY} A ${R+SW+8},${R+SW+8} 0 0,1 ${CX+R+SW+8},${CY}" fill="none" stroke="${colors.col}" stroke-width="12" opacity="0.09"/>
         <path d="M ${CX-R-2},${CY} A ${R+2},${R+2} 0 0,1 ${CX+R+2},${CY}" fill="none" stroke="${colors.col}" stroke-width="8" opacity="0.16"/>
         <path d="M ${CX-R},${CY} A ${R},${R} 0 0,1 ${CX+R},${CY}" fill="none" stroke="#e2e8f0" stroke-width="${SW}" stroke-linecap="round"/>
-        <path d="M ${CX-R},${CY} A ${R},${R} 0 0,1 ${CX+R},${CY}" fill="none" stroke="url(#grad${id})" stroke-width="${SW}" stroke-linecap="round" stroke-dasharray="${SEMI}" stroke-dashoffset="${targetOff}" filter="url(#glow${id})"/>
-        ${pct > 0 ? `<circle cx="${dotX}" cy="${dotY}" r="${SW/2+1}" fill="${colors.col}"/><circle cx="${dotX}" cy="${dotY}" r="${SW/2+4}" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55"><animate attributeName="r" values="${SW/2+4};${SW/2+10};${SW/2+4}" dur="1.8s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="1.8s" repeatCount="indefinite"/></circle>` : ''}
+        <path id="sgArc${id}" d="M ${CX-R},${CY} A ${R},${R} 0 0,1 ${CX+R},${CY}" fill="none" stroke="url(#grad${id})" stroke-width="${SW}" stroke-linecap="round" stroke-dasharray="${SEMI}" stroke-dashoffset="${SEMI}" filter="url(#glow${id})"/>
+        ${pct > 0 ? `<circle id="sgDot${id}" cx="${dotX}" cy="${dotY}" r="${SW/2+1}" fill="${colors.col}" opacity="0"/><circle id="sgDotHalo${id}" cx="${dotX}" cy="${dotY}" r="${SW/2+4}" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55" opacity="0"><animate attributeName="r" values="${SW/2+4};${SW/2+10};${SW/2+4}" dur="1.8s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="1.8s" repeatCount="indefinite"/></circle>` : ''}
         <circle cx="${CX}" cy="${CY}" r="${Ri}" fill="url(#ctr${id})"/>
         <text x="${CX}" y="${CY - 14}" font-family="IBM Plex Sans, sans-serif" font-size="30" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="middle">${val}</text>
-        <text x="${CX}" y="${CY + 10}" font-family="IBM Plex Sans, sans-serif" font-size="19" font-weight="700" fill="${colors.light}" text-anchor="middle" dominant-baseline="middle">${pct}%</text>
+        <text id="sgPct${id}" x="${CX}" y="${CY + 10}" font-family="IBM Plex Sans, sans-serif" font-size="19" font-weight="700" fill="${colors.light}" text-anchor="middle" dominant-baseline="middle">0%</text>
         <text x="${CX - R - SW + 2}" y="${CY + 18}" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">0%</text>
         <text x="${CX + R + SW - 2}" y="${CY + 18}" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">100%</text>
       </svg>`;
-  };
+};
+
   solventacionHTML = `
     <div style="margin-top:28px; padding-top:28px; border-top:1px solid rgba(253,185,19,0.12); font-family: sans-serif;">
       
       <div style="display:flex; align-items:center; gap:12px; margin-bottom:28px;">
         <div style="width:28px; height:28px; background:linear-gradient(135deg,#FDB913,#f59e0b); border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#fff;">⚡</div>
-        <div style="font-size:16px; font-weight:800; color:#0f1623; letter-spacing:-0.3px;">Solventación vs Pasivo</div>
+        <div style="font-size:16px; font-weight:800; color:#0f1623; letter-spacing:-0.3px;">Resolucion de Incidencias</div>
       </div>
 
       <div style="display:grid; grid-template-columns: 1.2fr 110px 1.2fr; gap:0; align-items:stretch;">
 
-        <div class="cgauge-card" style="border-radius:20px 0 0 20px !important; display:flex; flex-direction:column; overflow:hidden; padding:0;">
+        <div class="cgauge-card" data-id="res" data-pct="${porcResueltas}" data-semi="${(Math.PI * 72).toFixed(4)}" style="border-radius:20px 0 0 20px !important; display:flex; flex-direction:column; overflow:hidden; padding:0;">
           <div style="height:3px; background:${colorsRes.col}; flex-shrink:0;"></div>
           <div style="padding:32px 25px; text-align:center; flex:1;">
             <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px;">
@@ -4307,7 +4307,7 @@ var renderGaugeDesign = function(id, val, pct, colors) {
           <div style="font-size:9px; color:rgba(255,255,255,0.4); font-weight:700; text-transform:uppercase; margin-top:5px;">incidencias</div>
         </div>
 
-        <div class="cgauge-card" style="border-radius:0 20px 20px 0 !important; display:flex; flex-direction:column; overflow:hidden; padding:0;">
+        <div class="cgauge-card" data-id="pas" data-pct="${porcPasivo}" data-semi="${(Math.PI * 72).toFixed(4)}" style="border-radius:0 20px 20px 0 !important; display:flex; flex-direction:column; overflow:hidden; padding:0;">
           <div style="height:3px; background:${colorsPas.col}; flex-shrink:0;"></div>
           <div style="padding:32px 25px; text-align:center; flex:1;">
             <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px;">
