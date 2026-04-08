@@ -134,6 +134,8 @@ function obtenerTESIPorPeriodo(periodo) {
   const idxTotalIncidencias = encabezados.indexOf("Total Incidencias");
   const idxDetalle          = encabezados.indexOf("Detalle incidencias"); // col K
   const idxEtapaCierre      = encabezados.indexOf("Etapa Cierre");        // col Ba
+  const idxDiasTotales      = 40;  // AO
+  const idxReduccion        = 41;  // AP
 
   const [anio, mes] = periodo.split("-").map(Number);
 
@@ -186,8 +188,20 @@ function obtenerTESIPorPeriodo(periodo) {
         if      (etapaRaw.includes("1a") || etapaRaw.includes("primera")) etapasCierre['1a Revision']++;
         else if (etapaRaw.includes("2a") || etapaRaw.includes("segunda")) etapasCierre['2a Revision']++;
         else if (etapaRaw.includes("final"))                               etapasCierre['Final']++;
+        // Datos de solventación
+        var diasTotal = parseInt(fila[idxDiasTotales]) || 0;
+        var reduccion = (fila[idxReduccion] || '').toString().trim();
+        
+        listaCompletosUniverso.push({ 
+          id: fila[idxID], 
+          fecha: fechaTexto,
+          etapa: etapaRaw,
+          tipo: normalizarTipo(tipoRaw),
+          diasTotales: diasTotal,
+          reduccion: reduccion
+        });
 
-        listaCompletosUniverso.push({ id: fila[idxID], fecha: fechaTexto });
+     
 
       } else if (estatusRaw === "incidencias") {
         conIncidencias++;
@@ -231,6 +245,70 @@ function obtenerTESIPorPeriodo(periodo) {
   if      (tesi >= 95) bono = "Bono máximo / 15 días";
   else if (tesi >= 90) bono = "Bono medio / 10 días";
   else if (tesi >= 85) bono = "Bono mínimo / 5 días";
+// ══ KPIs DE SOLVENTACIÓN ══
+  
+  // 1. Velocidad: días promedio por incidencia
+  const completosConDias = listaCompletosUniverso.filter(e => e.diasTotales > 0);
+  
+  // Parsear reducción para obtener incidencias iniciales
+  const expedientesConReduccion = listaCompletosUniverso
+    .filter(e => e.reduccion && e.reduccion.includes('→'))
+    .map(e => {
+      const partes = e.reduccion.split('→').map(p => parseInt(p.trim()) || 0);
+      return {
+        id: e.id,
+        diasTotales: e.diasTotales,
+        incInicial: partes[0] || 0,
+        incFinal: partes[1] || 0,
+        incResueltas: Math.max((partes[0] || 0) - (partes[1] || 0), 0),
+        incResiduales: partes[1] || 0
+      };
+    });
+  
+  // Días promedio general
+  const diasPromedio = completosConDias.length > 0
+    ? Math.round(completosConDias.reduce((s, e) => s + e.diasTotales, 0) / completosConDias.length)
+    : 0;
+  
+  // Días promedio por incidencia (eficiencia)
+  const conIncResueltas = expedientesConReduccion.filter(e => e.incResueltas > 0 && e.diasTotales > 0);
+  const diasPorIncidencia = conIncResueltas.length > 0
+    ? parseFloat((conIncResueltas.reduce((s, e) => s + (e.diasTotales / e.incResueltas), 0) / conIncResueltas.length).toFixed(1))
+    : 0;
+  
+  // Total incidencias iniciales vs resueltas (de los que solventaron)
+  const totalIncInicial = expedientesConReduccion.reduce((s, e) => s + e.incInicial, 0);
+  const totalIncResueltas = expedientesConReduccion.reduce((s, e) => s + e.incResueltas, 0);
+  
+  // 2. Incidencias residuales (de los que SÍ solventaron pero no llegaron a 0)
+  const conResiduales = expedientesConReduccion.filter(e => e.incFinal > 0);
+  const totalResiduales = expedientesConReduccion.reduce((s, e) => s + e.incResiduales, 0);
+  
+  // 3. Pasivo de calidad — incidencias de los que NO solventaron
+  const pasivoCalidad = listaIncidencias.reduce((s, e) => s + (e.totalIncidencias || 0), 0);
+  const expedientesPasivo = listaIncidencias.length;
+  
+  // Días promedio que llevan abiertos (desde fecha firma hasta hoy)
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  var sumDiasPasivo = 0;
+  var countDiasPasivo = 0;
+  listaIncidencias.forEach(function(e) {
+    if (e.fecha) {
+      var partes = e.fecha.split('/');
+      if (partes.length === 3) {
+        var fechaFirma = new Date(partes[2], partes[1] - 1, partes[0]);
+        if (!isNaN(fechaFirma.getTime())) {
+          var dias = Math.round((hoy - fechaFirma) / (1000 * 60 * 60 * 24));
+          if (dias >= 0) {
+            sumDiasPasivo += dias;
+            countDiasPasivo++;
+          }
+        }
+      }
+    }
+  });
+  const diasPromedioPasivo = countDiasPasivo > 0 ? Math.round(sumDiasPasivo / countDiasPasivo) : 0;
 
   return {
     total,
@@ -239,6 +317,16 @@ function obtenerTESIPorPeriodo(periodo) {
     revision,
     conteoPorTipo,        // ← nuevo
     etapasCierre,         // ← nuevo
+    solventacion: {
+      diasPromedio: diasPromedio,
+      diasPorIncidencia: diasPorIncidencia,
+      totalIncInicial: totalIncInicial,
+      totalIncResueltas: totalIncResueltas,
+      expedientesAnalizados: expedientesConReduccion.length,
+      pasivoCalidad: pasivoCalidad,
+      expedientesPasivo: expedientesPasivo,
+      diasPromedioPasivo: diasPromedioPasivo
+    },
     tesiTotal:            totalTESI,
     tesiCompletos:        tesiCompletos,
     tesi:                 Math.round(tesi),
@@ -1232,5 +1320,115 @@ function testGetDatosProyectos() {
   console.log('Por estado:', JSON.stringify(datos.kpis.porEstado, null, 2));
   if (datos.proyectos.length > 0) {
     console.log('Primer proyecto:', JSON.stringify(datos.proyectos[0], null, 2));
+  }
+}
+// =====================================================
+// CONTRALORÍA - CONTROL DE CIBERSEGURIDAD
+// =====================================================
+
+/**
+ * Obtiene datos de la hoja "Control Ciberseguridad"
+ * @returns {Object} Proyectos y KPIs calculados
+ */
+function getDatosCiberseguridad() {
+  try {
+    var ss = SpreadsheetApp.openById(PROYECTOS_CONFIG.SPREADSHEET_ID);
+    var hoja = ss.getSheetByName('Control Ciberseguridad');
+    
+    if (!hoja) {
+      throw new Error('No se encontró la hoja "Control Ciberseguridad"');
+    }
+    
+    var datos = hoja.getDataRange().getValues();
+    var encabezados = datos[0];
+    var filas = datos.slice(1).filter(function(fila) {
+      return fila[0]; // Columna A = Proyecto (debe existir)
+    });
+    
+    var COL = {
+      PROYECTO:      1, // B
+      RESPONSABLE:   2, // C
+      FECHA_INICIO:  3, // D
+      FECHA_FIN:     4, // E
+      AVANCE:        5, // F
+      VENCIMIENTO:   6, // G
+      DESCRIPCION:   7, // H
+      ESTATUS:       8, // I
+      HALLAZGOS:     9  // J
+    };
+    
+    var proyectos = filas.map(function(fila, idx) {
+      var avance = parsearPorcentajeProyecto(fila[COL.AVANCE]);
+      var hallazgos = parsearNumeroProyecto(fila[COL.HALLAZGOS]);
+      var vencimiento = (fila[COL.VENCIMIENTO] || '').toString().trim();
+      
+      // Determinar si vence en 1 mes o menos
+      var porVencer = false;
+      var vencLower = vencimiento.toLowerCase();
+      if (vencLower && !vencLower.includes('vencido')) {
+        if (vencLower.includes('día') || vencLower.includes('dia')) {
+          if (!vencLower.includes('mes')) {
+            porVencer = true;
+          } else {
+            var mesMatch = vencLower.match(/(\d+)\s*mes/);
+            if (mesMatch && parseInt(mesMatch[1]) <= 1) {
+              porVencer = true;
+            }
+          }
+        }
+      }
+      
+      return {
+        id: idx + 1,
+        proyecto: (fila[COL.PROYECTO] || '').toString().trim(),
+        responsable: (fila[COL.RESPONSABLE] || '').toString().trim(),
+        fechaInicio: formatearFechaProyecto(fila[COL.FECHA_INICIO]),
+        fechaFin: formatearFechaProyecto(fila[COL.FECHA_FIN]),
+        avance: avance,
+        vencimiento: vencimiento,
+        descripcion: (fila[COL.DESCRIPCION] || '').toString().trim(),
+        estatus: (fila[COL.ESTATUS] || '').toString().trim(),
+        hallazgos: hallazgos,
+        porVencer: porVencer
+      };
+    });
+    
+    // KPIs
+    var totalProyectos = proyectos.length;
+    
+    var sumAvance = 0;
+    var countAvance = 0;
+    proyectos.forEach(function(p) {
+      if (p.avance !== null && p.avance !== undefined) {
+        sumAvance += p.avance;
+        countAvance++;
+      }
+    });
+    var avancePromedio = countAvance > 0 ? Math.round(sumAvance / countAvance) : 0;
+    
+    var totalHallazgos = 0;
+    proyectos.forEach(function(p) {
+      totalHallazgos += p.hallazgos || 0;
+    });
+    
+    var proyectosPorVencer = proyectos.filter(function(p) {
+      return p.porVencer;
+    });
+    
+    return {
+      proyectos: proyectos,
+      kpis: {
+        total: totalProyectos,
+        avancePromedio: avancePromedio,
+        hallazgos: totalHallazgos,
+        porVencer: proyectosPorVencer.length
+      },
+      proyectosPorVencer: proyectosPorVencer,
+      actualizadoEn: new Date().toISOString()
+    };
+    
+  } catch (error) {
+    console.error('Error en getDatosCiberseguridad:', error);
+    throw new Error('No se pudieron cargar los datos de ciberseguridad: ' + error.message);
   }
 }
