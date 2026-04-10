@@ -935,33 +935,6 @@ body {
   box-shadow:    0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6) !important;
 }
 
-/* chart-card y bars-card — mismo relieve, fondo blanco puro */
-.chart-card,
-.bars-card {
-  background:    #ffffff !important;
-  border:        1px solid #d1d5db !important;
-  border-radius: var(--card-radius) !important;
-  box-shadow:    var(--card-shadow) !important;
-}
-
-/* Hover — eleva más el relieve */
-.kpi-box:hover,
-.rtype-card:hover,
-.cgauge-card:hover,
-.chart-card:hover {
-  box-shadow: var(--card-shadow-hover) !important;
-  transform:  translateY(-3px) !important;
-}
-
-/* Quitar el pseudo ::before de chart-card */
-.chart-card::before { display: none !important; }
-
-/* El efecto glass arriba se simplifica */
-.chart-card::after {
-  background: linear-gradient(180deg,
-    rgba(255,255,255,0.45) 0%,
-    rgba(255,255,255,0)    60%) !important;
-}
 
 /* ══ KPI BOXES — ajustes específicos ══ */
 .kpi-section { padding:28px 40px; background:transparent; border-bottom:none; }
@@ -1096,7 +1069,7 @@ body {
   to   { opacity:1; transform:translateY(0)    scale(1);    }
 }
 .rtype-body { padding: 24px 26px 22px; }
-.rtype-top { display:flex; align-items:flex-start; gap:22px; }
+.rtype-top { display:flex; align-items:center; gap:30px; }
 .rtype-info { flex:1; min-width:0; }
 .rtype-nombre { font-size:18px; font-weight:800; letter-spacing:-0.4px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .rtype-univ-label { font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:18px; }
@@ -2499,8 +2472,8 @@ video { pointer-events:none; outline:none; }
 .kpi-box.proy-totales dotlottie-player,
 .kpi-box.proy-avance dotlottie-player,
 .kpi-box.proy-dias dotlottie-player {
-    width: 90px !important;
-    height: 90px !important;
+    width: 70px !important;
+    height: 70px !important;
     transform: scale(2.0); /* Cambia este número (ej. 1.4, 1.5) para hacerlo aún más grande visualmente */
 }
 
@@ -2978,12 +2951,20 @@ document.addEventListener('DOMContentLoaded', () => {
 // ════════════════════════════════════
 // CARGA
 // ════════════════════════════════════
-function cargarAnio(anio, cb) {
+function cargarAnio(anio, cb, intentosRestantes = 3) {
   anio = parseInt(anio);
-  if (CACHE[anio])    { if (cb) cb(); return; }
+  
+  // Si ya tenemos los datos en caché, no hacer nada
+  if (CACHE[anio]) { 
+    if (cb) cb(); 
+    return; 
+  }
+  
   if (CARGANDO[anio]) return;
   CARGANDO[anio] = true;
-  setStatus('cargando', `Cargando ${anio}...`);
+  
+  setStatus('cargando', intentosRestantes < 3 ? `Reintentando ${anio} (${4 - intentosRestantes}/3)...` : `Cargando ${anio}...`);
+  
   google.script.run
     .withSuccessHandler(datos => {
       CACHE[anio]    = datos || {};
@@ -2993,12 +2974,19 @@ function cargarAnio(anio, cb) {
     })
     .withFailureHandler(err => {
       CARGANDO[anio] = false;
-      console.error('Error:', err);
-      setStatus('vacio', 'Error al cargar');
+      console.error('Error de conexión con Google:', err);
+      
+      if (intentosRestantes > 1) {
+        console.warn(`Reintentando en 2 segundos. Intentos restantes: ${intentosRestantes - 1}`);
+        setTimeout(() => {
+          cargarAnio(anio, cb, intentosRestantes - 1);
+        }, 2000); // Espera 2 segundos antes de volver a intentar
+      } else {
+        setStatus('vacio', 'Sin conexión. Intente actualizar la página.');
+      }
     })
     .getDatosTESIAnio(anio);
 }
-
 function onCambioAnio() {
   const anio = parseInt(document.getElementById('selectAnio').value);
   anioActual = anio;
@@ -3707,9 +3695,9 @@ function htmlRubros(conteo, incs, label) {
     .sort((a, b) => b.total - a.total);
 
   // ── Dona SVG (mismo sistema que KPI) ──
-  const R    = 50;
-  const SW   = 10;
-  const SZ   = 130;
+  const R    = 65;  
+  const SW   = 12;  
+  const SZ   = 170; 
   const CX   = SZ / 2;
   const CY   = SZ / 2;
   const CIRC = parseFloat((2 * Math.PI * R).toFixed(4));
@@ -3771,36 +3759,35 @@ function htmlRubros(conteo, incs, label) {
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + (R - SW - 3) + '" fill="url(#cG' + safeT + ')"/>' +
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + (R - SW - 3) + '"' +
           ' fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>' +
-        // Número total (en lugar del emoji)
-        '<text x="' + CX + '" y="' + (CY - 9) + '"' +
+          // Número total (agrandado)
+        '<text x="' + CX + '" y="' + (CY - 12) + '"' +
           ' font-family="IBM Plex Sans, sans-serif"' +
-          ' font-size="22" font-weight="800"' +
+          ' font-size="28" font-weight="800"' + // Subió de 22 a 28
           ' text-anchor="middle" dominant-baseline="middle"' +
           ' fill="#fff">' + total + '</text>' +
-        // % del universo animado
+        // % del universo (agrandado)
         '<text id="pctT' + safeT + '"' +
-          ' x="' + CX + '" y="' + (CY + 13) + '"' +
+          ' x="' + CX + '" y="' + (CY + 16) + '"' +
           ' font-family="IBM Plex Sans, sans-serif"' +
-          ' font-size="16" font-weight="700"' +
+          ' font-size="20" font-weight="700"' + // Subió de 16 a 20
           ' text-anchor="middle" dominant-baseline="middle"' +
           ' fill="' + col.light + '">0%</text>' +
       '</svg>';
 
 
     // ── BARRAS PREMIUM ──
-    // Izquierda: número absoluto | Centro: barra animada | Derecha: círculo con %
-    const BW    = 160;                      // Ancho de barra
-    const BH    = 14;                       // Altura de barra
-    const R_B   = 7;                        // Radio de esquinas
-    const CIR_R = 16;                       // Radio del círculo %
+    const BW    = 200;                   
+    const BH    = 18;                      
+    const R_B   = 9;                        
+    const CIR_R = 20;                       
     const NUM_X = 0;                     
-    const BAR_X = 32;                       // Inicio de barra
-    const CIR_X = BAR_X + BW + CIR_R + 10;  // Posición del círculo
-    const SVG_W = CIR_X + CIR_R + 6;
+    const BAR_X = 40;                       
+    const CIR_X = BAR_X + BW + CIR_R + 12;  
+    const SVG_W = CIR_X + CIR_R + 8;
     const wOk   = ok  > 0 ? Math.max(8, Math.round((pctOk  / 100) * BW)) : 0;
     const wInc  = inc > 0 ? Math.max(8, Math.round((pctInc / 100) * BW)) : 0;
-    const Y1    = 20;                       // Posición Y primera barra
-    const Y2    = 72;                       // Posición Y segunda barra
+    const Y1    = 25;                       
+    const Y2    = 85;                      
 const barrasSVG =
       '<div class="rtype-bars-wrap">' +
       '<svg viewBox="0 0 ' + SVG_W + ' 68" width="100%" height="68"' +
@@ -4297,7 +4284,12 @@ var renderGaugeDesign = function(id, val, pct, colors) {
           ${renderGaugeDesign('res', solv.totalIncResueltas, porcResueltas, colorsRes)}
           <div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; margin-top:15px; letter-spacing:1px;">incidencias</div>
           <div style="height:1px; background:rgba(0,0,0,0.06); margin:20px 0;"></div>
-          <div style="font-size:13px; font-weight:600; color:#475569;">🕒 Tiempo promedio: <span style="color:${velColor}; font-weight:900; font-size:16px;">${solv.diasPromedio} días</span></div>
+          <div style="display:flex; align-items:center; justify-content:center; gap:6px; font-size:18px; font-weight:600; color:#475569;">
+            <video autoplay muted loop playsinline style="width:40px; height:40px; object-fill:cover; mix-blend-mode:multiply">
+              <source src="https://cdn-icons-mp4.freepik.com/512/17904/17904535.mp4" type="video/mp4">
+            </video>
+            <span>Tiempo promedio transcurrido: <span style="color:${velColor}; font-weight:1000; font-size:20px;">${solv.diasPromedio} días</span></span>
+          </div>
           </div>
         </div>
 
@@ -4317,8 +4309,13 @@ var renderGaugeDesign = function(id, val, pct, colors) {
           ${renderGaugeDesign('pas', solv.pasivoCalidad, porcPasivo, colorsPas)}
           <div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; margin-top:15px; letter-spacing:1px;">incidencias</div>
           <div style="height:1px; background:rgba(0,0,0,0.06); margin:20px 0;"></div>
-          <div style="font-size:12px; font-weight:600; color:#475569; margin-bottom:4px;">🕒 Tiempo transcurrido sin solventar:</div>
-          <div style="font-size:17px; font-weight:900; color:${solv.diasPromedioPasivo > 0 ? diasPasColor : '#94a3b8'};">${solv.diasPromedioPasivo || 0} días</div>
+          <div style="display:flex; align-items:center; justify-content:center; gap:8px; font-size:18px; font-weight:600; color:#475569; margin-bottom:4px;">
+          <video autoplay muted loop playsinline style="width:40px; height:40px; object-fit:cover; mix-blend-mode:multiply;">
+            <source src="https://cdn-icons-mp4.freepik.com/512/17904/17904535.mp4" type="video/mp4">
+            </video>
+          <span>Tiempo transcurrido sin solventar:</span>
+            </div>
+          <div style="font-size:20px; font-weight:1000; color:${solv.diasPromedioPasivo > 0 ? diasPasColor : '#94a3b8'};">${solv.diasPromedioPasivo || 0} días</div>
           </div>
         </div>
 
@@ -4524,8 +4521,8 @@ function initCharts(datos) {
     const haloEl = document.getElementById('dotHaloT' + safeT);
     if (arcEl && pctEl) {
       const targetOff = circ * (1 - pct / 100);
-      // Constantes geométricas tarjetas tipo (R=50, SZ=130, CX=CY=65)
-      const R_T = 50, CX_T = 65, CY_T = 65;
+      // Nuevas constantes sincronizadas
+      const R_T = 65, CX_T = 85, CY_T = 85; // CX_T y CY_T son SZ / 2 (170 / 2)
       function typeDotPos(progress) {
         const angle = -Math.PI / 2 + 2 * Math.PI * progress;
         return { x: CX_T + R_T * Math.cos(angle), y: CY_T + R_T * Math.sin(angle) };
@@ -5752,16 +5749,17 @@ function htmlProyectosTipoDistribucion(proyectos) {
   if (!proyectos || proyectos.length === 0) return '';
   
   // Contar por Tipo
-  const tipoCount = { 'Tren de Crédito': 0, 'Cumplimiento Normativo': 0 };
-  proyectos.forEach(p => {
+  const tipoCount = { 'Tren de Crédito': 0, 'Cumplimiento Normativo': 0, 'Inmobiliaria':0 };
+    proyectos.forEach(p => {
     const tipo = (p.tipo || '').toLowerCase();
     if (tipo.includes('crédito') || tipo.includes('credito') || tipo.includes('tren')) {
       tipoCount['Tren de Crédito']++;
     } else if (tipo.includes('cumplimiento') || tipo.includes('normativo')) {
       tipoCount['Cumplimiento Normativo']++;
+    } else if (tipo.includes('inmob') || tipo.includes('vivienda') || tipo.includes('real estate')) {
+      tipoCount['Inmobiliaria']++;
     }
-  });
-  
+  });   
   const totalTipos = tipoCount['Tren de Crédito'] + tipoCount['Cumplimiento Normativo'];
   if (totalTipos === 0) return '';
   
