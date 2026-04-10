@@ -1113,6 +1113,15 @@ body {
   padding: 3px 10px; border-radius: 20px; border: 1px solid;
 }
 
+/* Efecto hover para tarjetas clickeables */
+.cgauge-card[onclick] {
+  cursor: pointer;
+}
+.cgauge-card[onclick]:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.8) !important;
+}
+
 /* ══ BARS CARD ══ */
 .bars-card {
   position: relative;
@@ -4225,7 +4234,7 @@ function htmlEtapasCierre(datos, label) {
         '<text x="' + (CX + R + SW - 2) + '" y="' + (CY + 18) + '" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">100%</text>' +
       '</svg>';
 
-    return '<div class="cgauge-card" data-id="' + safeId + '" data-pct="' + pct + '" data-semi="' + SEMI + '" style="--col:' + c.col + ';">' +
+    return '<div class="cgauge-card" data-id="' + safeId + '" data-pct="' + pct + '" data-semi="' + SEMI + '" style="--col:' + c.col + ';" onclick="abrirEtapaPanel(\'' + c.label + '\', \'' + c.col + '\', \'' + c.id + '\')">' +
       '<div style="height:3px;background:' + c.col + ';border-radius:18px 18px 0 0;"></div>' +
       '<div class="cgauge-body">' +
         svgSemi +
@@ -4311,52 +4320,62 @@ var renderGaugeDesign = function(id, val, pct, colors) {
 
       <div style="display:grid; grid-template-columns: 1.2fr 110px 1.2fr; gap:0; align-items:stretch;">
 
-        <div class="cgauge-card" data-id="res" data-pct="${porcResueltas}" data-semi="${(Math.PI * 72).toFixed(4)}" style="border-radius:20px 0 0 20px !important; display:flex; flex-direction:column; overflow:hidden; padding:0;">
+        <div class="cgauge-card" data-id="res" data-pct="${porcResueltas}" data-semi="${(Math.PI * 72).toFixed(4)}" style="border-radius:20px 0 0 20px !important; display:flex; flex-direction:column; overflow:hidden; padding:0;" onclick="abrirEtapaPanel('Incidencias Resueltas', '#10b981', 'res')">
           <div style="height:3px; background:${colorsRes.col}; flex-shrink:0;"></div>
           <div style="padding:32px 25px; text-align:center; flex:1;">
-            <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px;">
-            <div style="width:24px; height:24px; background:rgba(16,185,129,0.1); border-radius:6px; display:flex; align-items:center; justify-content:center; color:#10b981; font-size:12px;">✓</div>
-            <span style="font-size:11px; font-weight:800; color:#059669; text-transform:uppercase; letter-spacing:1.5px;">Resueltas</span>
-          </div>
-          ${renderGaugeDesign('res', solv.totalIncResueltas, porcResueltas, colorsRes)}
-          <div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; margin-top:15px; letter-spacing:1px;">incidencias</div>
-          <div style="height:1px; background:rgba(0,0,0,0.06); margin:20px 0;"></div>
-          <div style="display:flex; align-items:center; justify-content:center; gap:6px; font-size:18px; font-weight:600; color:#475569;">
-            <video autoplay muted loop playsinline style="width:40px; height:40px; object-fill:cover; mix-blend-mode:multiply">
-              <source src="https://cdn-icons-mp4.freepik.com/512/17904/17904535.mp4" type="video/mp4">
-            </video>
-            <span>Tiempo promedio transcurrido: <span style="color:${velColor}; font-weight:1000; font-size:20px;">${solv.diasPromedio} días</span></span>
-          </div>
-          </div>
-        </div>
+            
+              <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px;">
+              <dotlottie-player src="${ICONOS_KPI.completos}" background="transparent" speed="1" style="width:36px; height:36px;" loop autoplay></dotlottie-player>
+              <span style="font-size:11px; font-weight:800; color:#059669; text-transform:uppercase; letter-spacing:1.5px;">Resueltas</span>
+            </div>
+            
+            ${renderGaugeDesign('res', solv.totalIncResueltas, porcResueltas, colorsRes)}
+            
+            <div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; margin-top:15px; letter-spacing:1px;">incidencias</div>
+            
+            <div style="height:1px; background:rgba(0,0,0,0.06); margin:20px 0;"></div>
+            
+            <div style="display:flex; align-items:center; justify-content:center; gap:12px; margin-top:10px;">
+              <video autoplay muted loop playsinline style="width:48px; height:48px; object-fit:cover; mix-blend-mode:multiply">
+                <source src="https://cdn-icons-mp4.freepik.com/512/17904/17904535.mp4" type="video/mp4">
+              </video>
+                <div style="display:flex; flex-direction:column; text-align:center; justify-content:center; align-items:center;">
+                <span style="font-size:13px; font-weight:600; color:#64748b; line-height:1.2; white-space:nowrap;">Tiempo promedio transcurrido:</span>
+                <span style="color:${velColor}; font-weight:900; font-size:32px; line-height:1; margin-top:4px; display:block;">${solv.diasPromedio} <span style="font-size:16px; font-weight:700;">días</span></span>
+              </div>
+              </div>
 
-        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; background:#0f1623; color:#fff; z-index:2; box-shadow:0 0 30px rgba(0,0,0,0.25);">
+          </div> 
+        </div> <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; background:#0f1623; color:#fff; z-index:2; box-shadow:0 0 30px rgba(0,0,0,0.25);">
           <div style="font-size:10px; font-weight:800; color:#FDB913; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;">Total</div>
           <div style="font-size:42px; font-weight:900; line-height:1;">${totalIncidencias}</div>
           <div style="font-size:9px; color:rgba(255,255,255,0.4); font-weight:700; text-transform:uppercase; margin-top:5px;">incidencias</div>
         </div>
 
-        <div class="cgauge-card" data-id="pas" data-pct="${porcPasivo}" data-semi="${(Math.PI * 72).toFixed(4)}" style="border-radius:0 20px 20px 0 !important; display:flex; flex-direction:column; overflow:hidden; padding:0;">
+        <div class="cgauge-card" data-id="pas" data-pct="${porcPasivo}" data-semi="${(Math.PI * 72).toFixed(4)}" style="border-radius:0 20px 20px 0 !important; display:flex; flex-direction:column; overflow:hidden; padding:0;" onclick="abrirEtapaPanel('Incidencias Sin Solventar', '${pasColor}', 'pas')">
           <div style="height:3px; background:${colorsPas.col}; flex-shrink:0;"></div>
           <div style="padding:32px 25px; text-align:center; flex:1;">
-            <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px;">
-            <div style="width:24px;height:24px;background:rgba(239,68,68,0.12);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;">✗</div>
-            <span style="font-size:10px;font-weight:800;color:' + pasColor + ';text-transform:uppercase;letter-spacing:1.5px;">Sin Solventar</span>
-          </div>
-          ${renderGaugeDesign('pas', solv.pasivoCalidad, porcPasivo, colorsPas)}
-          <div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; margin-top:15px; letter-spacing:1px;">incidencias</div>
-          <div style="height:1px; background:rgba(0,0,0,0.06); margin:20px 0;"></div>
-          <div style="display:flex; align-items:center; justify-content:center; gap:8px; font-size:18px; font-weight:600; color:#475569; margin-bottom:4px;">
-          <video autoplay muted loop playsinline style="width:40px; height:40px; object-fit:cover; mix-blend-mode:multiply;">
-            <source src="https://cdn-icons-mp4.freepik.com/512/17904/17904535.mp4" type="video/mp4">
-            </video>
-          <span>Tiempo transcurrido sin solventar:</span>
-            </div>
-          <div style="font-size:20px; font-weight:1000; color:${solv.diasPromedioPasivo > 0 ? diasPasColor : '#94a3b8'};">${solv.diasPromedioPasivo || 0} días</div>
-          </div>
-        </div>
-
-      </div>
+            
+          <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px;">
+              <dotlottie-player src="${ICONOS_KPI.incidencias}" background="transparent" speed="1" style="width:36px; height:36px;" loop autoplay></dotlottie-player>
+              <span style="font-size:10px;font-weight:800;color:${pasColor};text-transform:uppercase;letter-spacing:1.5px;">Sin Solventar</span>
+            </div>            
+            ${renderGaugeDesign('pas', solv.pasivoCalidad, porcPasivo, colorsPas)}
+            
+            <div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; margin-top:15px; letter-spacing:1px;">incidencias</div>
+            
+            <div style="height:1px; background:rgba(0,0,0,0.06); margin:20px 0;"></div>
+            
+            <div style="display:flex; align-items:center; justify-content:center; gap:12px; margin-top:10px;">
+              <video autoplay muted loop playsinline style="width:48px; height:48px; object-fit:cover; mix-blend-mode:multiply">
+                <source src="https://cdn-icons-mp4.freepik.com/512/17904/17904535.mp4" type="video/mp4">
+              </video>
+                <div style="display:flex; flex-direction:column; text-align:center; justify-content:center; align-items:center;">
+                <span style="font-size:13px; font-weight:600; color:#64748b; line-height:1.2; white-space:nowrap;">Tiempo transcurrido sin solventar:</span>
+                <span style="color:${solv.diasPromedioPasivo > 0 ? diasPasColor : '#94a3b8'}; font-weight:900; font-size:32px; line-height:1; margin-top:4px; display:block;">${solv.diasPromedioPasivo || 0} <span style="font-size:16px; font-weight:700;">días</span></span>
+              </div>
+                </div>
+                  </div>
     </div>`;
 }
 
@@ -5463,7 +5482,7 @@ function htmlProyectosPieChart(porArea, total, proyectos) {
     <ellipse cx="${CX - 12}" cy="${CY - 12}" rx="${R_INNER * 0.5}" ry="${R_INNER * 0.3}" fill="rgba(255,255,255,0.9)"/>
   `;
 
-  // CSS para hover
+// CSS para hover
   const hoverCSS = `
     <style>
       .pie-seg {
@@ -5497,6 +5516,9 @@ function htmlProyectosPieChart(porArea, total, proyectos) {
       }
       .conn-line circle {
         transition: transform 0.3s ease, r 0.3s ease;
+        /* Corrección: obligar a los puntos a escalar sobre sí mismos */
+        transform-box: fill-box;
+        transform-origin: center;
       }
       .conn-line.active circle {
         transform: scale(1.4);
@@ -5506,6 +5528,9 @@ function htmlProyectosPieChart(porArea, total, proyectos) {
         cursor: pointer;
         transition: transform 0.3s ease, opacity 0.3s ease;
         opacity: 0.75;
+        /* Corrección: obligar a la etiqueta a escalar sobre su propio centro */
+        transform-box: fill-box;
+        transform-origin: center;
       }
       .lbl-grp:hover, .lbl-grp.active {
         transform: scale(1.08);
@@ -5514,13 +5539,16 @@ function htmlProyectosPieChart(porArea, total, proyectos) {
       
       .pct-label {
         transition: transform 0.3s ease, font-size 0.3s ease;
+        /* Corrección: obligar al porcentaje central a escalar sobre sí mismo */
+        transform-box: fill-box;
+        transform-origin: center;
       }
       .pct-label.active {
         transform: scale(1.15);
       }
     </style>
   `;
-
+  
   // Script para sincronizar hover entre segmento y etiqueta
   // Store area data as data attributes on each segment for click handling
   const areaNameMap = segmentos.map(seg => seg.nombre);
@@ -6683,6 +6711,85 @@ function cerrarKPIPanel() {
   document.getElementById('kpiPanel').classList.remove('open');
 }
 
+// ══ PANEL DETALLE FILTRADO POR ETAPA ══
+function abrirEtapaPanel(titulo, color, filtro) {
+  // 1. Configurar visualmente el panel
+  document.getElementById('kpStripe').style.background = color;
+  document.getElementById('kpName').textContent = titulo;
+  document.getElementById('kpName').style.color = color;
+  document.getElementById('kpSub').textContent = 'Listado específico de esta categoría';
+
+  // 2. Obtener los datos
+  var anio = parseInt(document.getElementById('selectAnio').value);
+  var mes = document.getElementById('selectMes').value;
+  var listaFiltrada = [];
+
+  // 3. Lógica de Filtrado Exacto
+  if (datosMostrados) {
+    if (filtro === 'res') {
+      // TODAS LAS RESUELTAS (Universo completo)
+      listaFiltrada = datosMostrados.completosUniverso || [];
+
+    } else if (filtro === 'e1' || filtro === 'e2' || filtro === 'ef') {
+      // ETAPAS INDIVIDUALES DE CIERRE
+      var todosCompletos = datosMostrados.completosUniverso || [];
+      
+      // Mapeamos el código del filtro al texto que usa tu base de datos
+      var etapaBuscada = "";
+      if (filtro === 'e1') etapaBuscada = "1a Revision";
+      if (filtro === 'e2') etapaBuscada = "2a Revision";
+      if (filtro === 'ef') etapaBuscada = "Final";
+
+      // Filtramos la lista buscando coincidencias
+      listaFiltrada = todosCompletos.filter(function(e) {
+        // Busca el dato en las propiedades más comunes (ajusta si en tu JSON se llama distinto)
+        var etapaExpediente = e.etapaCierre || e.etapa || e.revision || ""; 
+        
+        // Convertimos a minúsculas para evitar errores por mayúsculas o acentos
+        var strBusqueda = etapaBuscada.toLowerCase();
+        var strExpediente = etapaExpediente.toLowerCase().replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i').replace(/ó/g, 'o').replace(/ú/g, 'u');
+        
+        return strExpediente.includes(strBusqueda) || strBusqueda.includes(strExpediente);
+      });
+
+    } else if (filtro === 'pas' || filtro === 'ep') {
+      // SIN SOLVENTAR / INCIDENCIAS ACTIVAS
+      listaFiltrada = datosMostrados.incidencias || [];
+    }
+  }
+
+  // 4. Actualizar el contador del panel
+  document.getElementById('kpTotal').textContent = listaFiltrada.length;
+  document.getElementById('kpTotal').style.color = color;
+
+  // 5. Renderizar la tabla
+  var listEl = document.getElementById('kpExpList');
+  if (listaFiltrada.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;padding:32px;color:#94a3b8;font-size:14px;">No hay expedientes en esta etapa.</div>';
+  } else {
+    var html = '<table class="tp-exp-table"><thead><tr>' +
+      '<th>ID Oportunidad</th>' +
+      '<th>Tipo</th>' +
+      '<th>Fecha de Firma</th>' +
+      '</tr></thead><tbody>';
+
+    listaFiltrada.forEach(function(exp) {
+      var cls = tipoCSSClass(exp.tipo);
+      html += '<tr style="cursor:pointer;" onclick=\'abrirDetalle(' + esJSON(exp) + ')\'>' +
+        '<td><span class="tp-exp-id">' + (exp.id || '—') + '</span></td>' +
+        '<td>' + (exp.tipo ? '<span class="tipo-badge ' + cls + '">' + exp.tipo + '</span>' : '<span style="color:#94a3b8;">—</span>') + '</td>' +
+        '<td><span class="tp-exp-fecha">' + (exp.fecha || '—') + '</span></td>' +
+      '</tr>';
+    });
+
+    html += '</tbody></table>';
+    listEl.innerHTML = html;
+  }
+
+  // 6. Abrir panel
+  document.getElementById('kpiPanelOverlay').classList.add('open');
+  document.getElementById('kpiPanel').classList.add('open');
+}
 
 // ══════════════════════════════════════════════════════════
 // CUSTOM DROPDOWN PREMIUM
