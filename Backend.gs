@@ -1083,7 +1083,7 @@ function calcularKPIsProyectos(proyectos) {
   var porTipo = {
     'Tren de Crédito': 0,
     'Cumplimiento Normativo': 0,
-    'Otro': 0
+    'Inmobiliaria': 0
   };
   proyectos.forEach(function(p) {
     var tipo = p.tipo || 'Otro';
@@ -1092,7 +1092,7 @@ function calcularKPIsProyectos(proyectos) {
     } else if (tipo.toLowerCase().includes('cumplimiento') || tipo.toLowerCase().includes('normativo')) {
       porTipo['Cumplimiento Normativo']++;
     } else {
-      porTipo['Otro']++;
+      porTipo['Inmobiliaria']++;
     }
   });
   
