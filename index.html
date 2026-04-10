@@ -2778,6 +2778,43 @@ video { pointer-events:none; outline:none; }
   </div>
 </div>
 
+<!-- ══ PANEL DETALLE ÁREA PROYECTOS ══ -->
+<div class="tipo-panel-overlay" id="areaPanelOverlay" onclick="cerrarAreaPanel()"></div>
+<div class="tipo-panel" id="areaPanel">
+  <div class="tp-header">
+    <div class="tp-header-stripe" id="apStripe"></div>
+    <button class="tp-close" onclick="cerrarAreaPanel()">×</button>
+    <div class="tp-tipo-name" id="apAreaName">—</div>
+    <div class="tp-tipo-sub">Proyectos asignados a esta área</div>
+  </div>
+  <div class="tp-kpis" style="grid-template-columns: 1fr 1fr 1fr;">
+    <div class="tp-kpi">
+      <div class="tp-kpi-val gray" id="apTotal">0</div>
+      <div class="tp-kpi-label">Proyectos</div>
+    </div>
+    <div class="tp-kpi">
+      <div class="tp-kpi-val" style="color:#f59e0b;" id="apAvance">0%</div>
+      <div class="tp-kpi-label">Avance Prom.</div>
+    </div>
+    <div class="tp-kpi">
+      <div class="tp-kpi-val" style="color:#ef4444;" id="apRiesgo">0</div>
+      <div class="tp-kpi-label">Riesgo Alto</div>
+    </div>
+  </div>
+  <div class="tp-section">
+    <div class="tp-sec-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      Proyectos del área
+    </div>
+    <div id="apProyectosList"></div>
+  </div>
+</div>
+
 <!-- ══ PANEL DETALLE KPI EXPEDIENTES ══ -->
 <div class="tipo-panel-overlay" id="kpiPanelOverlay" onclick="cerrarKPIPanel()"></div>
 <div class="tipo-panel" id="kpiPanel">
@@ -4716,6 +4753,68 @@ function initCharts(datos) {
       })(performance.now());
     }, 500 + idx * 140);
   });
+
+  // ══════════════════════════════════════════════════════════
+  // GAUGES DE RIESGO PROYECTOS — animación de carga idéntica a cierre
+  // ══════════════════════════════════════════════════════════
+  document.querySelectorAll('.cgauge-card[data-rid]').forEach((card, idx) => {
+    const safeId = card.getAttribute('data-rid');
+    const pct    = parseFloat(card.getAttribute('data-rpct')  || 0);
+    const semi   = parseFloat(card.getAttribute('data-rsemi') || 0);
+    if (!safeId || semi === 0) return;
+
+    const arcEl  = document.getElementById('sgArcR'     + safeId);
+    const pctEl  = document.getElementById('sgPctR'     + safeId);
+    const dotEl  = document.getElementById('sgDotR'     + safeId);
+    const haloEl = document.getElementById('sgDotHaloR' + safeId);
+    if (!arcEl || !pctEl) return;
+
+    const targetOff = semi * (1 - pct / 100);
+    const dur       = 1800;
+    const easeOutR  = t => 1 - Math.pow(1 - t, 3);
+
+    const RR  = 72;
+    const RCX = 110;
+    const RCY = 122;
+
+    function rDotPos(progress) {
+      const angle = Math.PI * (1 - progress);
+      return { x: RCX + RR * Math.cos(angle), y: RCY - RR * Math.sin(angle) };
+    }
+
+    setTimeout(() => {
+      if (dotEl)  dotEl.setAttribute('opacity',  pct > 0 ? '1' : '0');
+      if (haloEl) haloEl.setAttribute('opacity', pct > 0 ? '1' : '0');
+
+      let start = null;
+      (function tick(now) {
+        if (!start) start = now;
+        const raw = Math.min((now - start) / dur, 1);
+        const t   = easeOutR(raw);
+
+        arcEl.setAttribute('stroke-dashoffset', (semi - (semi - targetOff) * t).toFixed(2));
+        pctEl.textContent = Math.round(pct * t) + '%';
+
+        if (pct > 0) {
+          const pos = rDotPos(t * pct / 100);
+          if (dotEl)  { dotEl.setAttribute('cx', pos.x.toFixed(2));  dotEl.setAttribute('cy', pos.y.toFixed(2)); }
+          if (haloEl) { haloEl.setAttribute('cx', pos.x.toFixed(2)); haloEl.setAttribute('cy', pos.y.toFixed(2)); }
+        }
+
+        if (raw < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          arcEl.setAttribute('stroke-dashoffset', targetOff.toFixed(2));
+          pctEl.textContent = pct + '%';
+          if (pct > 0) {
+            const fp = rDotPos(pct / 100);
+            if (dotEl)  { dotEl.setAttribute('cx',  fp.x.toFixed(2)); dotEl.setAttribute('cy',  fp.y.toFixed(2)); }
+            if (haloEl) { haloEl.setAttribute('cx', fp.x.toFixed(2)); haloEl.setAttribute('cy', fp.y.toFixed(2)); }
+          }
+        }
+      })(performance.now());
+    }, 400 + idx * 180);
+  });
 }
 
 // ════════════════════════════════════
@@ -4773,6 +4872,8 @@ const SEC_PANEL_CFG = {
       google.script.run
         .withSuccessHandler(data => {
           body.innerHTML = htmlPanelProyectos(data);
+          datosProyectosCache = data;
+          inicializarProyectosUI();
         })
         .withFailureHandler(err => {
           body.innerHTML = `<div class="proy-empty"><div class="proy-empty-icon">❌</div><div class="proy-empty-text">Error al cargar proyectos: ${err.message || err}</div></div>`;
@@ -5137,13 +5238,10 @@ function htmlPanelProyectos(data) {
     ${htmlProyectosHero(kpis)}
 
     <!-- Distribución por área — Gráfico de Pie -->
-    ${htmlProyectosPieChart(kpis.porArea || {}, kpis.total || 0)}
+    ${htmlProyectosPieChart(kpis.porArea || {}, kpis.total || 0, data.proyectos || [])}
 
     <!-- Estado y Nivel de Riesgo - PREMIUM -->
     ${htmlProyectosEstadoRiesgoPremium(kpis)}
-
-    <!-- Distribución por Tipo de Proyecto -->
-    ${htmlProyectosTipoDistribucion(proyectos)}
 
     <!-- Lista de proyectos -->
     ${htmlProyectosTabla(proyectos)}
@@ -5209,7 +5307,7 @@ function htmlProyectosHero(kpis) {
   `;
 }
 
-function htmlProyectosPieChart(porArea, total) {
+function htmlProyectosPieChart(porArea, total, proyectos) {
   const areas = Object.entries(porArea)
     .filter(([_, v]) => v.total > 0)
     .sort((a, b) => b[1].total - a[1].total);
@@ -5424,22 +5522,12 @@ function htmlProyectosPieChart(porArea, total) {
   `;
 
   // Script para sincronizar hover entre segmento y etiqueta
+  // Store area data as data attributes on each segment for click handling
+  const areaNameMap = segmentos.map(seg => seg.nombre);
+  const areaColorMap = segmentos.map(seg => seg.main);
+
   const hoverScript = `
-    <script>
-      (function(){
-        function setActive(idx, active) {
-          document.querySelectorAll('[data-idx="'+idx+'"]').forEach(el => {
-            if (active) el.classList.add('active');
-            else el.classList.remove('active');
-          });
-        }
-        
-        document.querySelectorAll('.pie-seg, .lbl-grp, .conn-line').forEach(el => {
-          el.addEventListener('mouseenter', () => setActive(el.dataset.idx, true));
-          el.addEventListener('mouseleave', () => setActive(el.dataset.idx, false));
-        });
-      })();
-    <\/script>
+    <div id="pieAreaData" data-areas='${JSON.stringify(areaNameMap)}' data-colors='${JSON.stringify(areaColorMap)}' style="display:none;"></div>
   `;
 
   return `
@@ -5483,7 +5571,7 @@ function htmlProyectosEstadoRiesgoPremium(kpis) {
   const total = kpis.total || 0;
   
   const ESTADOS_CFG = {
-    'Solicitud inicial':              { color: '#64748b', light: '#94a3b8', dark: '#475569', order: 1 },
+    'Solicitud inicial':              { color: '#a78bfa', light: '#c4b5fd', dark: '#7c3aed', order: 1 },
     'Levantamiento de información':   { color: '#0ea5e9', light: '#38bdf8', dark: '#0284c7', order: 2 },
     'En desarrollo':                  { color: '#f59e0b', light: '#fbbf24', dark: '#b45309', order: 3 },
     'En pruebas':                     { color: '#d946ef', light: '#e879f9', dark: '#a21caf', order: 4 },
@@ -5674,11 +5762,12 @@ function htmlProyectosEstadoRiesgoPremium(kpis) {
 // ============================================================================
 function crearGaugeRiesgoPremium(alto, medio, bajo, total) {
   const CFG = [
-    { id: 'rAlto',  label: 'Riesgo Alto',  val: alto,  col: '#ef4444', light: '#f87171', dark: '#991b1b', bg: '#fef2f2', border: '#fecaca' },
-    { id: 'rMedio', label: 'Riesgo Medio', val: medio, col: '#f59e0b', light: '#fbbf24', dark: '#92400e', bg: '#fffbeb', border: '#fde68a' },
-    { id: 'rBajo',  label: 'Riesgo Bajo',  val: bajo,  col: '#10b981', light: '#34d399', dark: '#065f46', bg: '#f0fdf4', border: '#86efac' }
+    { id: 'rAlto',  label: 'Riesgo Alto',  sub: 'Crítico',   val: alto,  col: '#ef4444', light: '#f87171', dark: '#991b1b', bg: '#fef2f2', border: '#fecaca' },
+    { id: 'rMedio', label: 'Riesgo Medio', sub: 'Moderado',  val: medio, col: '#f59e0b', light: '#fbbf24', dark: '#92400e', bg: '#fffbeb', border: '#fde68a' },
+    { id: 'rBajo',  label: 'Riesgo Bajo',  sub: 'Controlado',val: bajo,  col: '#10b981', light: '#34d399', dark: '#065f46', bg: '#f0fdf4', border: '#86efac' }
   ];
 
+  // Misma geometría que TESI etapas de cierre
   const R   = 72;
   const SW  = 13;
   const SZW = 220;
@@ -5690,14 +5779,10 @@ function crearGaugeRiesgoPremium(alto, medio, bajo, total) {
 
   const tarjetas = CFG.map(c => {
     const pct = total > 0 ? Math.round((c.val / total) * 100) : 0;
-    const offset = parseFloat((SEMI * (1 - pct / 100)).toFixed(4));
-    
-    const angle = Math.PI * (1 - (pct / 100)); 
-    const dotX = (CX + R * Math.cos(angle)).toFixed(2);
-    const dotY = (CY - R * Math.sin(angle)).toFixed(2);
+    const targetOff = parseFloat((SEMI * (1 - pct / 100)).toFixed(4));
 
     const svgSemi =
-      '<svg viewBox="0 0 ' + SZW + ' ' + SZH + '" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; max-width: 280px; display: block; filter: drop-shadow(0 6px 16px rgba(0,0,0,0.10)); margin: 0 auto;">' +
+      '<svg viewBox="0 0 ' + SZW + ' ' + SZH + '" style="width:100%; height:auto; display:block; margin:0 auto; transform: scale(1.15); filter:drop-shadow(0 6px 16px rgba(0,0,0,0.10));" xmlns="http://www.w3.org/2000/svg">' +
         '<defs>' +
           '<linearGradient id="sgR' + c.id + '" x1="0%" y1="0%" x2="100%" y2="0%">' +
             '<stop offset="0%"   stop-color="' + c.light + '"/>' +
@@ -5712,296 +5797,44 @@ function crearGaugeRiesgoPremium(alto, medio, bajo, total) {
             '<stop offset="100%" stop-color="#1e2533"/>' +
           '</radialGradient>' +
         '</defs>' +
+
         '<path d="M ' + (CX - R - SW - 8) + ',' + CY + ' A ' + (R + SW + 8) + ',' + (R + SW + 8) + ' 0 0,1 ' + (CX + R + SW + 8) + ',' + CY + '" fill="none" stroke="' + c.col + '" stroke-width="12" opacity="0.09"/>' +
         '<path d="M ' + (CX - R - 2) + ',' + CY + ' A ' + (R + 2) + ',' + (R + 2) + ' 0 0,1 ' + (CX + R + 2) + ',' + CY + '" fill="none" stroke="' + c.col + '" stroke-width="8" opacity="0.16"/>' +
         '<path d="M ' + (CX - R) + ',' + CY + ' A ' + R + ',' + R + ' 0 0,1 ' + (CX + R) + ',' + CY + '" fill="none" stroke="#e2e8f0" stroke-width="' + SW + '" stroke-linecap="round"/>' +
-        '<path d="M ' + (CX - R) + ',' + CY + ' A ' + R + ',' + R + ' 0 0,1 ' + (CX + R) + ',' + CY + '" fill="none" stroke="url(#sgR' + c.id + ')" stroke-width="' + SW + '" stroke-linecap="round" stroke-dasharray="' + SEMI + '" stroke-dashoffset="' + offset + '" filter="url(#sgGlwR' + c.id + ')"/>' +
-        (pct > 0 ? '<circle cx="' + dotX + '" cy="' + dotY + '" r="' + (SW / 2 + 1) + '" fill="' + c.col + '"></circle><circle cx="' + dotX + '" cy="' + dotY + '" r="' + (SW / 2 + 4) + '" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55"><animate attributeName="r" values="' + (SW / 2 + 4) + ';' + (SW / 2 + 10) + ';' + (SW / 2 + 4) + '" dur="1.8s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="1.8s" repeatCount="indefinite"/></circle>' : '') +
+        '<path id="sgArcR' + c.id + '" d="M ' + (CX - R) + ',' + CY + ' A ' + R + ',' + R + ' 0 0,1 ' + (CX + R) + ',' + CY + '" fill="none" stroke="url(#sgR' + c.id + ')" stroke-width="' + SW + '" stroke-linecap="round" stroke-dasharray="' + SEMI + '" stroke-dashoffset="' + SEMI + '" filter="url(#sgGlwR' + c.id + ')"/>' +
+
+        (pct > 0 ? (function() {
+          return '<circle id="sgDotR' + c.id + '" cx="' + (CX - R) + '" cy="' + CY + '" r="' + (SW / 2 + 1) + '" fill="' + c.col + '" opacity="0"/>' +
+                 '<circle id="sgDotHaloR' + c.id + '" cx="' + (CX - R) + '" cy="' + CY + '" r="' + (SW / 2 + 4) + '" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55" opacity="0">' +
+                   '<animate attributeName="r" values="' + (SW / 2 + 4) + ';' + (SW / 2 + 10) + ';' + (SW / 2 + 4) + '" dur="1.8s" repeatCount="indefinite"/>' +
+                   '<animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="1.8s" repeatCount="indefinite"/>' +
+                 '</circle>';
+        })() : '') +
 
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + Ri + '" fill="#253044"/>' +
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + Ri + '" fill="url(#sgCtrR' + c.id + ')"/>' +
         '<circle cx="' + CX + '" cy="' + CY + '" r="' + Ri + '" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>' +
+
         '<text x="' + CX + '" y="' + (CY - 14) + '" font-family="IBM Plex Sans, sans-serif" font-size="30" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="middle">' + c.val + '</text>' +
-        '<text x="' + CX + '" y="' + (CY + 10) + '" font-family="IBM Plex Sans, sans-serif" font-size="19" font-weight="700" fill="' + c.light + '" text-anchor="middle" dominant-baseline="middle">' + pct + '%</text>' +
-        '<text x="' + (CX - R - SW + 2) + '" y="' + (CY + 18) + '" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#94a3b8" text-anchor="middle">0%</text>' +
-        '<text x="' + (CX + R + SW - 2) + '" y="' + (CY + 18) + '" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#94a3b8" text-anchor="middle">100%</text>' +
+        '<text id="sgPctR' + c.id + '" x="' + CX + '" y="' + (CY + 10) + '" font-family="IBM Plex Sans, sans-serif" font-size="19" font-weight="700" fill="' + c.light + '" text-anchor="middle" dominant-baseline="middle">0%</text>' +
+
+        '<text x="' + (CX - R - SW + 2) + '" y="' + (CY + 18) + '" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">0%</text>' +
+        '<text x="' + (CX + R + SW - 2) + '" y="' + (CY + 18) + '" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">100%</text>' +
       '</svg>';
 
-    // AQUÍ ES DONDE SE ELIMINÓ LA ETIQUETA .cgauge-sub
-    return '<div class="cgauge-card" style="--col:' + c.col + ';">' +
+    return '<div class="cgauge-card" data-rid="' + c.id + '" data-rpct="' + pct + '" data-rsemi="' + SEMI + '" style="--col:' + c.col + ';">' +
       '<div style="height:3px;background:' + c.col + ';border-radius:18px 18px 0 0;"></div>' +
       '<div class="cgauge-body">' +
         svgSemi +
         '<div class="cgauge-label">' +
-          '<div class="cgauge-title" style="color:' + c.col + '; margin-top: 8px;">' + c.label + '</div>' +
+          '<div class="cgauge-title" style="color:' + c.col + ';">' + c.label + '</div>' +
+          '<div class="cgauge-sub" style="background:' + c.bg + ';color:' + c.dark + ';border-color:' + c.border + ';">' + c.sub + '</div>' +
         '</div>' +
       '</div>' +
     '</div>';
   }).join('');
 
-  return '<div class="cgauge-grid" style="grid-template-columns: repeat(3, 1fr); width: 100%; margin-top: 10px;">' + tarjetas + '</div>';
-}
-// ══════════════════════════════════════════════════════════════════════════════
-// SECCIÓN 04: DISTRIBUCIÓN POR TIPO DE PROYECTO
-// ══════════════════════════════════════════════════════════════════════════════
-
-function htmlProyectosTipoDistribucion(proyectos) {
-  if (!proyectos || proyectos.length === 0) return '';
-  
-  // Contar por Tipo
-  const tipoCount = { 'Tren de Crédito': 0, 'Cumplimiento Normativo': 0, 'Inmobiliaria':0 };
-    proyectos.forEach(p => {
-    const tipo = (p.tipo || '').toLowerCase();
-    if (tipo.includes('crédito') || tipo.includes('credito') || tipo.includes('tren')) {
-      tipoCount['Tren de Crédito']++;
-    } else if (tipo.includes('cumplimiento') || tipo.includes('normativo')) {
-      tipoCount['Cumplimiento Normativo']++;
-    } else if (tipo.includes('inmob') || tipo.includes('vivienda') || tipo.includes('real estate')) {
-      tipoCount['Inmobiliaria']++;
-    }
-  });   
-  const totalTipos = tipoCount['Tren de Crédito'] + tipoCount['Cumplimiento Normativo'];
-  if (totalTipos === 0) return '';
-  
-  const pctCredito = Math.round((tipoCount['Tren de Crédito'] / totalTipos) * 100);
-  const pctCumplimiento = Math.round((tipoCount['Cumplimiento Normativo'] / totalTipos) * 100);
-  
-  // Configuración de tipos
-  const TIPOS_CFG = [
-    { 
-      key: 'Tren de Crédito', 
-      count: tipoCount['Tren de Crédito'], 
-      pct: pctCredito,
-      color: '#3b82f6', 
-      light: '#60a5fa', 
-      dark: '#2563eb',
-      bg: 'linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,249,230,0.75) 100%)',
-      border: 'rgba(255,255,255,0.4)',
-      desc: 'Proyectos del proceso crediticio'
-    },
-    { 
-      key: 'Cumplimiento Normativo', 
-      count: tipoCount['Cumplimiento Normativo'], 
-      pct: pctCumplimiento,
-      color: '#8b5cf6', 
-      light: '#a78bfa', 
-      dark: '#7c3aed',
-      bg: 'linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,249,230,0.75) 100%)',
-      border: 'rgba(255,255,255,0.4)',
-      desc: 'Proyectos regulatorios y de cumplimiento'
-    }
-  ];
-  
-  // Parámetros del semicírculo (mismo estilo que etapas de cierre TESI)
-  const R   = 72;
-  const SW  = 13;
-  const SZW = 220;
-  const SZH = 140;
-  const CX  = SZW / 2;
-  const CY  = SZH - 18;
-  const SEMI = parseFloat((Math.PI * R).toFixed(4));
-  
-  const tarjetas = TIPOS_CFG.map(t => {
-    const offset = SEMI - (SEMI * t.pct / 100);
-    
-    return `
-      <div class="proy-tipo-gauge-card" style="--tipo-color: ${t.color}; --tipo-light: ${t.light}; --tipo-bg: ${t.bg}; --tipo-border: ${t.border};">
-       
-        <svg viewBox="0 0 ${SZW} ${SZH}" style="width: 100%; height: auto; max-width: 280px; display: block; margin: 0 auto;" class="proy-tipo-svg">
-          <defs>
-            <linearGradient id="gT${t.key.replace(/\s/g,'')}" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="${t.light}"/>
-              <stop offset="100%" stop-color="${t.color}"/>
-            </linearGradient>
-            <filter id="glowT${t.key.replace(/\s/g,'')}" x="-25%" y="-25%" width="150%" height="150%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-            <radialGradient id="cGT${t.key.replace(/\s/g,'')}" cx="38%" cy="32%" r="65%">
-              <stop offset="0%" stop-color="#3d4a5c"/>
-              <stop offset="100%" stop-color="#1e2533"/>
-            </radialGradient>
-          </defs>
-          
-          <!-- Anillos decorativos exteriores -->
-          <path d="M ${CX - R - SW - 5} ${CY} A ${R + SW + 5} ${R + SW + 5} 0 0 1 ${CX + R + SW + 5} ${CY}"
-                fill="none" stroke="${t.color}" stroke-width="10" opacity="0.07"/>
-          <path d="M ${CX - R - 2} ${CY} A ${R + 2} ${R + 2} 0 0 1 ${CX + R + 2} ${CY}"
-                fill="none" stroke="${t.color}" stroke-width="6" opacity="0.12"/>
-          
-          <!-- Track base -->
-          <path d="M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}"
-                fill="none" stroke="#e2e8f0" stroke-width="${SW}" stroke-linecap="round"/>
-          
-          <!-- Arco de progreso -->
-          <path d="M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}"
-                fill="none" stroke="url(#gT${t.key.replace(/\s/g,'')})" stroke-width="${SW}" stroke-linecap="round"
-                stroke-dasharray="${SEMI}" stroke-dashoffset="${offset}"
-                filter="url(#glowT${t.key.replace(/\s/g,'')})"/>
-          
-          <!-- Dot luminoso en la punta del arco -->
-          ${t.pct > 0 ? (() => {
-            const angle = Math.PI * (1 - t.pct / 100);
-            const dotX = (CX + R * Math.cos(angle)).toFixed(2);
-            const dotY = (CY - R * Math.sin(angle)).toFixed(2);
-            return `<circle cx="${dotX}" cy="${dotY}" r="${SW/2 + 2}" fill="${t.color}" opacity="0.9"/>
-                    <circle cx="${dotX}" cy="${dotY}" r="${SW/2 + 5}" fill="none" stroke="#fff" stroke-width="2" opacity="0.4">
-                      <animate attributeName="r" values="${SW/2 + 5};${SW/2 + 11};${SW/2 + 5}" dur="1.8s" repeatCount="indefinite"/>
-                      <animate attributeName="stroke-opacity" values="0.4;0;0.4" dur="1.8s" repeatCount="indefinite"/>
-                    </circle>`;
-          })() : ''}          
-          
-          <!-- Círculo central oscuro -->
-          <circle cx="${CX}" cy="${CY - 8}" r="${R - SW - 6}" fill="#253044"/>
-          <circle cx="${CX}" cy="${CY - 8}" r="${R - SW - 6}" fill="url(#cGT${t.key.replace(/\s/g,'')})"/>
-          <circle cx="${CX}" cy="${CY - 8}" r="${R - SW - 6}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
-          
-          <!-- Número central -->
-          <text x="${CX}" y="${CY - 14}" text-anchor="middle" dominant-baseline="middle"
-                font-family="'IBM Plex Sans', sans-serif" font-size="30" font-weight="800" fill="#fff">${t.count}</text>
-          <!-- Porcentaje -->
-          <text x="${CX}" y="${CY + 10}" text-anchor="middle" dominant-baseline="middle"
-                font-family="'IBM Plex Sans', sans-serif" font-size="19" font-weight="700" fill="${t.light}">${t.pct}%</text>
-             </svg>
-        
-        <div class="proy-tipo-gauge-info">
-          <div class="proy-tipo-gauge-name">${t.key}</div>
-          <div class="proy-tipo-gauge-desc">${t.desc}</div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  return `
-    <style>
-      .proy-tipo-section {
-        padding: 0 40px 40px;
-      }
-      .proy-tipo-container {
-        background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,249,230,0.75) 100%);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255,255,255,0.4);
-        border-radius: 18px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
-        padding: 28px;
-        transition: all 0.3s ease;
-      }
-      .proy-tipo-container:hover {
-        box-shadow: 0 12px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
-        transform: translateY(-3px);
-      }
-      
-      .proy-tipo-header {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        margin-bottom: 28px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid rgba(253,185,19,0.15);
-      }
-      .proy-tipo-header-num {
-        width: 36px;
-        height: 36px;
-        background: linear-gradient(135deg, #FDB913 0%, #f59e0b 100%);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        font-weight: 800;
-        color: #fff;
-        box-shadow: 0 4px 12px rgba(253,185,19,0.35);
-      }
-      .proy-tipo-header-text h4 {
-        font-size: 18px;
-        font-weight: 800;
-        color: #1e293b;
-        margin: 0 0 2px;
-      }
-      .proy-tipo-header-text p {
-        font-size: 12px;
-        color: #64748b;
-        margin: 0;
-      }
-      
-      .proy-tipo-gauges-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 24px;
-      }
-      
-      .proy-tipo-gauge-card {
-        background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,249,230,0.75) 100%);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255,255,255,0.4);
-        border-radius: 18px;
-        padding: 28px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
-        transition: all 0.3s ease;
-      }
-      .proy-tipo-gauge-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: var(--yellow, #FDB913);
-        border-radius: 18px 18px 0 0;
-      }
-      .proy-tipo-gauge-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
-        border-color: rgba(255,255,255,0.4);
-      }
-      
-      .proy-tipo-svg {
-        display: block;
-        margin-bottom: 16px;
-        width: 100%;
-        height: auto;
-        max-width: 280px;
-        margin-left: auto;
-        margin-right: auto;
-      }
-      
-      .proy-tipo-gauge-info {
-        text-align: center;
-      }
-      .proy-tipo-gauge-name {
-        font-size: 16px;
-        font-weight: 800;
-        color: #1e293b;
-        margin-bottom: 4px;
-      }
-      .proy-tipo-gauge-desc {
-        font-size: 12px;
-        color: #64748b;
-      }
-    </style>
-    
-    <div class="proy-tipo-section">
-      <div class="proy-tipo-container">
-        <div class="proy-tipo-header">
-          <div class="proy-tipo-header-num">04</div>
-          <div class="proy-tipo-header-text">
-            <h4>Distribución por Tipo</h4>
-            <p>Clasificación de proyectos por categoría</p>
-          </div>
-        </div>
-        <div class="proy-tipo-gauges-grid">
-          ${tarjetas}
-        </div>
-      </div>
-    </div>
-  `;
+  return '<div class="cgauge-grid" style="grid-template-columns: repeat(3, 1fr); max-width: 820px; margin: 10px auto 0;">' + tarjetas + '</div>';
 }
 
 
@@ -6010,7 +5843,7 @@ function htmlProyectosTabla(proyectos) {
     return `
       <div class="proy-section">
         <div class="proy-sec-header">
-          <span class="proy-sec-num">05</span>
+          <span class="proy-sec-num">04</span>
           <div class="proy-sec-text">
             <h3>Lista de Proyectos</h3>
             <p>Detalle de todos los proyectos registrados</p>
@@ -6071,7 +5904,7 @@ function htmlProyectosTabla(proyectos) {
   return `
     <div class="proy-section">
       <div class="proy-sec-header">
-        <span class="proy-sec-num">05</span>
+        <span class="proy-sec-num">04</span>
         <div class="proy-sec-text">
           <h3>Lista de Proyectos</h3>
           <p>${proyectos.length} proyectos registrados en el sistema</p>
@@ -6271,6 +6104,218 @@ function abrirEstadoPanel(estado, color) {
 function cerrarEstadoPanel() {
   document.getElementById('estadoPanelOverlay').classList.remove('open');
   document.getElementById('estadoPanel').classList.remove('open');
+}
+
+// ════════════════════════════════════════════════════════════
+// PANEL DETALLE ÁREA — Distribución por Área (Pie Chart)
+// ════════════════════════════════════════════════════════════
+
+function abrirAreaPanel(area, color) {
+  document.getElementById('apStripe').style.background = color;
+  document.getElementById('apAreaName').textContent = area;
+  document.getElementById('apAreaName').style.color = color;
+  document.getElementById('apTotal').textContent = '...';
+  document.getElementById('apAvance').textContent = '...';
+  document.getElementById('apRiesgo').textContent = '...';
+  document.getElementById('apProyectosList').innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;">Cargando...</div>';
+
+  document.getElementById('areaPanelOverlay').classList.add('open');
+  document.getElementById('areaPanel').classList.add('open');
+
+  function renderAreaPanel(data) {
+    datosProyectosCache = data;
+    var proyectos = data.proyectos.filter(function(p) {
+      return p.areaSolicitante === area;
+    });
+
+    document.getElementById('apTotal').textContent = proyectos.length;
+
+    // Avance promedio
+    var sumAv = 0, countAv = 0;
+    proyectos.forEach(function(p) {
+      if (p.avance !== null && p.avance !== undefined) { sumAv += p.avance; countAv++; }
+    });
+    var avgAv = countAv > 0 ? Math.round(sumAv / countAv) : 0;
+    document.getElementById('apAvance').textContent = avgAv + '%';
+
+    // Riesgo alto
+    var rAlto = proyectos.filter(function(p) { return p.nivelRiesgo === 'Alto'; }).length;
+    document.getElementById('apRiesgo').textContent = rAlto;
+
+    var listEl = document.getElementById('apProyectosList');
+
+    if (proyectos.length === 0) {
+      listEl.innerHTML = '<div style="text-align:center;padding:32px;color:#94a3b8;font-size:14px;">Sin proyectos en esta área</div>';
+      return;
+    }
+
+    var sorted = proyectos.sort(function(a, b) { return (b.avance || 0) - (a.avance || 0); });
+
+    var html = '<table class="tp-exp-table">' +
+      '<thead><tr>' +
+        '<th>Proyecto</th>' +
+        '<th>Estado</th>' +
+        '<th>Riesgo</th>' +
+        '<th style="text-align:center;">Avance</th>' +
+      '</tr></thead><tbody>';
+
+    var ESTADO_COLORS = {
+      'Solicitud inicial': '#a78bfa',
+      'Levantamiento de información': '#0ea5e9',
+      'En desarrollo': '#f59e0b',
+      'En pruebas': '#d946ef',
+      'En producción': '#10b981',
+      'Completado': '#22c55e',
+      'Pausado': '#ef4444',
+      'Cancelado': '#9ca3af'
+    };
+
+    var RIESGO_COLORS = { 'Alto': '#ef4444', 'Medio': '#f59e0b', 'Bajo': '#10b981' };
+
+    sorted.forEach(function(p) {
+      var pct = parseInt(p.avance) || 0;
+      var barColor = pct >= 70 ? '#10b981' : pct >= 30 ? '#f59e0b' : '#ef4444';
+      var eColor = ESTADO_COLORS[p.estado] || '#64748b';
+      var rColor = RIESGO_COLORS[p.nivelRiesgo] || '#94a3b8';
+
+      html += '<tr>' +
+        '<td>' +
+          '<div style="font-weight:700;font-size:13px;color:#1e293b;">' + (p.proyecto || '—') + '</div>' +
+        '</td>' +
+        '<td>' +
+          '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:' + eColor + ';background:' + eColor + '14;padding:3px 10px;border-radius:20px;white-space:nowrap;">' +
+            '<span style="width:6px;height:6px;border-radius:50%;background:' + eColor + ';flex-shrink:0;"></span>' +
+            (p.estado || '—') +
+          '</span>' +
+        '</td>' +
+        '<td>' +
+          '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:' + rColor + ';background:' + rColor + '14;padding:3px 10px;border-radius:20px;white-space:nowrap;">' +
+            '<span style="width:6px;height:6px;border-radius:50%;background:' + rColor + ';flex-shrink:0;"></span>' +
+            (p.nivelRiesgo || '—') +
+          '</span>' +
+        '</td>' +
+        '<td style="text-align:center;">' +
+          '<div style="display:flex;align-items:center;gap:6px;justify-content:center;">' +
+            '<div style="flex:1;max-width:60px;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;">' +
+              '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:3px;"></div>' +
+            '</div>' +
+            '<span style="font-size:12px;font-weight:800;color:' + barColor + ';min-width:32px;">' + pct + '%</span>' +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+    });
+
+    html += '</tbody></table>';
+    listEl.innerHTML = html;
+  }
+
+  if (datosProyectosCache) {
+    renderAreaPanel(datosProyectosCache);
+  } else {
+    google.script.run
+      .withSuccessHandler(renderAreaPanel)
+      .withFailureHandler(function(err) {
+        document.getElementById('apProyectosList').innerHTML =
+          '<div style="text-align:center;padding:20px;color:#ef4444;">Error: ' + (err.message || err) + '</div>';
+      })
+      .getDatosProyectos();
+  }
+}
+
+function cerrarAreaPanel() {
+  document.getElementById('areaPanelOverlay').classList.remove('open');
+  document.getElementById('areaPanel').classList.remove('open');
+}
+
+// ════════════════════════════════════════════════════════════
+// INICIALIZACIÓN UI PROYECTOS
+// Se llama después de inyectar htmlPanelProyectos en el DOM
+// ════════════════════════════════════════════════════════════
+function inicializarProyectosUI() {
+
+  // ── 1) Pie chart: hover + click ──
+  var dataEl = document.getElementById('pieAreaData');
+  if (dataEl) {
+    var PIE_AREAS  = JSON.parse(dataEl.getAttribute('data-areas')  || '[]');
+    var PIE_COLORS = JSON.parse(dataEl.getAttribute('data-colors') || '[]');
+
+    function setActive(idx, active) {
+      document.querySelectorAll('[data-idx="'+idx+'"]').forEach(function(el) {
+        if (active) el.classList.add('active');
+        else el.classList.remove('active');
+      });
+    }
+
+    document.querySelectorAll('.pie-seg, .lbl-grp, .conn-line').forEach(function(el) {
+      el.addEventListener('mouseenter', function() { setActive(el.dataset.idx, true); });
+      el.addEventListener('mouseleave', function() { setActive(el.dataset.idx, false); });
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', function() {
+        var i = parseInt(el.dataset.idx);
+        if (PIE_AREAS[i]) abrirAreaPanel(PIE_AREAS[i], PIE_COLORS[i]);
+      });
+    });
+  }
+
+  // ── 2) Gauges de riesgo: animación de carga ──
+  document.querySelectorAll('.cgauge-card[data-rid]').forEach(function(card, idx) {
+    var safeId = card.getAttribute('data-rid');
+    var pct    = parseFloat(card.getAttribute('data-rpct')  || 0);
+    var semi   = parseFloat(card.getAttribute('data-rsemi') || 0);
+    if (!safeId || semi === 0) return;
+
+    var arcEl  = document.getElementById('sgArcR'     + safeId);
+    var pctEl  = document.getElementById('sgPctR'     + safeId);
+    var dotEl  = document.getElementById('sgDotR'     + safeId);
+    var haloEl = document.getElementById('sgDotHaloR' + safeId);
+    if (!arcEl || !pctEl) return;
+
+    var targetOff = semi * (1 - pct / 100);
+    var dur       = 1800;
+    function easeOutR(t) { return 1 - Math.pow(1 - t, 3); }
+
+    var RR  = 72;
+    var RCX = 110;
+    var RCY = 122;
+
+    function rDotPos(progress) {
+      var angle = Math.PI * (1 - progress);
+      return { x: RCX + RR * Math.cos(angle), y: RCY - RR * Math.sin(angle) };
+    }
+
+    setTimeout(function() {
+      if (dotEl)  dotEl.setAttribute('opacity',  pct > 0 ? '1' : '0');
+      if (haloEl) haloEl.setAttribute('opacity', pct > 0 ? '1' : '0');
+
+      var start = null;
+      (function tick(now) {
+        if (!start) start = now;
+        var raw = Math.min((now - start) / dur, 1);
+        var t   = easeOutR(raw);
+
+        arcEl.setAttribute('stroke-dashoffset', (semi - (semi - targetOff) * t).toFixed(2));
+        pctEl.textContent = Math.round(pct * t) + '%';
+
+        if (pct > 0) {
+          var pos = rDotPos(t * pct / 100);
+          if (dotEl)  { dotEl.setAttribute('cx', pos.x.toFixed(2));  dotEl.setAttribute('cy', pos.y.toFixed(2)); }
+          if (haloEl) { haloEl.setAttribute('cx', pos.x.toFixed(2)); haloEl.setAttribute('cy', pos.y.toFixed(2)); }
+        }
+
+        if (raw < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          arcEl.setAttribute('stroke-dashoffset', targetOff.toFixed(2));
+          pctEl.textContent = pct + '%';
+          if (pct > 0) {
+            var fp = rDotPos(pct / 100);
+            if (dotEl)  { dotEl.setAttribute('cx',  fp.x.toFixed(2)); dotEl.setAttribute('cy',  fp.y.toFixed(2)); }
+            if (haloEl) { haloEl.setAttribute('cx', fp.x.toFixed(2)); haloEl.setAttribute('cy', fp.y.toFixed(2)); }
+          }
+        }
+      })(performance.now());
+    }, 400 + idx * 180);
+  });
 }
 
 // ════════════════════════════════════════════════════════════
