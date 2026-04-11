@@ -428,7 +428,7 @@ body {
   min-width: 0;
 }
 .pc-sistema {
-  font-size: 12px;
+  font-size: 18px;
   font-weight: 800;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -436,14 +436,14 @@ body {
   margin-bottom: 6px;
 }
 .pc-titulo {
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 800;
   color: #fff;
   letter-spacing: -0.5px;
   line-height: 1.2;
 }
 .pc-sub {
-  font-size: 11px;
+  font-size: 13px;
   color: rgba(255,255,255,0.35);
   font-weight: 500;
   margin-top: 4px;
@@ -1091,6 +1091,7 @@ body {
 .rtype-bars-wrap svg {
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.06));
 }
+.rtype-bar-click:hover { opacity: 0.06; fill: #000 !important; }
 
 /* ══ CGAUGE CARD — ajustes específicos ══ */
 .cgauge-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
@@ -2971,8 +2972,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const hoy = new Date();
   document.getElementById('fechaHoy').textContent =
     hoy.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('repContenido').innerHTML =
-    `<div class="empty-rep"><div class="empty-rep-icon">⏳</div><div class="empty-rep-text">Cargando datos de 2026...</div></div>`;
+  document.getElementById('repContenido').innerHTML = htmlClockLoader('Cargando datos de 2026', 'Conectando con el servidor...');
     cargarAnio(2026, () => {
     poblarMeses(2026);
     
@@ -3037,21 +3037,26 @@ function onCambioAnio() {
   const anio = parseInt(document.getElementById('selectAnio').value);
   anioActual = anio;
   
+  // ★ Ocultar reporte INMEDIATAMENTE y limpiar todo rastro visual
+  var repWrap = document.getElementById('repWrap');
+  var repCont = document.getElementById('repContenido');
+  repWrap.style.display = 'none';
+  repCont.innerHTML = '';
+  
+  // Después de un frame, mostrar el loader
+  requestAnimationFrame(function() {
+    repCont.innerHTML = htmlClockLoader('Cargando ' + anio, 'Obteniendo datos del servidor...');
+    repWrap.style.display = '';
+    repWrap.classList.remove('visible');
+    requestAnimationFrame(function() { repWrap.classList.add('visible'); });
+  });
+  
   // Agregar estado loading al wrapper del mes
   const mesWrap = document.querySelector('.pc-mes-wrap');
   const mesSelect = document.getElementById('selectMes');
   
   mesWrap.classList.remove('loaded');
   mesWrap.classList.add('loading');
-  
-  // Agregar spinner
-  let spinner = mesWrap.querySelector('.select-spinner');
-  if (!spinner) {
-    spinner = document.createElement('div');
-    spinner.className = 'select-spinner';
-    spinner.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>';
-    mesWrap.appendChild(spinner);
-  }
   
   mesSelect.innerHTML = '<option value="">Cargando...</option>';
   
@@ -3061,10 +3066,6 @@ function onCambioAnio() {
     // Quitar loading, agregar loaded
     mesWrap.classList.remove('loading');
     mesWrap.classList.add('loaded');
-    
-    // Quitar spinner
-    const sp = mesWrap.querySelector('.select-spinner');
-    if (sp) sp.remove();
     
     // Quitar clase loaded después de la animación
     setTimeout(() => mesWrap.classList.remove('loaded'), 600);
@@ -3186,11 +3187,20 @@ function renderAnioCompleto(mesesData, anio) {
   // Guardar incidencias anuales para filtros y panel de tipo
   incidenciasAnuales = incidenciasAcum;
 
-  // Dato sintético del año para initCharts (donas KPI)
+  // Acumular completosUniverso del año
+  const completosAcum = [];
+  meses.forEach(k => {
+    const d = mesesData[k];
+    if (d.completosUniverso && d.completosUniverso.length) completosAcum.push(...d.completosUniverso);
+  });
+
+  // Dato sintético del año — incluye completosUniverso para clicks
   const datosAnio = {
     total: totTotal, sinIncidencias: totOk, conIncidencias: totInc,
-    conteoPorTipo, incidencias: incidenciasAcum, etapasCierre: {}
+    conteoPorTipo, incidencias: incidenciasAcum, etapasCierre: {},
+    completosUniverso: completosAcum
   };
+  datosMostrados = datosAnio;
 
   // Toggle de vista
   const toggle = `
@@ -3212,6 +3222,7 @@ function renderAnioCompleto(mesesData, anio) {
       ${htmlKPIs(totTotal, totOk, totInc, pctC, pctI, label)}
       ${htmlRubros(conteoPorTipo, incidenciasAcum, label)}
       ${htmlDistribucion(totArea, totalIncs, label)}
+      ${htmlTopDocumentos(incidenciasAcum, label)}
       ${htmlExpedientes(incidenciasAcum)}
       ${htmlDetalleAreas(incidenciasAcum, totArea)}
     </div>`;
@@ -3407,6 +3418,8 @@ function renderReporte(datos, nombreMes, anio, datosPrev, nombreMesPrev) {
       htmlEtapasCierre(datos, `${nombreMes} ${anio}`) +
       htmlDistribucion(totArea, totalIncs, `${nombreMes} ${anio}`) +
       htmlRubros(datos.conteoPorTipo, datos.incidencias||[], `${nombreMes} ${anio}`) +
+      htmlTopDocumentos(datos.incidencias||[], `${nombreMes} ${anio}`) +
+      htmlAvisos(datos.avisos||[], `${nombreMes} ${anio}`) +
       htmlExpedientes(datos.incidencias||[]) +
       htmlDetalleAreas(datos.incidencias||[], totArea);
 
@@ -3890,6 +3903,8 @@ const barrasSVG =
         '<text x="' + CIR_X + '" y="' + Y1 + '"' +
           ' font-family="IBM Plex Sans, sans-serif" font-size="12" font-weight="800"' +
           ' fill="#fff" text-anchor="middle" dominant-baseline="middle">' + pctOk + '%</text>' +
+        // Click zone COMPLETOS
+        '<rect class="rtype-bar-click" data-bar="completos" data-tipo="' + t + '" x="0" y="0" width="' + SVG_W + '" height="' + (Y1 + BH/2 + 8) + '" fill="transparent" style="cursor:pointer;"/>' +
 
         // ── FILA INCIDENCIAS ──
         // Label encima
@@ -3924,6 +3939,8 @@ const barrasSVG =
         '<text x="' + CIR_X + '" y="' + Y2 + '"' +
           ' font-family="IBM Plex Sans, sans-serif" font-size="12" font-weight="800"' +
           ' fill="#fff" text-anchor="middle" dominant-baseline="middle">' + pctInc + '%</text>' +
+        // Click zone INCIDENCIAS
+        '<rect class="rtype-bar-click" data-bar="incidencias" data-tipo="' + t + '" x="0" y="' + (Y1 + BH/2 + 8) + '" width="' + SVG_W + '" height="' + (Y2 + BH/2 + 8 - Y1) + '" fill="transparent" style="cursor:pointer;"/>' +
 
       '</svg></div>';
 
@@ -4059,7 +4076,7 @@ function htmlDistribucion(totArea, totalIncs, label) {
           '<svg class="area-orbit orbit-ccw" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
             '<circle cx="32" cy="32" r="29" fill="none" stroke="' + a.colorClaro + '" stroke-width="1.5" stroke-dasharray="12 170" stroke-linecap="round" opacity="0.4"/>' +
           '</svg>' +
-          '<div style="position:absolute;top:4px;left:4px;width:46px;height:46px;background:linear-gradient(135deg,' + a.colorClaro + ',' + a.color + ');border-radius:50%;border:3px solid ' + a.colorOscuro + ';display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:900;box-shadow:0 4px 12px ' + a.color + '40;">' + val + '</div>' +
+          '<div onclick="abrirAreaIncPanel(\'' + nom + '\')" style="position:absolute;top:4px;left:4px;width:46px;height:46px;background:linear-gradient(135deg,' + a.colorClaro + ',' + a.color + ');border-radius:50%;border:3px solid ' + a.colorOscuro + ';display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:900;box-shadow:0 4px 12px ' + a.color + '40;cursor:pointer;transition:transform 0.2s;" onmouseenter="this.style.transform=\'scale(1.12)\'" onmouseleave="this.style.transform=\'scale(1)\'">' + val + '</div>' +
         '</div>' +
       '</td>' +
       '<td style="border-bottom:1px solid #f1f5f9;padding:12px 18px;">' +
@@ -4386,6 +4403,94 @@ var renderGaugeDesign = function(id, val, pct, colors) {
   '</div>';
 }
 
+// ════════════════════════════════════
+// TOP 5 DOCUMENTOS CON MÁS INCIDENCIAS
+// ════════════════════════════════════
+function htmlTopDocumentos(incidencias, label) {
+  if (!incidencias || incidencias.length === 0) return '';
+  var conteo = {};
+  incidencias.forEach(function(exp) {
+    var docs = exp.documentos && exp.documentos.length > 0 ? exp.documentos : parsearDocumentosHTML(exp.areas || '');
+    docs.forEach(function(d) {
+      var nombre = (d.documento || '').replace(/^\*+\s*/, '').replace(/^\d+\.\s*/, '').replace(/^\*+\s*/, '').replace(/\s*\/.*$/, '').trim();
+      if (!nombre || nombre === '—') return;
+      if (!conteo[nombre]) conteo[nombre] = { nombre: nombre, total: 0, areas: {}, expedientes: new Set() };
+      conteo[nombre].total++;
+      var area = (d.area || '').trim();
+      if (area) conteo[nombre].areas[area] = (conteo[nombre].areas[area] || 0) + 1;
+      conteo[nombre].expedientes.add(exp.id || '');
+    });
+  });
+  var ranking = Object.values(conteo).sort(function(a, b) { return b.total - a.total; }).slice(0, 5);
+  if (ranking.length === 0) return '';
+  var maxVal = ranking[0].total;
+  var totalMenciones = ranking.reduce(function(s, d) { return s + d.total; }, 0);
+  var COLORES = [
+    { color:'#ef4444', claro:'#fca5a5', oscuro:'#991b1b' },
+    { color:'#f97316', claro:'#fdba74', oscuro:'#c2410c' },
+    { color:'#f59e0b', claro:'#fcd34d', oscuro:'#92400e' },
+    { color:'#0ea5e9', claro:'#7dd3fc', oscuro:'#0369a1' },
+    { color:'#8b5cf6', claro:'#c4b5fd', oscuro:'#6d28d9' }
+  ];
+  var BW=320,BH=22,R_PILL=BH/2,DOT_R=BH/2+3,SVG_H=DOT_R*2,SVG_W=BW+DOT_R*2+6;
+  var filas = ranking.map(function(doc, idx) {
+    var c=COLORES[idx], pct=totalMenciones>0?Math.round((doc.total/totalMenciones)*100):0, wBar=Math.max(BH*2,Math.round((pct/100)*BW)), CY=DOT_R, safeN='topDoc'+idx;
+    var numExp=doc.expedientes?doc.expedientes.size:0;
+    var areasBadges=Object.entries(doc.areas).sort(function(a,b){return b[1]-a[1];}).map(function(entry){
+      var ac=AREAS_CFG[entry[0]]||{color:'#64748b',colorBg:'#f8fafc'};
+      return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:'+ac.color+';background:'+ac.colorBg+';padding:2px 8px;border-radius:12px;"><span style="width:5px;height:5px;border-radius:50%;background:'+ac.color+';"></span>'+entry[0]+'</span>';
+    }).join(' ');
+    var barSVG='<svg viewBox="0 0 '+SVG_W+' '+SVG_H+'" width="100%" height="auto" style="display:block;overflow:visible;max-width:'+SVG_W+'px;" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gTD'+safeN+'" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="'+c.claro+'"/><stop offset="100%" stop-color="'+c.color+'"/></linearGradient><filter id="fTD'+safeN+'" x="-2%" y="-20%" width="106%" height="140%"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><linearGradient id="shTD'+safeN+'" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="'+Math.round(BW*0.4)+'" y2="0"><stop offset="0%" stop-color="rgba(255,255,255,0)"/><stop offset="50%" stop-color="rgba(255,255,255,0.35)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/><animate attributeName="x1" values="-'+Math.round(BW*0.4)+';'+BW+'" dur="3s" repeatCount="indefinite"/><animate attributeName="x2" values="0;'+Math.round(BW*1.4)+'" dur="3s" repeatCount="indefinite"/></linearGradient><clipPath id="clipTD'+safeN+'"><rect x="0" y="'+(CY-BH/2)+'" width="'+wBar+'" height="'+BH+'" rx="'+R_PILL+'" ry="'+R_PILL+'"/></clipPath></defs><rect x="0" y="'+(CY-BH/2)+'" width="'+BW+'" height="'+BH+'" rx="'+R_PILL+'" ry="'+R_PILL+'" fill="#e2e8f0"/><rect x="0" y="'+(CY-BH/2)+'" width="'+wBar+'" height="'+BH+'" rx="'+R_PILL+'" ry="'+R_PILL+'" fill="url(#gTD'+safeN+')" filter="url(#fTD'+safeN+')" style="animation:fadeSlideRight 0.8s ease-out both;animation-delay:'+(idx*0.12)+'s;"/><rect x="0" y="'+(CY-BH/2)+'" width="'+BW+'" height="'+BH+'" rx="'+R_PILL+'" ry="'+R_PILL+'" fill="url(#shTD'+safeN+')" clip-path="url(#clipTD'+safeN+')" pointer-events="none"/><rect x="0" y="'+(CY-BH/2)+'" width="'+BW+'" height="'+Math.round(BH*0.38)+'" rx="'+R_PILL+'" ry="'+R_PILL+'" fill="rgba(255,255,255,0.22)" pointer-events="none"/><text x="'+(wBar-R_PILL-3)+'" y="'+CY+'" font-family="IBM Plex Sans,sans-serif" font-size="13" font-weight="800" fill="#fff" text-anchor="end" dominant-baseline="middle">'+pct+'%</text><circle cx="'+wBar+'" cy="'+CY+'" r="'+DOT_R+'" fill="#fff" stroke="'+c.color+'" stroke-width="3" style="animation:fadeSlideRight 0.6s ease-out both;animation-delay:'+(0.3+idx*0.12)+'s;"/></svg>';
+    var bg=idx%2===0?'#fff':'#f8fafc';
+    return '<div style="display:flex;align-items:center;gap:18px;padding:18px 24px;background:'+bg+';border-bottom:1px solid #f1f5f9;transition:background 0.2s;" onmouseenter="this.style.background=\'#fafbfc\'" onmouseleave="this.style.background=\''+bg+'\'">'+'<div class="area-circle-wrap" style="flex-shrink:0;width:54px;height:54px;"><svg class="area-orbit orbit-cw" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="29" fill="none" stroke="'+c.color+'" stroke-width="2" stroke-dasharray="20 163" stroke-linecap="round" opacity="0.6"></circle></svg><svg class="area-orbit orbit-ccw" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="29" fill="none" stroke="'+c.claro+'" stroke-width="1.5" stroke-dasharray="12 170" stroke-linecap="round" opacity="0.4"></circle></svg><div style="position:absolute;top:4px;left:4px;width:46px;height:46px;background:linear-gradient(135deg,'+c.claro+','+c.color+');border-radius:50%;border:3px solid '+c.oscuro+';display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:900;box-shadow:0 4px 12px '+c.color+'40;">'+doc.total+'</div></div>'+'<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:800;color:#1e293b;line-height:1.3;margin-bottom:4px;">'+doc.nombre+'</div><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;"><span style="font-size:11px;font-weight:700;color:#94a3b8;">'+numExp+' expediente'+(numExp!==1?'s':'')+'</span><span style="width:1px;height:12px;background:#e2e8f0;"></span>'+areasBadges+'</div>'+barSVG+'</div></div>';
+  }).join('');
+  return '<div class="rep-section"><div class="sec-titulo">'+secTitulo(5,'Top Documentos con Incidencias','Los documentos que más se repiten en las observaciones registradas',label||'')+'</div><div style="background:linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,249,230,0.7));backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.4);border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.06),inset 0 1px 0 rgba(255,255,255,0.6);overflow:hidden;"><div style="padding:16px 24px;background:rgba(253,185,19,0.08);border-bottom:1px solid rgba(253,185,19,0.12);display:flex;align-items:center;gap:12px;"><div style="width:32px;height:32px;background:linear-gradient(135deg,#FDB913,#f59e0b);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 4px 12px rgba(253,185,19,0.35);">📄</div><span style="font-size:14px;font-weight:800;color:#1e293b;">Ranking de frecuencia</span><span style="margin-left:auto;font-size:12px;font-weight:800;color:#FDB913;background:rgba(253,185,19,0.12);padding:4px 12px;border-radius:20px;">'+totalMenciones+' menciones</span></div>'+filas+'</div></div>';
+}
+
+// ════════════════════════════════════
+// AVISOS Y NOTIFICACIONES
+// ════════════════════════════════════
+function htmlAvisos(avisos, label) {
+  if (!avisos || avisos.length === 0) return '';
+  var TC = {
+    'Retención':{icon:'🔒',color:'#ef4444',claro:'#fca5a5',oscuro:'#991b1b',bg:'#fef2f2',border:'#fecaca'},
+    'Retencion':{icon:'🔒',color:'#ef4444',claro:'#fca5a5',oscuro:'#991b1b',bg:'#fef2f2',border:'#fecaca'},
+    'Sanción':{icon:'⚖️',color:'#dc2626',claro:'#f87171',oscuro:'#7f1d1d',bg:'#fef2f2',border:'#fecaca'},
+    'Sancion':{icon:'⚖️',color:'#dc2626',claro:'#f87171',oscuro:'#7f1d1d',bg:'#fef2f2',border:'#fecaca'},
+    'Información':{icon:'ℹ️',color:'#3b82f6',claro:'#93c5fd',oscuro:'#1e40af',bg:'#eff6ff',border:'#bfdbfe'},
+    'Informacion':{icon:'ℹ️',color:'#3b82f6',claro:'#93c5fd',oscuro:'#1e40af',bg:'#eff6ff',border:'#bfdbfe'},
+    'Advertencia':{icon:'⚠️',color:'#f59e0b',claro:'#fcd34d',oscuro:'#92400e',bg:'#fffbeb',border:'#fde68a'},
+    'Reconocimiento':{icon:'🏆',color:'#10b981',claro:'#6ee7b7',oscuro:'#065f46',bg:'#f0fdf4',border:'#86efac'},
+    'Cambio':{icon:'🔄',color:'#8b5cf6',claro:'#c4b5fd',oscuro:'#5b21b6',bg:'#f5f3ff',border:'#ddd6fe'}
+  };
+  var tarjetas = avisos.map(function(aviso, idx) {
+    var tipo=aviso.tipo||'Información', cfg=TC[tipo]||TC['Informacion'], delay=(idx*0.1).toFixed(2);
+    
+    return '<div style="background:var(--card-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--card-border);border-radius:var(--card-radius);box-shadow:var(--card-shadow);transition:transform 0.3s ease,box-shadow 0.3s ease;animation:fadeSlideRight 0.6s ease-out both;animation-delay:'+delay+'s;position:relative;overflow:hidden;" onmouseenter="this.style.transform=\'translateY(-4px)\';this.style.boxShadow=\'var(--card-shadow-hover)\'" onmouseleave="this.style.transform=\'none\';this.style.boxShadow=\'var(--card-shadow)\'">' +
+      '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:'+cfg.color+';z-index:1;"></div>' +
+      '<div style="display:flex;gap:18px;padding:22px 24px;position:relative;z-index:2;">' +
+        '<div class="area-circle-wrap" style="flex-shrink:0;width:54px;height:54px;">' +
+          '<svg class="area-orbit orbit-cw" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="29" fill="none" stroke="'+cfg.color+'" stroke-width="2" stroke-dasharray="20 163" stroke-linecap="round" opacity="0.5"></circle></svg>' +
+          '<svg class="area-orbit orbit-ccw" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="29" fill="none" stroke="'+cfg.claro+'" stroke-width="1.5" stroke-dasharray="12 170" stroke-linecap="round" opacity="0.35"></circle></svg>' +
+          '<div style="position:absolute;top:4px;left:4px;width:46px;height:46px;background:linear-gradient(135deg,'+cfg.claro+','+cfg.color+');border-radius:50%;border:3px solid '+cfg.oscuro+';display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 12px '+cfg.color+'40;">'+cfg.icon+'</div>' +
+        '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">' +
+            '<span style="font-size:16px;font-weight:800;color:#1e293b;">'+(aviso.titulo||tipo)+'</span>' +
+            '<span style="font-size:10px;font-weight:800;color:'+cfg.color+';background:'+cfg.bg+';padding:3px 10px;border-radius:20px;border:1px solid '+cfg.border+';text-transform:uppercase;letter-spacing:0.8px;">'+tipo+'</span>' +
+          '</div>' +
+          '<div style="font-size:13px;color:#475569;line-height:1.7;margin-bottom:10px;">'+(aviso.mensaje||'')+'</div>' +
+          '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+            (aviso.area?'<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:'+cfg.oscuro+';background:#fff;padding:4px 12px;border-radius:20px;border:1px solid '+cfg.border+';"><span style="width:6px;height:6px;border-radius:50%;background:'+cfg.color+';"></span>'+aviso.area+'</span>':'') +
+            (aviso.fecha?'<span style="font-size:11px;font-weight:600;color:#94a3b8;">📅 '+aviso.fecha+'</span>':'') +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  return '<div class="rep-section"><div class="sec-titulo">'+secTitulo(6,'Avisos y Notificaciones','Comunicados relevantes del período actual',label||'')+'</div><div style="display:flex;flex-direction:column;gap:14px;">'+tarjetas+'</div></div>';
+}
+
 function htmlDetalleAreas(incidencias, totArea) {
   const areasOrdenadas = Object.entries(AREAS_CFG).sort(([nA],[nB]) => (totArea[nB]||0)-(totArea[nA]||0));
   let html = `<div class="rep-section"><div class="sec-titulo"><h2>Detalle por Área</h2><p>Documentos pendientes de integración</p></div>`;
@@ -4560,6 +4665,12 @@ function initCharts(datos) {
 
     // ── Agregar click handler para abrir panel de tipo ──
     if (card.classList.contains('rtype-clickable')) {
+      card.querySelectorAll('.rtype-bar-click').forEach(function(rect) {
+        rect.addEventListener('click', function(e) {
+          e.stopPropagation();
+          abrirTipoBarraPanel(this.getAttribute('data-tipo'), this.getAttribute('data-bar'));
+        });
+      });
       card.addEventListener('click', function() {
         const tipo = this.getAttribute('data-tipo');
         const total = parseInt(this.getAttribute('data-total') || 0);
@@ -5172,6 +5283,151 @@ function cerrarTipoPanel() {
   document.getElementById('tipoPanelOverlay').classList.remove('open');
   document.getElementById('tipoPanel').classList.remove('open');
   tipoExpedienteActual = null;
+}
+
+// ════════════════════════════════════════════════════════════
+// PANEL BARRA — Completos o Incidencias por Tipo (premium)
+// ════════════════════════════════════════════════════════════
+function abrirTipoBarraPanel(tipo, bar) {
+  var datos = datosMostrados;
+  var expedientes = [];
+  var esCompletos = (bar === 'completos');
+  var color = esCompletos ? '#10B981' : '#EF4444';
+  var colorLight = esCompletos ? '#34d399' : '#f87171';
+  var colorDark = esCompletos ? '#065f46' : '#991b1b';
+  var colorBg = esCompletos ? '#f0fdf4' : '#fef2f2';
+
+  document.getElementById('kpStripe').style.background = color;
+  document.getElementById('kpName').textContent = tipo + ' — ' + (esCompletos ? 'Completos' : 'Con Incidencias');
+  document.getElementById('kpName').style.color = color;
+  document.getElementById('kpSub').textContent = esCompletos
+    ? 'Expedientes de tipo ' + tipo + ' sin observaciones'
+    : 'Expedientes de tipo ' + tipo + ' con observaciones pendientes';
+
+  if (esCompletos) {
+    if (datos && datos.completosUniverso) {
+      expedientes = datos.completosUniverso
+        .filter(function(e) { return normalizarTipoExp(e.tipo) === tipo; })
+        .map(function(e) { return { id: e.id, fecha: e.fecha, tipo: e.tipo || '' }; });
+    }
+  } else {
+    var src = (datos && datos.incidencias) ? datos.incidencias : incidenciasAnuales;
+    expedientes = src
+      .filter(function(e) { return normalizarTipoExp(e.tipo) === tipo; })
+      .map(function(e) { return { id: e.id, fecha: e.fecha, tipo: e.tipo, totalIncidencias: e.totalIncidencias, areas: e.areas }; });
+  }
+
+  expedientes.sort(function(a, b) {
+    if (!esCompletos) return (b.totalIncidencias || 0) - (a.totalIncidencias || 0);
+    var fA = a.fecha ? a.fecha.split('/').reverse().join('-') : '';
+    var fB = b.fecha ? b.fecha.split('/').reverse().join('-') : '';
+    return fA.localeCompare(fB);
+  });
+
+  document.getElementById('kpTotal').textContent = expedientes.length;
+  document.getElementById('kpTotal').style.color = color;
+  var listEl = document.getElementById('kpExpList');
+
+  if (expedientes.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;padding:32px;color:#94a3b8;font-size:14px;">Sin expedientes</div>';
+  } else if (esCompletos) {
+    var html = '<table class="tp-exp-table"><thead><tr><th>ID Oportunidad</th><th>Fecha de Firma</th></tr></thead><tbody>';
+    expedientes.forEach(function(e) {
+      html += '<tr><td><span class="tp-exp-id">' + e.id + '</span></td><td><span class="tp-exp-fecha">' + e.fecha + '</span></td></tr>';
+    });
+    listEl.innerHTML = html + '</tbody></table>';
+  } else {
+    // ── Áreas con incidencias — diseño premium con orbitas ──
+    var areasTot = {};
+    Object.keys(AREAS_CFG).forEach(function(a) { areasTot[a] = 0; });
+    expedientes.forEach(function(e) {
+      var map = parsearAreas(e.areas || '');
+      Object.entries(map).forEach(function(entry) { if (areasTot[entry[0]] !== undefined) areasTot[entry[0]] += entry[1]; });
+    });
+    var areasConInc = Object.entries(areasTot).filter(function(e) { return e[1] > 0; }).sort(function(a, b) { return b[1] - a[1]; });
+    var totalIncsBar = areasConInc.reduce(function(s, e) { return s + e[1]; }, 0);
+
+    var areasHtml = '';
+    if (areasConInc.length > 0) {
+      // Header resumen
+      areasHtml += '<div style="padding:16px 20px;background:linear-gradient(135deg,rgba(255,255,255,0.9),rgba(239,68,68,0.04));border:1px solid #fecaca;border-radius:14px;margin-bottom:16px;">';
+      areasHtml += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">';
+      areasHtml += '<div style="width:28px;height:28px;background:linear-gradient(135deg,#f87171,#ef4444);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:800;box-shadow:0 2px 8px rgba(239,68,68,0.3);">⚠</div>';
+      areasHtml += '<span style="font-size:13px;font-weight:800;color:#1e293b;">' + totalIncsBar + ' incidencias en ' + areasConInc.length + ' área' + (areasConInc.length !== 1 ? 's' : '') + '</span>';
+      areasHtml += '<span style="margin-left:auto;font-size:11px;font-weight:700;color:#ef4444;background:#fef2f2;padding:3px 10px;border-radius:12px;border:1px solid #fecaca;">' + expedientes.length + ' exp.</span>';
+      areasHtml += '</div>';
+
+      // Grid de áreas — círculos simples sin orbitas
+      areasHtml += '<div style="display:flex;flex-wrap:wrap;gap:10px;">';
+      areasConInc.forEach(function(entry) {
+        var acfg = AREAS_CFG[entry[0]] || { color: '#64748b', colorClaro: '#94a3b8', colorOscuro: '#475569', colorBg: '#f8fafc' };
+        areasHtml += '<div style="display:flex;align-items:center;gap:8px;background:' + acfg.colorBg + ';padding:6px 14px 6px 6px;border-radius:24px;border:1px solid ' + acfg.color + '20;">';
+        areasHtml += '<div style="width:28px;height:28px;background:linear-gradient(135deg,' + acfg.colorClaro + ',' + acfg.color + ');border-radius:50%;border:2px solid ' + acfg.colorOscuro + ';display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:900;box-shadow:0 2px 6px ' + acfg.color + '40;flex-shrink:0;">' + entry[1] + '</div>';
+        areasHtml += '<span style="font-size:12px;font-weight:700;color:' + acfg.color + ';">' + entry[0] + '</span>';
+        areasHtml += '</div>';
+      });
+      areasHtml += '</div></div>';
+    }
+
+    var html = areasHtml + '<table class="tp-exp-table"><thead><tr><th>ID Oportunidad</th><th>Fecha</th><th style="text-align:center;">Incidencias</th></tr></thead><tbody>';
+    expedientes.forEach(function(e) {
+      html += '<tr><td><span class="tp-exp-id">' + e.id + '</span></td><td><span class="tp-exp-fecha">' + e.fecha + '</span></td><td style="text-align:center;"><span class="tp-exp-inc">' + (e.totalIncidencias || 0) + '</span></td></tr>';
+    });
+    listEl.innerHTML = html + '</tbody></table>';
+  }
+
+  document.getElementById('kpiPanelOverlay').classList.add('open');
+  document.getElementById('kpiPanel').classList.add('open');
+}
+
+// ════════════════════════════════════════════════════════════
+// PANEL ÁREA — Click en distribución de incidencias
+// ════════════════════════════════════════════════════════════
+function abrirAreaIncPanel(area) {
+  var acfg = AREAS_CFG[area] || { color: '#64748b', colorClaro: '#94a3b8', colorOscuro: '#475569', colorBg: '#f8fafc' };
+  var src = (datosMostrados && datosMostrados.incidencias) ? datosMostrados.incidencias : incidenciasAnuales;
+
+  var expedientes = [];
+  var totalIncArea = 0;
+  src.forEach(function(exp) {
+    var map = parsearAreas(exp.areas || '');
+    var n = map[area] || 0;
+    if (n > 0) {
+      expedientes.push({ id: exp.id, fecha: exp.fecha, tipo: exp.tipo, incArea: n, totalIncidencias: exp.totalIncidencias });
+      totalIncArea += n;
+    }
+  });
+  expedientes.sort(function(a, b) { return b.incArea - a.incArea; });
+
+  document.getElementById('kpStripe').style.background = acfg.color;
+  document.getElementById('kpName').textContent = area;
+  document.getElementById('kpName').style.color = acfg.color;
+  document.getElementById('kpSub').textContent = 'Expedientes con incidencias en esta área';
+  document.getElementById('kpTotal').textContent = expedientes.length;
+  document.getElementById('kpTotal').style.color = acfg.color;
+
+  var listEl = document.getElementById('kpExpList');
+  if (expedientes.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;padding:32px;color:#94a3b8;font-size:14px;">Sin expedientes</div>';
+  } else {
+    var resumen = '<div style="padding:14px 20px;background:' + acfg.colorBg + ';border:1px solid ' + acfg.color + '25;border-radius:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;">' +
+      '<div style="width:40px;height:40px;background:linear-gradient(135deg,' + acfg.colorClaro + ',' + acfg.color + ');border-radius:50%;border:3px solid ' + acfg.colorOscuro + ';display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:900;box-shadow:0 4px 10px ' + acfg.color + '40;flex-shrink:0;">' + totalIncArea + '</div>' +
+      '<div><div style="font-size:14px;font-weight:800;color:#1e293b;">' + totalIncArea + ' incidencia' + (totalIncArea !== 1 ? 's' : '') + '</div>' +
+      '<div style="font-size:11px;color:#94a3b8;font-weight:600;">' + expedientes.length + ' expediente' + (expedientes.length !== 1 ? 's' : '') + ' afectados</div></div></div>';
+
+    var html = resumen + '<table class="tp-exp-table"><thead><tr><th>ID Oportunidad</th><th>Tipo</th><th>Fecha</th><th style="text-align:center;">Inc.</th></tr></thead><tbody>';
+    expedientes.forEach(function(e) {
+      var cls = tipoCSSClass(e.tipo);
+      html += '<tr><td><span class="tp-exp-id">' + e.id + '</span></td>' +
+        '<td>' + (e.tipo ? '<span class="tipo-badge ' + cls + '">' + e.tipo + '</span>' : '—') + '</td>' +
+        '<td><span class="tp-exp-fecha">' + e.fecha + '</span></td>' +
+        '<td style="text-align:center;"><span class="tp-exp-inc">' + e.incArea + '</span></td></tr>';
+    });
+    listEl.innerHTML = html + '</tbody></table>';
+  }
+
+  document.getElementById('kpiPanelOverlay').classList.add('open');
+  document.getElementById('kpiPanel').classList.add('open');
 }
 
 function normalizarTipoExp(tipo) {
