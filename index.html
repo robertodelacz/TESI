@@ -2571,6 +2571,12 @@ video { pointer-events:none; outline:none; }
         <span class="sb-item-icon">🔍</span>
         <span class="sb-item-label">Detalle por Área</span>
       </a>
+
+      <a class="sb-item" data-tip="Pago de Comisiones"
+         onclick="sbNavegar('sec-comisiones',this)">
+        <span class="sb-item-icon">💰</span>
+        <span class="sb-item-label">Pago Comisiones</span>
+      </a>
     </div>
 
     <div class="sb-divider"></div>
@@ -4976,6 +4982,12 @@ const SEC_PANEL_CFG = {
       body.innerHTML  = htmlDetalleAreas(datosMostrados.incidencias || [], totArea);
     }
   },
+  'sec-comisiones': {
+    icon: '💰',
+    name: 'Pago de Comisiones',
+    sub:  'Estatus de expedientes comerciales para pago de comisiones',
+    render: (body) => { body.innerHTML = htmlPanelComisiones(); }
+  },
   'sec-ciberseguridad': {
     icon: 'https://cdn-icons-mp4.freepik.com/512/18113/18113621.mp4',
     name: 'Panel de Ciberseguridad',
@@ -5439,6 +5451,196 @@ function normalizarTipoExp(tipo) {
   if (t.includes('reestr')) return 'Reestructura';
   if (t.includes('amplia')) return 'Ampliación';
   return 'Normal';
+}
+
+// ════════════════════════════════════════════════════════════
+// PANEL PAGO DE COMISIONES — Expedientes tipo Normal
+// Criterio: Comercial sin incidencias = Procedente
+//           Comercial con incidencias = Retenido
+// ════════════════════════════════════════════════════════════
+function htmlPanelComisiones() {
+  var anio = parseInt(document.getElementById('selectAnio').value);
+  var mesSelect = document.getElementById('selectMes');
+  var mesesDisponibles = [];
+  if (CACHE[anio]) {
+    mesesDisponibles = Object.keys(CACHE[anio]).filter(function(k) { return k.startsWith(String(anio)); })
+      .map(function(k) { return parseInt(k.split('-')[1]); }).sort(function(a,b) { return a - b; });
+  }
+  var mesActual = mesSelect.value ? parseInt(mesSelect.value) : (mesesDisponibles.length > 0 ? mesesDisponibles[mesesDisponibles.length - 1] : 0);
+  var opcionesMes = mesesDisponibles.map(function(m) {
+    return '<option value="' + m + '"' + (m === mesActual ? ' selected' : '') + '>' + MESES_L[m] + '</option>';
+  }).join('');
+
+  var selectorHtml = '<div style="display:flex;align-items:center;gap:14px;padding:20px 32px;background:linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,249,230,0.7));border:1px solid rgba(253,185,19,0.15);border-radius:16px;margin-bottom:24px;">' +
+    '<div style="width:36px;height:36px;background:linear-gradient(135deg,#FDB913,#f59e0b);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 12px rgba(253,185,19,0.35);">📅</div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Período</div>' +
+    '<div style="font-size:16px;font-weight:800;color:#1e293b;">' + anio + '</div></div>' +
+    '<select id="comisionesMesSelect" onchange="renderComisionesContenido()" style="margin-left:auto;padding:8px 16px;border-radius:10px;border:1px solid rgba(253,185,19,0.3);background:#fff;font-family:IBM Plex Sans,sans-serif;font-size:13px;font-weight:700;color:#1e293b;cursor:pointer;">' + opcionesMes + '</select></div>';
+
+  if (mesActual === 0) return selectorHtml + '<div style="text-align:center;padding:60px;color:#94a3b8;">Sin datos disponibles</div>';
+  return selectorHtml + '<div id="comisionesContenido">' + generarContenidoComisiones(anio, mesActual) + '</div>';
+}
+
+function renderComisionesContenido() {
+  var anio = parseInt(document.getElementById('selectAnio').value);
+  var mes = parseInt(document.getElementById('comisionesMesSelect').value);
+  var cont = document.getElementById('comisionesContenido');
+  if (cont) cont.innerHTML = generarContenidoComisiones(anio, mes);
+}
+
+function generarContenidoComisiones(anio, mes) {
+  var clave = anio + '-' + String(mes).padStart(2, '0');
+  var datosMes = CACHE[anio] && CACHE[anio][clave];
+  if (!datosMes) return '<div style="text-align:center;padding:40px;color:#94a3b8;">Sin datos para ' + MESES_L[mes] + ' ' + anio + '</div>';
+  var nombreMes = MESES_L[mes];
+
+  // ═══ CLASIFICACIÓN: todos los Normal pasan por verificación de Comercial ═══
+  var procedentes = [];  // Comercial SIN incidencias
+  var retenidos = [];    // Comercial CON incidencias
+
+  // 1) Expedientes completos (estatus "completo") → Comercial no tiene incidencias por definición
+  if (datosMes.completosUniverso) {
+    datosMes.completosUniverso.forEach(function(exp) {
+      if (normalizarTipoExp(exp.tipo) === 'Normal') {
+        procedentes.push({ id: exp.id, fecha: exp.fecha, estatus: 'completo' });
+      }
+    });
+  }
+
+  // 2) Expedientes con incidencias → verificar si Comercial tiene o no
+  if (datosMes.incidencias) {
+    datosMes.incidencias.forEach(function(exp) {
+      if (normalizarTipoExp(exp.tipo) !== 'Normal') return;
+      var map = parsearAreas(exp.areas || '');
+      var incComercial = map['Comercial'] || 0;
+
+      if (incComercial > 0) {
+        // Comercial SÍ tiene incidencias → RETENIDO
+        var docsCom = [];
+        var docs = exp.documentos && exp.documentos.length > 0 ? exp.documentos : parsearDocumentosHTML(exp.areas || '');
+        docs.forEach(function(d) {
+          var areaN = (d.area || '').toLowerCase().replace('í', 'i');
+          if (areaN.includes('comercial')) {
+            var nombre = (d.documento || '').replace(/^\*+\s*/, '').replace(/^\d+\.\s*/, '').replace(/\s*\/.*$/, '').trim();
+            if (nombre) docsCom.push({ documento: nombre, comentario: d.comentario || d.observacion || '' });
+          }
+        });
+        retenidos.push({ id: exp.id, fecha: exp.fecha, estatus: 'incidencias', totalIncidencias: exp.totalIncidencias, incComercial: incComercial, documentos: docsCom });
+      } else {
+        // Comercial NO tiene incidencias (las tiene en otras áreas) → PROCEDENTE
+        procedentes.push({ id: exp.id, fecha: exp.fecha, estatus: 'incidencias-otras' });
+      }
+    });
+  }
+
+  var totalNormal = procedentes.length + retenidos.length;
+  var pctProc = totalNormal > 0 ? Math.round((procedentes.length / totalNormal) * 100) : 0;
+  var pctRet = totalNormal > 0 ? Math.round((retenidos.length / totalNormal) * 100) : 0;
+
+  // ── Header ──
+  var headerHtml = '<div style="display:flex;align-items:center;gap:14px;padding:20px 24px;background:linear-gradient(135deg,rgba(255,255,255,0.92),rgba(249,115,22,0.04));border:1px solid #fed7aa;border-radius:16px;margin-bottom:24px;">' +
+    '<div style="width:44px;height:44px;background:linear-gradient(135deg,#fb923c,#f97316);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 12px rgba(249,115,22,0.3);">💰</div>' +
+    '<div><div style="font-size:18px;font-weight:800;color:#1e293b;">Comisiones Comerciales</div>' +
+    '<div style="font-size:12px;color:#64748b;font-weight:600;">' + nombreMes + ' ' + anio + ' · Expedientes tipo Normal · Área Comercial</div></div>' +
+    '<div style="margin-left:auto;text-align:center;"><div style="font-size:28px;font-weight:900;color:#1e293b;">' + totalNormal + '</div><div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Total</div></div></div>';
+
+  // ── KPI Cards estilo TESI ──
+  var dots = '<div class="kpi-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>';
+  var kpiCards = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">' +
+    '<div class="kpi-box total" style="animation:cardIn 0.5s cubic-bezier(0.34,1.3,0.64,1) both;animation-delay:0.05s;"><div class="kpi-box-inner">' + dots + '<div class="kpi-label">Total Normal</div><div class="kpi-num num-pop">' + totalNormal + '</div></div></div>' +
+    '<div class="kpi-box completos" style="animation:cardIn 0.5s cubic-bezier(0.34,1.3,0.64,1) both;animation-delay:0.10s;"><div class="kpi-box-inner">' + dots + '<div class="kpi-label">Procedentes</div><div class="kpi-num num-pop">' + procedentes.length + '</div></div></div>' +
+    '<div class="kpi-box incidencias" style="animation:cardIn 0.5s cubic-bezier(0.34,1.3,0.64,1) both;animation-delay:0.15s;"><div class="kpi-box-inner">' + dots + '<div class="kpi-label">Retenidos</div><div class="kpi-num num-pop">' + retenidos.length + '</div></div></div>' +
+  '</div>';
+
+  // ── Donas SVG estilo TESI ──
+  var R_ARC = 78, STROKE_W = 18, CIRC_VAL = (2 * Math.PI * R_ARC).toFixed(4), CXd = 110, CYd = 110;
+  function donaCom(id, color, colorLight, pct, sublabel) {
+    return '<div class="kpi-dona-wrap"><svg class="dona-svg-stage" viewBox="0 0 220 220" width="220" height="220" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><radialGradient id="dkGrad' + id + '" cx="40%" cy="35%" r="65%"><stop offset="0%" stop-color="#4d5f75"/><stop offset="100%" stop-color="#1e2533"/></radialGradient>' +
+      '<linearGradient id="aGrad' + id + '" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="' + colorLight + '"/><stop offset="100%" stop-color="' + color + '"/></linearGradient>' +
+      '<filter id="glow' + id + '" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
+      '<circle cx="110" cy="110" r="100" fill="none" stroke="' + color + '" stroke-width="14" opacity="0.13"/>' +
+      '<circle cx="110" cy="110" r="88" fill="none" stroke="' + color + '" stroke-width="11" opacity="0.26"/>' +
+      '<circle cx="110" cy="110" r="78" fill="none" stroke="#cbd5e1" stroke-opacity="0.5" stroke-width="18" stroke-linecap="round"/>' +
+      '<circle id="arc' + id + '" cx="110" cy="110" r="78" fill="none" stroke="url(#aGrad' + id + ')" stroke-width="18" stroke-linecap="round" stroke-dasharray="' + CIRC_VAL + '" stroke-dashoffset="' + CIRC_VAL + '" transform="rotate(-90 110 110)" filter="url(#glow' + id + ')"/>' +
+      '<circle id="dot' + id + '" cx="110" cy="32" r="10" fill="' + color + '" opacity="0"/>' +
+      '<circle id="dotHalo' + id + '" cx="110" cy="32" r="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55" opacity="0"><animate attributeName="r" values="13;19;13" dur="2s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="2s" repeatCount="indefinite"/></circle>' +
+      '<circle cx="110" cy="110" r="57" fill="#253044"/><circle cx="110" cy="110" r="57" fill="url(#dkGrad' + id + ')"/><circle cx="110" cy="110" r="57" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>' +
+      '<text x="110" y="100" font-family="IBM Plex Sans,sans-serif" font-size="42" font-weight="800" text-anchor="middle" dominant-baseline="middle" fill="#fff">' + pct + '%</text>' +
+      '<text x="110" y="130" font-family="Inter,sans-serif" font-size="11" font-weight="600" text-anchor="middle" fill="' + colorLight + '" opacity="0.8" letter-spacing="1.5">' + sublabel + '</text>' +
+    '</svg></div>';
+  }
+
+  var donas = '<div class="kpi-donas-panel" style="margin-bottom:28px;">' +
+    donaCom('cm_ok', '#059669', '#34d399', pctProc, 'PROCEDENTE') +
+    donaCom('cm_ret', '#dc2626', '#f87171', pctRet, 'RETENIDO') + '</div>';
+
+  var animScript = '<script>(function(){var ids=["cm_ok","cm_ret"],pcts=[' + pctProc + ',' + pctRet + '],circ=' + CIRC_VAL + ';' +
+    'ids.forEach(function(id,idx){var arc=document.getElementById("arc"+id),dot=document.getElementById("dot"+id),halo=document.getElementById("dotHalo"+id);' +
+    'if(!arc)return;var tOff=circ*(1-pcts[idx]/100);' +
+    'function dp(p){var a=-Math.PI/2+2*Math.PI*p;return{x:110+78*Math.cos(a),y:110+78*Math.sin(a)}}' +
+    'setTimeout(function(){if(dot)dot.setAttribute("opacity","1");if(halo)halo.setAttribute("opacity","1");' +
+    'var s=null;(function t(n){if(!s)s=n;var r=Math.min((n-s)/1600,1),e=1-Math.pow(1-r,3);' +
+    'arc.setAttribute("stroke-dashoffset",(circ-(circ-tOff)*e).toFixed(2));' +
+    'if(pcts[idx]>0){var p=dp(e*pcts[idx]/100);if(dot){dot.setAttribute("cx",p.x.toFixed(2));dot.setAttribute("cy",p.y.toFixed(2))}if(halo){halo.setAttribute("cx",p.x.toFixed(2));halo.setAttribute("cy",p.y.toFixed(2))}}' +
+    'if(r<1)requestAnimationFrame(t);else{arc.setAttribute("stroke-dashoffset",tOff.toFixed(2));if(pcts[idx]>0){var f=dp(pcts[idx]/100);if(dot){dot.setAttribute("cx",f.x.toFixed(2));dot.setAttribute("cy",f.y.toFixed(2))}if(halo){halo.setAttribute("cx",f.x.toFixed(2));halo.setAttribute("cy",f.y.toFixed(2))}}}' +
+    '})(performance.now())},300+idx*200)})})();<\/script>';
+
+  // ── Tabla PROCEDENTES ──
+  var tablaProcHtml = '<div style="margin-bottom:28px;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">' +
+    '<div style="width:28px;height:28px;background:linear-gradient(135deg,#34d399,#10b981);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:800;box-shadow:0 2px 8px rgba(16,185,129,0.3);">✓</div>' +
+    '<span style="font-size:15px;font-weight:800;color:#1e293b;">Procedentes para Pago</span>' +
+    '<span style="margin-left:auto;font-size:12px;font-weight:800;color:#10b981;background:#f0fdf4;padding:4px 12px;border-radius:20px;border:1px solid #86efac;">' + procedentes.length + '</span></div>';
+
+  if (procedentes.length > 0) {
+    tablaProcHtml += '<table class="tp-exp-table"><thead><tr><th>ID Oportunidad</th><th>Fecha de Firma</th><th>Estatus General</th></tr></thead><tbody>';
+    procedentes.forEach(function(e) {
+      var estatusLabel = e.estatus === 'completo' ? '<span style="color:#10b981;font-weight:700;font-size:11px;">● Completo</span>' : '<span style="color:#f59e0b;font-weight:700;font-size:11px;">● Inc. otras áreas</span>';
+      tablaProcHtml += '<tr><td><span class="tp-exp-id">' + e.id + '</span></td><td><span class="tp-exp-fecha">' + e.fecha + '</span></td><td>' + estatusLabel + '</td></tr>';
+    });
+    tablaProcHtml += '</tbody></table>';
+  } else {
+    tablaProcHtml += '<div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px;">Sin expedientes procedentes</div>';
+  }
+  tablaProcHtml += '</div>';
+
+  // ── Sección RETENIDOS con detalle por expediente ──
+  var tablaRetHtml = '<div><div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">' +
+    '<div style="width:28px;height:28px;background:linear-gradient(135deg,#f87171,#ef4444);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:800;box-shadow:0 2px 8px rgba(239,68,68,0.3);">✗</div>' +
+    '<span style="font-size:15px;font-weight:800;color:#1e293b;">Comisión Retenida</span>' +
+    '<span style="margin-left:auto;font-size:12px;font-weight:800;color:#ef4444;background:#fef2f2;padding:4px 12px;border-radius:20px;border:1px solid #fecaca;">' + retenidos.length + '</span></div>';
+
+  if (retenidos.length > 0) {
+    retenidos.forEach(function(exp, idx) {
+      var bg = idx % 2 === 0 ? 'rgba(254,242,242,0.5)' : 'rgba(255,255,255,0.5)';
+      tablaRetHtml += '<div style="background:' + bg + ';border:1px solid #fecaca;border-radius:14px;padding:18px;margin-bottom:12px;">' +
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">' +
+          '<span style="font-size:14px;font-weight:800;color:#1e293b;">' + exp.id + '</span>' +
+          '<span style="font-size:11px;color:#94a3b8;margin-left:auto;">' + exp.fecha + '</span></div>' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">' +
+          '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#ef4444;background:#fef2f2;padding:3px 10px;border-radius:12px;border:1px solid #fecaca;"><span style="width:6px;height:6px;border-radius:50%;background:#ef4444;"></span>' + exp.incComercial + ' inc. Comercial</span>' +
+          '<span style="font-size:11px;font-weight:700;color:#94a3b8;">' + exp.totalIncidencias + ' total expediente</span></div>';
+      if (exp.documentos && exp.documentos.length > 0) {
+        tablaRetHtml += '<div style="background:#fff;border:1px solid #f1f5f9;border-radius:10px;overflow:hidden;">' +
+          '<div style="padding:8px 14px;background:#f8fafc;border-bottom:1px solid #f1f5f9;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;">Documentos faltantes — Comercial</div>';
+        exp.documentos.forEach(function(doc, di) {
+          var dbg = di % 2 === 0 ? '#fff' : '#f8fafc';
+          tablaRetHtml += '<div style="display:flex;align-items:flex-start;gap:8px;padding:10px 14px;background:' + dbg + ';border-bottom:1px solid #f1f5f9;">' +
+            '<div style="width:20px;height:20px;background:#fef2f2;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#ef4444;flex-shrink:0;">' + (di + 1) + '</div>' +
+            '<div><div style="font-size:12px;font-weight:700;color:#1e293b;line-height:1.4;">' + doc.documento + '</div>' +
+            (doc.comentario && doc.comentario !== '—' ? '<div style="font-size:11px;color:#94a3b8;margin-top:2px;">' + doc.comentario + '</div>' : '') +
+          '</div></div>';
+        });
+        tablaRetHtml += '</div>';
+      }
+      tablaRetHtml += '</div>';
+    });
+  } else {
+    tablaRetHtml += '<div style="text-align:center;padding:24px;color:#10b981;font-size:13px;font-weight:700;background:#f0fdf4;border-radius:12px;">✓ Sin comisiones retenidas — todos los expedientes Normal están libres de incidencias en Comercial</div>';
+  }
+  tablaRetHtml += '</div>';
+
+  return headerHtml + kpiCards + donas + animScript + tablaProcHtml + tablaRetHtml;
 }
 
 function abrirDetalle(exp) {
