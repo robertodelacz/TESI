@@ -2511,6 +2511,280 @@ video { pointer-events:none; outline:none; }
     height: 100% !important;
 }
 
+/* ==========================================
+   PERIÓDICO PREMIUM - ESTILOS FUNDACIONALES
+   ========================================== */
+
+/* Textura de Papel Periódico */
+.paper-texture {
+  background-color: #fdfaf6;
+  background-image: 
+    repeating-linear-gradient(45deg, rgba(200,180,140,0.02) 0px, rgba(200,180,140,0.02) 2px, transparent 2px, transparent 6px),
+    radial-gradient(circle at 30% 40%, rgba(220,200,170,0.03) 0%, transparent 50%),
+    radial-gradient(circle at 70% 60%, rgba(180,160,130,0.02) 0%, transparent 50%);
+  position: relative;
+}
+
+.paper-texture::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noise)" opacity="0.04"/%3E%3C/svg%3E');
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Animación de Entrada - Pergamino Desplegable */
+@keyframes parchmentUnfold {
+  0% {
+    opacity: 0;
+    transform: perspective(1000px) rotateX(-8deg) translateZ(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1000px) rotateX(0deg) translateZ(0);
+  }
+}
+
+@keyframes fadeSlideRight {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Clase para tarjetas con animación */
+.newspaper-item {
+  animation: fadeSlideRight 0.6s ease-out both;
+}
+
+.parchment-card {
+  animation: parchmentUnfold 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  transform-origin: center top;
+}
+
+
+
+/* Efecto tinta para texto */
+@keyframes inkSpread {
+  0% {
+    opacity: 0.3;
+    clip-path: inset(0 100% 0 0);
+  }
+  100% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.ink-text {
+  animation: inkSpread 1.2s ease-out forwards;
+}
+
+/* Letra Capital Moderada */
+@keyframes capitalFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.moderate-capital {
+  float: left;
+  font-size: 28px;
+  line-height: 1;
+  padding-top: 4px;
+  padding-right: 8px;
+  padding-bottom: 0;
+  font-weight: 700;
+  color: #4a0404;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  animation: capitalFadeIn 0.8s ease-out forwards;
+}
+
+
+/* ==========================================
+   ÓRBITAS SVG (ANIMACIONES)
+   ========================================== */
+@keyframes orbitRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.orbit-cw {
+  animation: orbitRotate 20s linear infinite;
+}
+
+.orbit-ccw {
+  animation: orbitRotate 25s linear infinite reverse;
+}
+
+/* ==========================================
+   UTILIDADES
+   ========================================== */
+.watermark-stamp {
+  position: absolute;
+  bottom: 10px;
+  right: 20px;
+  font-family: 'Times New Roman', serif;
+  font-size: 11px;
+  color: #c4b5a0;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  opacity: 0.3;
+  transform: rotate(-3deg);
+  pointer-events: none;
+}
+
+/* ==========================================
+   CÍRCULO CON ÓRBITAS - ESTILO PERIÓDICO
+   ========================================== */
+
+.hallazgo-orbit-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 8px;
+}
+
+@keyframes orbitRotatePeriodico {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.orbit-periodico-cw {
+  animation: orbitRotatePeriodico 5s linear infinite;
+}
+
+.orbit-periodico-ccw {
+  animation: orbitRotatePeriodico 2s linear infinite reverse;
+}
+
+.hallazgo-circle-number {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  background: linear-gradient(135deg, #d4a574 0%, #8b4513 50%, #5c2e00 100%);
+  border-radius: 50%;
+  border: 3px solid #4a0404;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 28px;
+  font-weight: 900;
+  font-family: 'Courier New', monospace;
+  box-shadow: 
+    0 4px 12px rgba(74,4,4,0.3),
+    inset 0 2px 4px rgba(255,215,150,0.3);
+  animation: circleBreathing 4s ease-in-out infinite;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+@keyframes circleBreathing {
+  0%, 100% {
+    box-shadow: 
+      0 4px 12px rgba(74,4,4,0.3),
+      inset 0 2px 4px rgba(255,215,150,0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 
+      0 6px 18px rgba(139,69,19,0.5),
+      inset 0 2px 6px rgba(255,235,200,0.4);
+    transform: scale(1.02);
+  }
+}
+
+.hallazgo-circle-number::after {
+  content: "";
+  position: absolute;
+  top: 15%;
+  left: 15%;
+  width: 30%;
+  height: 30%;
+  background: radial-gradient(circle, 
+    rgba(255,235,200,0.4) 0%, 
+    transparent 70%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+}
+/* ==========================================
+   EFECTO DE ÓRBITAS GIRATORIAS
+   (Replicado de htmlDistribucion)
+   ========================================== */
+
+/* Contenedor del círculo con órbitas */
+.area-circle-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  display: inline-block;
+}
+
+/* Animación de giro - Sentido horario */
+@keyframes orbitRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Órbita sentido horario */
+.orbit-cw {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  animation: orbitRotate 12s linear infinite;
+}
+
+/* Órbita sentido antihorario */
+.orbit-ccw {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  animation: orbitRotate 15s linear infinite reverse;
+}
+
+/* Círculo central con número */
+.orbit-circle-center {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #d4a574, #8b4513);
+  border-radius: 50%;
+  border: 3px solid #4a0404;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 900;
+  font-family: 'IBM Plex Sans', sans-serif;
+  box-shadow: 0 4px 12px rgba(139,69,19,0.4);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.orbit-circle-center:hover {
+  transform: scale(1.12);
+}
+
 
 </style>
 </head>
@@ -2619,22 +2893,6 @@ video { pointer-events:none; outline:none; }
     <!-- MÓDULO CONTROL INTERNO Y PLD -->
     <div class="sb-module">
       <div class="sb-module-header">
-        <span class="sb-module-icon">⚖️</span>
-        <span class="sb-module-label">Control Interno · PLD</span>
-      </div>
-
-      <a class="sb-item" data-tip="Control PLD"
-         onclick="sbNavegar('sec-pld',this)">
-        <span class="sb-item-icon">🛡️</span>
-        <span class="sb-item-label">Control PLD</span>
-      </a>
-    </div>
-
-    <div class="sb-divider"></div>
-
-    <!-- MÓDULO PROYECTOS -->
-    <div class="sb-module">
-      <div class="sb-module-header">
         <span class="sb-module-icon">📁</span>
         <span class="sb-module-label">Proyectos · Contraloría</span>
       </div>
@@ -2643,6 +2901,21 @@ video { pointer-events:none; outline:none; }
          onclick="sbNavegar('sec-proyectos',this)">
         <span class="sb-item-icon">📈</span>
         <span class="sb-item-label">Panel Proyectos</span>
+      </a>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-module">
+      <div class="sb-module-header">
+        <span class="sb-module-icon">⚖️</span>
+        <span class="sb-module-label">Control Interno · PLD</span>
+      </div>
+
+      <a class="sb-item" data-tip="Control PLD"
+         onclick="sbNavegar('sec-pld',this)">
+        <span class="sb-item-icon">🛡️</span>
+        <span class="sb-item-label">Control PLD</span>
       </a>
     </div>
     <div class="sb-divider"></div>
@@ -3472,7 +3745,6 @@ function renderReporte(datos, nombreMes, anio, datosPrev, nombreMesPrev) {
       htmlKPIs(datos.total, datos.sinIncidencias, datos.conIncidencias, pctC, pctI, `${nombreMes} ${anio}`, datosPrev, nombreMesPrev) +
       htmlEtapasCierre(datos, `${nombreMes} ${anio}`) +
       htmlDistribucion(totArea, totalIncs, `${nombreMes} ${anio}`) +
-      htmlAvisos(datos.avisos||[], `${nombreMes} ${anio}`) +
       htmlExpedientes(datos.incidencias||[]) +
       htmlDetalleAreas(datos.incidencias||[], totArea);
 
@@ -4507,43 +4779,149 @@ function htmlTopDocumentos(incidencias, label) {
 // ════════════════════════════════════
 function htmlAvisos(avisos, label) {
   if (!avisos || avisos.length === 0) return '';
+  
   var TC = {
-    'Retención':{icon:'🔒',color:'#ef4444',claro:'#fca5a5',oscuro:'#991b1b',bg:'#fef2f2',border:'#fecaca'},
-    'Retencion':{icon:'🔒',color:'#ef4444',claro:'#fca5a5',oscuro:'#991b1b',bg:'#fef2f2',border:'#fecaca'},
-    'Sanción':{icon:'⚖️',color:'#dc2626',claro:'#f87171',oscuro:'#7f1d1d',bg:'#fef2f2',border:'#fecaca'},
-    'Sancion':{icon:'⚖️',color:'#dc2626',claro:'#f87171',oscuro:'#7f1d1d',bg:'#fef2f2',border:'#fecaca'},
-    'Información':{icon:'ℹ️',color:'#3b82f6',claro:'#93c5fd',oscuro:'#1e40af',bg:'#eff6ff',border:'#bfdbfe'},
-    'Informacion':{icon:'ℹ️',color:'#3b82f6',claro:'#93c5fd',oscuro:'#1e40af',bg:'#eff6ff',border:'#bfdbfe'},
-    'Advertencia':{icon:'⚠️',color:'#f59e0b',claro:'#fcd34d',oscuro:'#92400e',bg:'#fffbeb',border:'#fde68a'},
-    'Reconocimiento':{icon:'🏆',color:'#10b981',claro:'#6ee7b7',oscuro:'#065f46',bg:'#f0fdf4',border:'#86efac'},
-    'Cambio':{icon:'🔄',color:'#8b5cf6',claro:'#c4b5fd',oscuro:'#5b21b6',bg:'#f5f3ff',border:'#ddd6fe'}
+    'Retención':{icon:'🔒',color:'#8b0000',claro:'#dc2626',oscuro:'#4a0404',bg:'#fdf8f5',border:'#e8d5c4'},
+    'Retencion':{icon:'🔒',color:'#8b0000',claro:'#dc2626',oscuro:'#4a0404',bg:'#fdf8f5',border:'#e8d5c4'},
+    'Sanción':{icon:'⚖️',color:'#8b0000',claro:'#dc2626',oscuro:'#4a0404',bg:'#fdf8f5',border:'#e8d5c4'},
+    'Sancion':{icon:'⚖️',color:'#8b0000',claro:'#dc2626',oscuro:'#4a0404',bg:'#fdf8f5',border:'#e8d5c4'},
+    'Información':{icon:'ℹ️',color:'#1e3a8a',claro:'#3b82f6',oscuro:'#0f172a',bg:'#f5f7fa',border:'#cbd5e1'},
+    'Informacion':{icon:'ℹ️',color:'#1e3a8a',claro:'#3b82f6',oscuro:'#0f172a',bg:'#f5f7fa',border:'#cbd5e1'},
+    'Advertencia':{icon:'⚠️',color:'#854d0e',claro:'#eab308',oscuro:'#422006',bg:'#fefce8',border:'#fde047'},
+    'Reconocimiento':{icon:'🏆',color:'#065f46',claro:'#10b981',oscuro:'#022c22',bg:'#ecfdf5',border:'#a7f3d0'},
+    'Cambio':{icon:'🔄',color:'#4c1d95',claro:'#8b5cf6',oscuro:'#2e1065',bg:'#f5f3ff',border:'#ddd6fe'}
   };
+
   var tarjetas = avisos.map(function(aviso, idx) {
-    var tipo=aviso.tipo||'Información', cfg=TC[tipo]||TC['Informacion'], delay=(idx*0.1).toFixed(2);
+    var tipo = aviso.tipo || 'Información';
+    var cfg = TC[tipo] || TC['Informacion'];
+    var delay = (idx * 0.12).toFixed(2);
     
-    return '<div style="background:var(--card-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--card-border);border-radius:var(--card-radius);box-shadow:var(--card-shadow);transition:transform 0.3s ease,box-shadow 0.3s ease;animation:fadeSlideRight 0.6s ease-out both;animation-delay:'+delay+'s;position:relative;overflow:hidden;" onmouseenter="this.style.transform=\'translateY(-4px)\';this.style.boxShadow=\'var(--card-shadow-hover)\'" onmouseleave="this.style.transform=\'none\';this.style.boxShadow=\'var(--card-shadow)\'">' +
-      '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:'+cfg.color+';z-index:1;"></div>' +
-      '<div style="display:flex;gap:18px;padding:22px 24px;position:relative;z-index:2;">' +
-        '<div class="area-circle-wrap" style="flex-shrink:0;width:54px;height:54px;">' +
-          '<svg class="area-orbit orbit-cw" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="29" fill="none" stroke="'+cfg.color+'" stroke-width="2" stroke-dasharray="20 163" stroke-linecap="round" opacity="0.5"></circle></svg>' +
-          '<svg class="area-orbit orbit-ccw" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="29" fill="none" stroke="'+cfg.claro+'" stroke-width="1.5" stroke-dasharray="12 170" stroke-linecap="round" opacity="0.35"></circle></svg>' +
-          '<div style="position:absolute;top:4px;left:4px;width:46px;height:46px;background:linear-gradient(135deg,'+cfg.claro+','+cfg.color+');border-radius:50%;border:3px solid '+cfg.oscuro+';display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 12px '+cfg.color+'40;">'+cfg.icon+'</div>' +
-        '</div>' +
-        '<div style="flex:1;min-width:0;">' +
-          '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">' +
-            '<span style="font-size:16px;font-weight:800;color:#1e293b;">'+(aviso.titulo||tipo)+'</span>' +
-            '<span style="font-size:10px;font-weight:800;color:'+cfg.color+';background:'+cfg.bg+';padding:3px 10px;border-radius:20px;border:1px solid '+cfg.border+';text-transform:uppercase;letter-spacing:0.8px;">'+tipo+'</span>' +
-          '</div>' +
-          '<div style="font-size:13px;color:#475569;line-height:1.7;margin-bottom:10px;">'+(aviso.mensaje||'')+'</div>' +
-          '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
-            (aviso.area?'<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:'+cfg.oscuro+';background:#fff;padding:4px 12px;border-radius:20px;border:1px solid '+cfg.border+';"><span style="width:6px;height:6px;border-radius:50%;background:'+cfg.color+';"></span>'+aviso.area+'</span>':'') +
-            (aviso.fecha?'<span style="font-size:11px;font-weight:600;color:#94a3b8;">📅 '+aviso.fecha+'</span>':'') +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
+    // Número Editorial Ornamentado
+    var numRomano = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][idx] || String(idx + 1);
+    
+    var mensaje = aviso.mensaje || '';
+    var mensajeHTML = mensaje;
+    if (mensaje.length > 0) {
+        var primeraLetra = mensaje.charAt(0);
+        var restoMensaje = mensaje.slice(1);
+        mensajeHTML = '<span style="float:left; font-size:68px; line-height:56px; padding-top:8px; padding-right:18px; padding-bottom:8px; font-weight:900; color:' + cfg.oscuro + '; font-family:\'Playfair Display\', \'Times New Roman\', serif; margin-right:4px; text-shadow:2px 2px 0px rgba(0,0,0,0.05);">' + primeraLetra + '</span>' + restoMensaje.replace(/\n/g, '<br>');
+    }
+
+    return `
+      <article class="newspaper-item" style="display:flex; background:transparent; border-bottom:3px double #d4c5b0; margin-bottom:36px; padding-bottom:36px; position:relative; animation-delay:${delay}s;">
+        
+        <!-- COLUMNA IZQUIERDA: CABECERA EDITORIAL -->
+        <aside class="fold-line" style="width:220px; flex-shrink:0; padding:20px 24px 20px 0; border-right:1px solid #e8d5c4; position:relative; margin-right:36px;">
+          
+          <!-- Número de Edición Ornamentado -->
+          <div style="position:relative; margin-bottom:32px; text-align:center;">
+            <div style="font-family:'Times New Roman', serif; font-size:11px; color:#8b7355; text-transform:uppercase; letter-spacing:6px; margin-bottom:8px;">Nº</div>
+            <div class="editorial-number" style="font-size:72px; color:${cfg.oscuro}; line-height:1; margin-bottom:8px; position:relative; display:inline-block;">
+              ${numRomano}
+            </div>
+            <div style="width:40px; height:1px; background:${cfg.color}; margin:16px auto;"></div>
+          </div>
+
+          <!-- Ficha Catalográfica -->
+          <div style="font-family:'Courier New', monospace; border-top:1px solid #d4c5b0; padding-top:20px;">
+            <div style="font-size:10px; font-weight:800; color:${cfg.oscuro}; text-transform:uppercase; letter-spacing:2px; margin-bottom:12px; display:flex; align-items:center;">
+              <span style="display:inline-block; width:8px; height:8px; background:${cfg.color}; margin-right:8px;"></span>
+              ${cfg.icon} ${tipo}
+            </div>
+            
+            <div style="background:${cfg.bg}; padding:12px; border:1px solid ${cfg.border}; font-size:11px; line-height:1.6;">
+              <div style="font-weight:bold; color:#4a3728; margin-bottom:4px;">FECHA DE EMISIÓN</div>
+              <div style="font-family:'Georgia', serif; font-size:14px; color:#2c1810;">${aviso.fecha || 'EDICIÓN ACTUAL'}</div>
+              
+              ${aviso.area ? `
+                <div style="margin-top:16px; padding-top:12px; border-top:1px dashed ${cfg.border};">
+                  <div style="font-weight:bold; color:#4a3728; margin-bottom:4px;">SECCIÓN</div>
+                  <div style="font-family:'Georgia', serif; font-size:12px; color:#2c1810;">${aviso.area}</div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+
+          <!-- Sello de archivo -->
+          <div style="margin-top:24px; text-align:center;">
+            <div style="display:inline-block; border:1px solid #d4c5b0; padding:6px 16px; font-family:'Times New Roman', serif; font-size:9px; color:#8b7355; text-transform:uppercase; letter-spacing:2px; transform:rotate(-3deg);">
+              ARCHIVADO
+            </div>
+          </div>
+        </aside>
+
+        <!-- COLUMNA DERECHA: NOTICIA PRINCIPAL -->
+        <div style="flex:1; padding:20px 0; position:relative;">
+          
+          ${idx === 0 ? '<div class="breaking-news">⚠️ ÚLTIMA HORA</div>' : ''}
+          
+          <!-- Titular con Filetes -->
+          <h2 style="font-family:'Playfair Display', 'Times New Roman', serif; font-size:${idx === 0 ? '36px' : '28px'}; font-weight:900; color:#1a1a1a; line-height:1.2; letter-spacing:-0.5px; margin-bottom:20px; border-left:4px solid ${cfg.color}; padding-left:20px;">
+            ${aviso.titulo || tipo}
+          </h2>
+          
+          <!-- Subtítulo Decorativo -->
+          <div class="fleuron-divider">
+            ❧ <span>❧</span> ❧ <span>❧</span> ❧
+          </div>
+          
+          <!-- Cuerpo de la Noticia -->
+          <div style="font-family:'Georgia', 'Times New Roman', serif; font-size:16px; color:#2c2c2c; line-height:1.8; text-align:justify;">
+            ${mensajeHTML}
+          </div>
+          
+          <!-- Continuación -->
+          <div style="margin-top:28px; display:flex; justify-content:space-between; align-items:center; font-family:'Times New Roman', serif;">
+            <div style="font-size:10px; color:#8b7355; text-transform:uppercase; letter-spacing:2px;">
+              ✦ CONTINÚA EN PÁG. 3 ✦
+            </div>
+            <div style="width:60px; height:1px; background:linear-gradient(to right, transparent, #d4c5b0, transparent);"></div>
+          </div>
+        </div>
+      </article>
+    `;
   }).join('');
-  return '<div class="rep-section"><div class="sec-titulo">'+secTitulo(6,'Avisos y Notificaciones','Comunicados relevantes del período actual',label||'')+'</div><div style="display:flex;flex-direction:column;gap:14px;">'+tarjetas+'</div></div>';
+
+  return `
+    <div class="rep-section paper-texture" style="padding:40px 30px; position:relative;">
+      
+      <!-- Cabecera del Periódico -->
+      <div style="border-bottom:4px double #2c1810; margin-bottom:40px; padding-bottom:20px; position:relative;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+          <div style="font-family:'Times New Roman', serif; font-size:12px; color:#8b7355; letter-spacing:3px;">VOL. XLII · Nº 247</div>
+          <h1 style="font-family:'Playfair Display', 'Times New Roman', serif; font-size:48px; font-weight:900; color:#1a1a1a; margin:0; letter-spacing:-1px; text-transform:uppercase;">
+            THE DAILY CHRONICLE
+          </h1>
+          <div style="font-family:'Times New Roman', serif; font-size:12px; color:#8b7355; letter-spacing:3px;">${label || 'EDICIÓN ESPECIAL'}</div>
+        </div>
+        <div style="display:flex; justify-content:center; gap:40px; margin-top:12px; font-family:'Courier New', monospace; font-size:10px; color:#6b5b4e; text-transform:uppercase; letter-spacing:2px; border-top:1px solid #d4c5b0; padding-top:12px;">
+          <span>BOLETÍN OFICIAL</span>
+          <span>✦</span>
+          <span>AVISOS DE INTERÉS PÚBLICO</span>
+          <span>✦</span>
+          <span>${new Date().toLocaleDateString('es-ES', {year:'numeric', month:'long', day:'numeric'}).toUpperCase()}</span>
+        </div>
+      </div>
+
+      <!-- Contenido Principal -->
+      <div style="max-width: 1200px; margin: 0 auto;">
+        ${tarjetas}
+      </div>
+
+      <!-- Marca de Agua -->
+      <div class="watermark-stamp">
+        GACETA OFICIAL · CIRCULACIÓN LIMITADA
+      </div>
+      
+      <!-- Pie de Imprenta -->
+      <div style="margin-top:40px; padding-top:20px; border-top:3px double #d4c5b0; display:flex; justify-content:space-between; font-family:'Times New Roman', serif; font-size:10px; color:#8b7355; letter-spacing:2px;">
+        <span>IMPRESO EN TALLERES OFICIALES</span>
+        <span>PRECIO: GRATUITO</span>
+        <span>DEPÓSITO LEGAL Nº 2024-001</span>
+      </div>
+    </div>
+  `;
 }
 
 function htmlDetalleAreas(incidencias, totArea) {
@@ -5055,12 +5433,18 @@ const SEC_PANEL_CFG = {
       body.innerHTML = '<div style="max-width:900px;margin:0 auto;padding:28px 40px;">' + (htmlAvisos(avisos, lbl) || '<div style="text-align:center;padding:40px;color:#94a3b8;">Sin avisos para este período</div>') + '</div>';
     }
   },
-  'sec-pld': {
+'sec-pld': {
     icon: '🛡️',
     name: 'Control Interno y PLD',
     sub:  'Información relevante de prevención de lavado de dinero',
     render: (body) => {
+      // 1. Dibujamos el panel
       body.innerHTML = htmlPanelPLD();
+      
+      // 2. Extraemos el mes seleccionado y ejecutamos la carga manualmente
+      var mesSelect = document.getElementById('pldMesSelect');
+      var mesActual = mesSelect ? parseInt(mesSelect.value) : 0;
+      cargarDatosPLD(mesActual);
     }
   },
   'sec-comisiones': {
@@ -5731,6 +6115,38 @@ function generarContenidoComisiones(anio, mes) {
 // ════════════════════════════════════════════════════════════
 var cachePLD = null;
 
+// 1. Función para disparar la actualización al cambiar el mes en el select
+function renderPLDContenido() {
+  var mesSelect = document.getElementById('pldMesSelect');
+  var mesActual = mesSelect ? parseInt(mesSelect.value) : 0;
+  cargarDatosPLD(mesActual);
+}
+
+// 2. Función que pide los datos al backend (.gs) y los renderiza
+function cargarDatosPLD(mes) {
+  var cont = document.getElementById('pldContenido');
+  if (!cont) return;
+
+  // Si ya tenemos los datos guardados en caché, cargan al instante
+  if (cachePLD) {
+    renderPLDCards(cachePLD, mes);
+    return;
+  }
+
+  // Si no hay caché, mostramos el loader y hacemos la petición
+  cont.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">' + htmlClockLoader('Cargando PLD', 'Conectando con el servidor...') + '</div>';
+
+  google.script.run
+    .withSuccessHandler(function(datos) {
+      cachePLD = datos || [];
+      renderPLDCards(cachePLD, mes);
+    })
+    .withFailureHandler(function(err) {
+      cont.innerHTML = '<div style="text-align:center;padding:60px;color:#ef4444;font-weight:700;">Error al cargar PLD: ' + (err.message || err) + '</div>';
+    })
+    .getDatosPLD(); // Aquí llama a la función optimizada que pusimos en tu backend
+}
+
 function htmlPanelPLD() {
   var anio = parseInt(document.getElementById('selectAnio').value);
   var mesSelect = document.getElementById('selectMes');
@@ -5740,89 +6156,157 @@ function htmlPanelPLD() {
       .map(function(k) { return parseInt(k.split('-')[1]); }).sort(function(a,b) { return a - b; });
   }
   var mesActual = mesSelect.value ? parseInt(mesSelect.value) : (mesesDisponibles.length > 0 ? mesesDisponibles[mesesDisponibles.length - 1] : 0);
+  
   var opcionesMes = mesesDisponibles.map(function(m) {
-    return '<option value="' + m + '"' + (m === mesActual ? ' selected' : '') + '>' + MESES_L[m] + '</option>';
+    return '<option value="' + m + '" style="color:#000;"' + (m === mesActual ? ' selected' : '') + '>' + MESES_L[m] + '</option>';
   }).join('');
 
-  var html = '<div style="max-width:900px;margin:0 auto;padding:28px 40px;">';
-  
-  // Header
-  html += '<div style="display:flex;align-items:center;gap:14px;padding:20px 24px;background:linear-gradient(135deg,rgba(255,255,255,0.92),rgba(139,92,246,0.06));border:1px solid #ddd6fe;border-radius:16px;margin-bottom:24px;">' +
-    '<div style="width:44px;height:44px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 12px rgba(124,58,237,0.3);">⚖️</div>' +
-    '<div><div style="font-size:18px;font-weight:800;color:#1e293b;">Control Interno y PLD</div>' +
-    '<div style="font-size:12px;color:#64748b;font-weight:600;">Información relevante · Prevención de Lavado de Dinero</div></div>' +
-    '<select id="pldMesSelect" onchange="renderPLDContenido()" style="margin-left:auto;padding:8px 16px;border-radius:10px;border:1px solid rgba(139,92,246,0.3);background:#fff;font-family:IBM Plex Sans,sans-serif;font-size:13px;font-weight:700;color:#1e293b;cursor:pointer;">' + opcionesMes + '</select></div>';
+  var html = `
+    <div class="proy-hero" style="padding-bottom: 28px; background: linear-gradient(145deg, #1e1b4b 0%, #2e1065 60%, #111827 100%); margin-bottom: 0;">
+      <div class="proy-hero-header" style="margin-bottom: 0;">
+        <div style="width: 64px; height: 64px; background: rgba(167, 139, 250, 0.12); border: 1px solid rgba(167, 139, 250, 0.3); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-right: 24px;">⚖️</div>
+        <div>
+          <div class="proy-hero-title" style="color: rgba(167, 139, 250, 0.75); letter-spacing:2px; font-size:11px;">PREVENCIÓN DE LAVADO DE DINERO</div>
+          <div class="proy-hero-name" style="color: #fff; font-size:48px;">Control Interno y PLD</div>
+        </div>
+        <div style="margin-left: auto;">
+           <select id="pldMesSelect" onchange="renderPLDContenido()" style="padding:10px 20px;border-radius:12px;border:1px solid rgba(167,139,250,0.5);background:#1e1b4b;color:#fff;font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer; outline:none; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+             ${opcionesMes}
+           </select>
+        </div>
+      </div>
+    </div>
+    
+      <div id="pldContenido" style="padding: 40px 48px; background: #f8fafc; min-height: 50vh;">
+      <div style="text-align:center;padding:40px;color:#94a3b8;">
+        ${htmlClockLoader('Cargando PLD', 'Obteniendo registros...')}
+      </div>
+    </div>
+  `;
 
-  html += '<div id="pldContenido"><div style="text-align:center;padding:40px;color:#94a3b8;">' + htmlClockLoader('Cargando PLD', 'Obteniendo datos...') + '</div></div>';
-  html += '</div>';
-
-  // Trigger load
-  html += '<script>(function(){ cargarDatosPLD(' + mesActual + '); })();<\/script>';
   return html;
-}
-
-function cargarDatosPLD(mes) {
-  if (cachePLD) {
-    renderPLDCards(cachePLD, mes);
-    return;
-  }
-  google.script.run
-    .withSuccessHandler(function(data) {
-      cachePLD = data || [];
-      renderPLDCards(cachePLD, mes);
-    })
-    .withFailureHandler(function(err) {
-      document.getElementById('pldContenido').innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444;">Error al cargar datos PLD: ' + (err.message || err) + '</div>';
-    })
-    .getDatosPLD();
-}
-
-function renderComisionesContenidoPLD() {
-  // alias used by onchange
-  renderPLDContenido();
-}
-
-function renderPLDContenido() {
-  var mes = parseInt(document.getElementById('pldMesSelect').value);
-  cargarDatosPLD(mes);
 }
 
 function renderPLDCards(datos, mes) {
   var cont = document.getElementById('pldContenido');
   if (!cont) return;
 
-  // Filtrar por mes de la fecha
   var filtrados = datos.filter(function(item) {
     if (!item.fecha) return false;
     var partes = item.fecha.split('/');
     if (partes.length === 3) {
-      var mesItem = parseInt(partes[1]);
-      return mesItem === mes;
+      return parseInt(partes[1]) === mes;
     }
     return false;
   });
 
   if (filtrados.length === 0) {
-    cont.innerHTML = '<div style="text-align:center;padding:60px;"><div style="font-size:48px;margin-bottom:16px;">📋</div><div style="font-size:14px;color:#94a3b8;font-weight:600;">Sin registros PLD para ' + MESES_L[mes] + '</div></div>';
+    cont.innerHTML = `
+      <div class="paper-texture" style="padding:80px 40px; text-align:center;">
+        <div style="font-family:'Times New Roman', serif;">
+          <div style="font-size:72px; opacity:0.15; margin-bottom:30px;">📜</div>
+          <h3 style="font-family:'Playfair Display', serif; font-size:24px; color:#4a3728; margin-bottom:12px;">SIN HALLAZGOS REGISTRADOS</h3>
+          <div style="width:100px; height:2px; background:#d4c5b0; margin:20px auto;"></div>
+          <p style="font-family:'Georgia', serif; font-size:16px; color:#6b5b4e; font-style:italic;">No se han documentado incidencias en ${MESES_L[mes]}</p>
+        </div>
+      </div>
+    `;
     return;
   }
 
-  var html = '<div style="margin-bottom:16px;display:flex;align-items:center;gap:10px;">' +
-    '<div style="width:28px;height:28px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:800;box-shadow:0 2px 8px rgba(124,58,237,0.3);">📋</div>' +
-    '<span style="font-size:15px;font-weight:800;color:#1e293b;">' + filtrados.length + ' registro' + (filtrados.length !== 1 ? 's' : '') + ' en ' + MESES_L[mes] + '</span></div>';
+  var html = `
+    <div class="paper-texture" style="padding:40px 30px; position:relative;">
+      
+      <!-- Cabecera Financiera Cualli -->
+      <div style="border-bottom:4px double #4a0404; margin-bottom:40px; position:relative;">
+        <div style="position:absolute; top:-10px; left:0; right:0; text-align:center;">
+          <span style="background:#fdfaf6; padding:0 20px; font-family:'Times New Roman', serif; font-size:38px; color:#8b0000; letter-spacing:6px;">FINANCIERA CUALLLI</span>
+        </div>
+        <div style="padding-top:30px; text-align:center;">
+          <h2 style="font-family:'Playfair Display', 'Times New Roman', serif; font-size:36px; font-weight:900; color:#1a1a1a; margin:0; letter-spacing:2px;">
+            Información Relevante Control Interno / PLD
+          </h2>
+          <div style="display:flex; justify-content:center; gap:20px; margin-top:12px;">
+            <span style="font-family:'Georgia', serif; font-size:24px; color:#6b5b4e; font-style:italic;">Marzo 2026</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="max-width: 1200px; margin: 0 auto;">
+  `;
 
   filtrados.forEach(function(item, idx) {
-    var delay = (idx * 0.08).toFixed(2);
-    html += '<div style="display:flex;gap:18px;padding:22px 24px;background:linear-gradient(135deg,rgba(255,255,255,0.92),rgba(139,92,246,0.04));backdrop-filter:blur(12px);border:1px solid #ddd6fe;border-radius:16px;border-left:5px solid #7c3aed;margin-bottom:14px;box-shadow:0 4px 20px rgba(0,0,0,0.04),inset 0 1px 0 rgba(255,255,255,0.7);transition:transform 0.25s,box-shadow 0.25s;animation:fadeSlideRight 0.6s ease-out both;animation-delay:' + delay + 's;" onmouseenter="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 12px 32px rgba(0,0,0,0.10)\'" onmouseleave="this.style.transform=\'none\';this.style.boxShadow=\'0 4px 20px rgba(0,0,0,0.04)\'">' +
-      '<div style="width:44px;height:44px;background:linear-gradient(135deg,#c4b5fd,#7c3aed);border-radius:50%;border:3px solid #5b21b6;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:900;box-shadow:0 4px 12px rgba(124,58,237,0.4);flex-shrink:0;">' + item.numero + '</div>' +
-      '<div style="flex:1;min-width:0;">' +
-        '<div style="font-size:14px;font-weight:600;color:#1e293b;line-height:1.7;margin-bottom:8px;white-space:pre-line;">' + (item.detalle || '') + '</div>' +
-        '<div style="display:flex;align-items:center;gap:8px;">' +
-          '<span style="font-size:11px;font-weight:600;color:#94a3b8;">📅 ' + (item.fecha || '') + '</span>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
+    var delay = (idx * 0.15).toFixed(2);
+    
+    var color = '#4a0404';
+    var colorClaro = '#d4a574';
+    var colorOscuro = '#3d1a00';
+    var bgColor = '#fdf8f5';
+    var borderColor = '#d4b8a0';
+    
+    var detalle = item.detalle || '';
+    var detalleHTML = detalle;
+    if (detalle.length > 0) {
+        var primeraLetra = detalle.charAt(0);
+        var restoDetalle = detalle.slice(1);
+        detalleHTML = '<span class="moderate-capital" style="animation-delay:' + (delay + 0.2) + 's;">' + primeraLetra + '</span>' + restoDetalle.replace(/\n/g, '<br>');
+    }
+
+    var numStr = String(idx + 1).padStart(2, '0');
+
+    html += `
+      <article class="parchment-card" style="display:flex; background:${bgColor}; border:1px solid ${borderColor}; margin-bottom:32px; box-shadow:0 4px 12px rgba(0,0,0,0.05); position:relative; animation-delay:${delay}s;">
+        
+        <!-- COLUMNA IZQUIERDA - CÍRCULO Y PERIODO -->
+        <aside style="width:200px; flex-shrink:0; padding:40px 20px; background:linear-gradient(135deg, #f5ede4 0%, #fdf8f5 100%); border-right:2px solid ${borderColor}; display:flex; flex-direction:column; align-items:center; text-align:center;">
+          
+          <!-- CÍRCULO CON ÓRBITAS GIRATORIAS -->
+          <div class="area-circle-wrap" style="margin-bottom:24px;">
+            <svg class="orbit-cw" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="32" r="29" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="20 163" stroke-linecap="round" opacity="0.6"/>
+            </svg>
+            <svg class="orbit-ccw" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="32" r="29" fill="none" stroke="${colorClaro}" stroke-width="1.5" stroke-dasharray="12 170" stroke-linecap="round" opacity="0.4"/>
+            </svg>
+            <div class="orbit-circle-center" style="background:linear-gradient(135deg, ${colorClaro}, ${color}); border-color:${colorOscuro}; box-shadow:0 4px 12px ${color}40;">
+              ${numStr}
+            </div>
+          </div>
+          
+          <div style="width:24px; height:2px; background:${colorClaro}; margin-bottom:20px;"></div>
+          
+          <!-- Periodo -->
+          <div style="font-size:10px; font-weight:800; color:#6b5b4e; font-family:'Inter', sans-serif; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">
+            Periodo
+          </div>
+          <div style="font-size:15px; font-weight:800; color:${color}; font-family:'Georgia', serif;">
+            Marzo 2026
+          </div>
+          
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL - SOLO TEXTO -->
+        <div style="flex:1; padding:40px 48px;">
+          
+          <!-- Texto Principal -->
+          <div class="ink-text" style="font-family:'Georgia', 'Times New Roman', serif; font-size:16px; color:#2c2c2c; line-height:1.8; text-align:justify;">
+            ${detalleHTML}
+          </div>
+          
+        </div>
+      </article>
+    `;
   });
+  
+  html += `
+      </div>
+      
+      <!-- Marca de agua sutil -->
+      <div class="watermark-stamp">
+        FINANCIERA CUALLLI · CONTROL INTERNO
+      </div>
+    </div>
+  `;
 
   cont.innerHTML = html;
 }
@@ -6424,18 +6908,7 @@ function htmlProyectosEstadoRiesgoPremium(kpis) {
         </div>
       </div>
       
-      <div class="proy-contenedor-premium">
-        <div class="proy-header-seccion">
-          <div class="sec-num">03</div>
-          <div>
-            <h4>Nivel de Riesgo</h4>
-            <p>Clasificación de proyectos activos</p>
-          </div>
-        </div>
-        <div>
-          ${riesgoGauge}
-        </div>
-      </div>
+       
     </div>
   `;
 }
@@ -6539,12 +7012,9 @@ function htmlProyectosTabla(proyectos) {
     `;
   }
 
-  // Ordenar por área y luego por nombre
+  // Ordenar por ID/Número de proyecto
   const proyectosOrdenados = [...proyectos].sort((a, b) => {
-    if (a.areaSolicitante !== b.areaSolicitante) {
-      return (a.areaSolicitante || '').localeCompare(b.areaSolicitante || '');
-    }
-    return (a.proyecto || '').localeCompare(b.proyecto || '');
+    return String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true, sensitivity: 'base' });
   });
 
   // Función para formatear fecha
