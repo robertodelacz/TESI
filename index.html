@@ -215,6 +215,26 @@ body {
   margin:4px 16px;
   flex-shrink:0;
 }
+.sb-collapse-trigger {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 16px; margin:4px 8px;
+  cursor:pointer; border-radius:8px;
+  transition:background 0.2s; user-select:none;
+}
+.sb-collapse-trigger:hover { background:rgba(255,255,255,0.05); }
+.sb-collapse-icon {
+  font-size:8px; color:rgba(253,185,19,0.7);
+  transition:transform 0.3s ease;
+  width:14px; text-align:center;
+}
+.sb-collapse-icon.open { transform:rotate(90deg); }
+.sb-collapse-label {
+  font-size:10px; font-weight:700; color:rgba(253,185,19,0.5);
+  text-transform:uppercase; letter-spacing:1.2px;
+  opacity:0; transition:opacity 0.2s;
+}
+.sidebar:hover .sb-collapse-label,
+.sidebar.open .sb-collapse-label { opacity:1; }
 
 /* ── Footer del sidebar ── */
 .sb-footer {
@@ -2396,13 +2416,9 @@ video { pointer-events:none; outline:none; }
 .proy-tabla-desc {
   font-size: 12px;
   color: #64748b;
-  line-height: 1.4;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  line-height: 1.5;
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* ══ BARRA DE AVANCE ══ */
@@ -2552,42 +2568,65 @@ video { pointer-events:none; outline:none; }
         <span class="sb-item-label">Distribución Áreas</span>
       </a>
 
-      <a class="sb-item" data-tip="Expedientes por Tipo"
-         onclick="sbNavegar('sec-tipos',this)">
-        <span class="sb-item-icon">🗂️</span>
-        <span class="sb-item-label">Expedientes por Tipo</span>
-      </a>
-
-      <a class="sb-item" data-tip="Top Documentos"
-         onclick="sbNavegar('sec-topdocs',this)">
-        <span class="sb-item-icon">📄</span>
-        <span class="sb-item-label">Top Documentos</span>
-      </a>
-
       <a class="sb-item" data-tip="Avisos y Notificaciones"
          onclick="sbNavegar('sec-avisos',this)">
         <span class="sb-item-icon">🔔</span>
         <span class="sb-item-label">Avisos</span>
       </a>
 
-      <div class="sb-divider"></div>
+      <!-- Más detalle — collapsible -->
+      <div class="sb-collapse-trigger" onclick="toggleSbDetalle()">
+        <span class="sb-collapse-icon" id="sbDetalleIcon">▶</span>
+        <span class="sb-collapse-label">Más detalle</span>
+      </div>
+      <div class="sb-collapse-body" id="sbDetalleBody" style="max-height:0;overflow:hidden;transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1);">
 
-      <a class="sb-item" data-tip="Con Incidencias"
-         onclick="sbNavegar('sec-incidencias',this)">
-        <span class="sb-item-icon">⚠️</span>
-        <span class="sb-item-label">Con Incidencias</span>
-      </a>
+        <a class="sb-item" data-tip="Expedientes por Tipo"
+           onclick="sbNavegar('sec-tipos',this)">
+          <span class="sb-item-icon">🗂️</span>
+          <span class="sb-item-label">Expedientes por Tipo</span>
+        </a>
 
-      <a class="sb-item" data-tip="Detalle por Área"
-         onclick="sbNavegar('sec-detalle',this)">
-        <span class="sb-item-icon">🔍</span>
-        <span class="sb-item-label">Detalle por Área</span>
-      </a>
+        <a class="sb-item" data-tip="Top Documentos"
+           onclick="sbNavegar('sec-topdocs',this)">
+          <span class="sb-item-icon">📄</span>
+          <span class="sb-item-label">Top Documentos</span>
+        </a>
 
-      <a class="sb-item" data-tip="Pago de Comisiones"
-         onclick="sbNavegar('sec-comisiones',this)">
-        <span class="sb-item-icon">💰</span>
-        <span class="sb-item-label">Pago Comisiones</span>
+        <a class="sb-item" data-tip="Con Incidencias"
+           onclick="sbNavegar('sec-incidencias',this)">
+          <span class="sb-item-icon">⚠️</span>
+          <span class="sb-item-label">Con Incidencias</span>
+        </a>
+
+        <a class="sb-item" data-tip="Detalle por Área"
+           onclick="sbNavegar('sec-detalle',this)">
+          <span class="sb-item-icon">🔍</span>
+          <span class="sb-item-label">Detalle por Área</span>
+        </a>
+
+        <a class="sb-item" data-tip="Pago de Comisiones"
+           onclick="sbNavegar('sec-comisiones',this)">
+          <span class="sb-item-icon">💰</span>
+          <span class="sb-item-label">Pago Comisiones</span>
+        </a>
+
+      </div>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <!-- MÓDULO CONTROL INTERNO Y PLD -->
+    <div class="sb-module">
+      <div class="sb-module-header">
+        <span class="sb-module-icon">⚖️</span>
+        <span class="sb-module-label">Control Interno · PLD</span>
+      </div>
+
+      <a class="sb-item" data-tip="Control PLD"
+         onclick="sbNavegar('sec-pld',this)">
+        <span class="sb-item-icon">🛡️</span>
+        <span class="sb-item-label">Control PLD</span>
       </a>
     </div>
 
@@ -3238,9 +3277,7 @@ function renderAnioCompleto(mesesData, anio) {
   const vistaResumen = `
     <div id="vistaResumen" class="anio-vista">
       ${htmlKPIs(totTotal, totOk, totInc, pctC, pctI, label)}
-      ${htmlRubros(conteoPorTipo, incidenciasAcum, label)}
       ${htmlDistribucion(totArea, totalIncs, label)}
-      ${htmlTopDocumentos(incidenciasAcum, label)}
       ${htmlExpedientes(incidenciasAcum)}
       ${htmlDetalleAreas(incidenciasAcum, totArea)}
     </div>`;
@@ -3435,8 +3472,6 @@ function renderReporte(datos, nombreMes, anio, datosPrev, nombreMesPrev) {
       htmlKPIs(datos.total, datos.sinIncidencias, datos.conIncidencias, pctC, pctI, `${nombreMes} ${anio}`, datosPrev, nombreMesPrev) +
       htmlEtapasCierre(datos, `${nombreMes} ${anio}`) +
       htmlDistribucion(totArea, totalIncs, `${nombreMes} ${anio}`) +
-      htmlRubros(datos.conteoPorTipo, datos.incidencias||[], `${nombreMes} ${anio}`) +
-      htmlTopDocumentos(datos.incidencias||[], `${nombreMes} ${anio}`) +
       htmlAvisos(datos.avisos||[], `${nombreMes} ${anio}`) +
       htmlExpedientes(datos.incidencias||[]) +
       htmlDetalleAreas(datos.incidencias||[], totArea);
@@ -4996,20 +5031,12 @@ const SEC_PANEL_CFG = {
       body.innerHTML  = htmlDetalleAreas(datosMostrados.incidencias || [], totArea);
     }
   },
-  'sec-comisiones': {
-    icon: '💰',
-    name: 'Pago de Comisiones',
-    sub:  'Estatus de expedientes comerciales para pago de comisiones',
-    render: (body) => { body.innerHTML = htmlPanelComisiones(); }
-  },
   'sec-topdocs': {
     icon: '📄',
     name: 'Top Documentos con Incidencias',
     sub:  'Los documentos que más se repiten en las observaciones',
     render: (body) => {
-      let incs = [];
-      if (datosMostrados && datosMostrados.incidencias && datosMostrados.incidencias.length) incs = datosMostrados.incidencias;
-      else if (incidenciasAnuales && incidenciasAnuales.length) incs = incidenciasAnuales;
+      let incs = (datosMostrados && datosMostrados.incidencias) ? datosMostrados.incidencias : incidenciasAnuales;
       var anio = document.getElementById('selectAnio').value;
       var ms = document.getElementById('selectMes');
       var lbl = ms.value ? ms.options[ms.selectedIndex].textContent + ' ' + anio : 'Año ' + anio;
@@ -5027,6 +5054,20 @@ const SEC_PANEL_CFG = {
       var lbl = ms.value ? ms.options[ms.selectedIndex].textContent + ' ' + anio : 'Año ' + anio;
       body.innerHTML = '<div style="max-width:900px;margin:0 auto;padding:28px 40px;">' + (htmlAvisos(avisos, lbl) || '<div style="text-align:center;padding:40px;color:#94a3b8;">Sin avisos para este período</div>') + '</div>';
     }
+  },
+  'sec-pld': {
+    icon: '🛡️',
+    name: 'Control Interno y PLD',
+    sub:  'Información relevante de prevención de lavado de dinero',
+    render: (body) => {
+      body.innerHTML = htmlPanelPLD();
+    }
+  },
+  'sec-comisiones': {
+    icon: '💰',
+    name: 'Pago de Comisiones',
+    sub:  'Estatus de expedientes comerciales para pago de comisiones',
+    render: (body) => { body.innerHTML = htmlPanelComisiones(); }
   },
   'sec-ciberseguridad': {
     icon: 'https://cdn-icons-mp4.freepik.com/512/18113/18113621.mp4',
@@ -5517,8 +5558,8 @@ function htmlPanelComisiones() {
     '<div style="font-size:16px;font-weight:800;color:#1e293b;">' + anio + '</div></div>' +
     '<select id="comisionesMesSelect" onchange="renderComisionesContenido()" style="margin-left:auto;padding:8px 16px;border-radius:10px;border:1px solid rgba(253,185,19,0.3);background:#fff;font-family:IBM Plex Sans,sans-serif;font-size:13px;font-weight:700;color:#1e293b;cursor:pointer;">' + opcionesMes + '</select></div>';
 
-  if (mesActual === 0) return '<div style="max-width:900px;margin:0 auto;padding:28px 40px;">' + selectorHtml + '<div style="text-align:center;padding:60px;color:#94a3b8;">Sin datos disponibles</div></div>';
-  return '<div style="max-width:900px;margin:0 auto;padding:28px 40px;">' + selectorHtml + '<div id="comisionesContenido">' + generarContenidoComisiones(anio, mesActual) + '</div></div>';
+  if (mesActual === 0) return selectorHtml + '<div style="text-align:center;padding:60px;color:#94a3b8;">Sin datos disponibles</div>';
+  return selectorHtml + '<div id="comisionesContenido">' + generarContenidoComisiones(anio, mesActual) + '</div>';
 }
 
 function renderComisionesContenido() {
@@ -5534,155 +5575,256 @@ function generarContenidoComisiones(anio, mes) {
   if (!datosMes) return '<div style="text-align:center;padding:40px;color:#94a3b8;">Sin datos para ' + MESES_L[mes] + ' ' + anio + '</div>';
   var nombreMes = MESES_L[mes];
 
-  var totalNormal = (datosMes.conteoPorTipo && datosMes.conteoPorTipo['Normal']) ? datosMes.conteoPorTipo['Normal'].total : 0;
-  var procedentes = [], retenidos = [];
+  // ═══ CLASIFICACIÓN: todos los Normal pasan por verificación de Comercial ═══
+  var procedentes = [];  // Comercial SIN incidencias
+  var retenidos = [];    // Comercial CON incidencias
 
+  // 1) Expedientes completos (estatus "completo") → Comercial no tiene incidencias por definición
   if (datosMes.completosUniverso) {
     datosMes.completosUniverso.forEach(function(exp) {
-      if (normalizarTipoExp(exp.tipo) === 'Normal') procedentes.push({ id: exp.id, fecha: exp.fecha, estatus: 'completo' });
-    });
-  }
-  if (datosMes.incidencias) {
-    datosMes.incidencias.forEach(function(exp) {
-      if (normalizarTipoExp(exp.tipo) !== 'Normal') return;
-      var map = parsearAreas(exp.areas || '');
-      var incCom = map['Comercial'] || 0;
-      if (incCom > 0) {
-        var docsCom = [];
-        var docs = exp.documentos && exp.documentos.length > 0 ? exp.documentos : parsearDocumentosHTML(exp.areas || '');
-        docs.forEach(function(d) {
-          var an = (d.area || '').toLowerCase().replace('í','i');
-          if (an.includes('comercial')) {
-            var nm = (d.documento||'').replace(/^\*+\s*/,'').replace(/^\d+\.\s*/,'').replace(/\s*\/.*$/,'').trim();
-            if (nm) docsCom.push({ documento: nm, comentario: d.comentario || d.observacion || '' });
-          }
-        });
-        retenidos.push({ id: exp.id, fecha: exp.fecha, totalIncidencias: exp.totalIncidencias, incComercial: incCom, documentos: docsCom });
-      } else {
-        procedentes.push({ id: exp.id, fecha: exp.fecha, estatus: 'inc-otras' });
+      if (normalizarTipoExp(exp.tipo) === 'Normal') {
+        procedentes.push({ id: exp.id, fecha: exp.fecha, estatus: 'completo' });
       }
     });
   }
 
+  // 2) Expedientes con incidencias → verificar si Comercial tiene o no
+  if (datosMes.incidencias) {
+    datosMes.incidencias.forEach(function(exp) {
+      if (normalizarTipoExp(exp.tipo) !== 'Normal') return;
+      var map = parsearAreas(exp.areas || '');
+      var incComercial = map['Comercial'] || 0;
+
+      if (incComercial > 0) {
+        // Comercial SÍ tiene incidencias → RETENIDO
+        var docsCom = [];
+        var docs = exp.documentos && exp.documentos.length > 0 ? exp.documentos : parsearDocumentosHTML(exp.areas || '');
+        docs.forEach(function(d) {
+          var areaN = (d.area || '').toLowerCase().replace('í', 'i');
+          if (areaN.includes('comercial')) {
+            var nombre = (d.documento || '').replace(/^\*+\s*/, '').replace(/^\d+\.\s*/, '').replace(/\s*\/.*$/, '').trim();
+            if (nombre) docsCom.push({ documento: nombre, comentario: d.comentario || d.observacion || '' });
+          }
+        });
+        retenidos.push({ id: exp.id, fecha: exp.fecha, estatus: 'incidencias', totalIncidencias: exp.totalIncidencias, incComercial: incComercial, documentos: docsCom });
+      } else {
+        // Comercial NO tiene incidencias (las tiene en otras áreas) → PROCEDENTE
+        procedentes.push({ id: exp.id, fecha: exp.fecha, estatus: 'incidencias-otras' });
+      }
+    });
+  }
+
+  var totalNormal = procedentes.length + retenidos.length;
   var pctProc = totalNormal > 0 ? Math.round((procedentes.length / totalNormal) * 100) : 0;
   var pctRet = totalNormal > 0 ? Math.round((retenidos.length / totalNormal) * 100) : 0;
 
   // ── Header ──
-  var headerHtml = '<div style="display:flex;align-items:center;gap:14px;padding:20px 24px;background:linear-gradient(135deg,rgba(255,255,255,0.92),rgba(249,115,22,0.04));border:1px solid #fed7aa;border-radius:16px;margin-bottom:28px;">' +
+  var headerHtml = '<div style="display:flex;align-items:center;gap:14px;padding:20px 24px;background:linear-gradient(135deg,rgba(255,255,255,0.92),rgba(249,115,22,0.04));border:1px solid #fed7aa;border-radius:16px;margin-bottom:24px;">' +
     '<div style="width:44px;height:44px;background:linear-gradient(135deg,#fb923c,#f97316);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 12px rgba(249,115,22,0.3);">💰</div>' +
     '<div><div style="font-size:18px;font-weight:800;color:#1e293b;">Comisiones Comerciales</div>' +
     '<div style="font-size:12px;color:#64748b;font-weight:600;">' + nombreMes + ' ' + anio + ' · Expedientes tipo Normal · Área Comercial</div></div>' +
     '<div style="margin-left:auto;text-align:center;"><div style="font-size:28px;font-weight:900;color:#1e293b;">' + totalNormal + '</div><div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Total</div></div></div>';
 
-  // ── KPI Cards — clase kpi-row idéntica a TESI ──
+  // ── KPI Cards estilo TESI ──
   var dots = '<div class="kpi-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>';
-  var kpiCards = '<div class="kpi-row">' +
-    '<div class="kpi-box total"><div class="kpi-box-inner">' + dots + '<div class="kpi-label">Total Normal</div><div class="kpi-num num-pop">' + totalNormal + '</div></div></div>' +
-    '<div class="kpi-box completos"><div class="kpi-box-inner">' + dots + '<div class="kpi-label">Procedentes</div><div class="kpi-num num-pop">' + procedentes.length + '</div></div></div>' +
-    '<div class="kpi-box incidencias"><div class="kpi-box-inner">' + dots + '<div class="kpi-label">Retenidos</div><div class="kpi-num num-pop">' + retenidos.length + '</div></div></div></div>';
+  var kpiCards = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">' +
+    '<div class="kpi-box total" style="animation:cardIn 0.5s cubic-bezier(0.34,1.3,0.64,1) both;animation-delay:0.05s;"><div class="kpi-box-inner">' + dots + '<div class="kpi-label">Total Normal</div><div class="kpi-num num-pop">' + totalNormal + '</div></div></div>' +
+    '<div class="kpi-box completos" style="animation:cardIn 0.5s cubic-bezier(0.34,1.3,0.64,1) both;animation-delay:0.10s;"><div class="kpi-box-inner">' + dots + '<div class="kpi-label">Procedentes</div><div class="kpi-num num-pop">' + procedentes.length + '</div></div></div>' +
+    '<div class="kpi-box incidencias" style="animation:cardIn 0.5s cubic-bezier(0.34,1.3,0.64,1) both;animation-delay:0.15s;"><div class="kpi-box-inner">' + dots + '<div class="kpi-label">Retenidos</div><div class="kpi-num num-pop">' + retenidos.length + '</div></div></div>' +
+  '</div>';
 
-  // ── Donas SVG — EXACTA copia del patrón donaSVG de htmlKPIs ──
-  var CIRC_VAL = (2 * Math.PI * 78).toFixed(4);
-  function donaComision(safeId, color, colorLight, pct, labelTop) {
-    return '<div class="kpi-dona-wrap">' +
-      '<svg class="dona-svg-stage" id="svg' + safeId + '" viewBox="0 0 220 220" width="220" height="220" xmlns="http://www.w3.org/2000/svg">' +
-        '<defs>' +
-          '<radialGradient id="dkGrad' + safeId + '" cx="40%" cy="35%" r="65%"><stop offset="0%" stop-color="#4d5f75"/><stop offset="100%" stop-color="#1e2533"/></radialGradient>' +
-          '<linearGradient id="aGrad' + safeId + '" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="' + colorLight + '"/><stop offset="100%" stop-color="' + color + '"/></linearGradient>' +
-          '<filter id="glow' + safeId + '" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
-        '</defs>' +
-        '<circle cx="110" cy="110" r="100" fill="none" stroke="' + color + '" stroke-width="14" opacity="0.13"/>' +
-        '<circle cx="110" cy="110" r="88" fill="none" stroke="' + color + '" stroke-width="11" opacity="0.26"/>' +
-        '<circle cx="110" cy="110" r="78" fill="none" stroke="#cbd5e1" stroke-opacity="0.5" stroke-width="18" stroke-linecap="round"/>' +
-        '<circle id="arc' + safeId + '" cx="110" cy="110" r="78" fill="none" stroke="url(#aGrad' + safeId + ')" stroke-width="18" stroke-linecap="round" stroke-dasharray="' + CIRC_VAL + '" stroke-dashoffset="' + CIRC_VAL + '" transform="rotate(-90 110 110)" filter="url(#glow' + safeId + ')"/>' +
-        '<circle id="dot' + safeId + '" cx="110" cy="32" r="10" fill="' + color + '" opacity="0"/>' +
-        '<circle id="dotHalo' + safeId + '" cx="110" cy="32" r="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55" opacity="0">' +
-          '<animate attributeName="r" values="13;19;13" dur="2s" repeatCount="indefinite"/>' +
-          '<animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="2s" repeatCount="indefinite"/>' +
-        '</circle>' +
-        '<circle cx="110" cy="110" r="57" fill="#253044"/>' +
-        '<circle cx="110" cy="110" r="57" fill="url(#dkGrad' + safeId + ')"/>' +
-        '<circle cx="110" cy="110" r="57" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>' +
-        '<circle cx="110" cy="110" r="68" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>' +
-        '<text x="110" y="94" font-family="IBM Plex Sans,sans-serif" font-size="10" font-weight="800" letter-spacing="1.5" text-anchor="middle" dominant-baseline="middle" fill="' + colorLight + '">' + labelTop + '</text>' +
-        '<text id="pct' + safeId + '" x="110" y="124" font-family="IBM Plex Sans,sans-serif" font-size="44" font-weight="800" letter-spacing="-2" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">0%</text>' +
-      '</svg></div>';
+  // ── Donas SVG estilo TESI ──
+  var R_ARC = 78, STROKE_W = 18, CIRC_VAL = (2 * Math.PI * R_ARC).toFixed(4), CXd = 110, CYd = 110;
+  function donaCom(id, color, colorLight, pct, sublabel) {
+    return '<div class="kpi-dona-wrap"><svg class="dona-svg-stage" viewBox="0 0 220 220" width="220" height="220" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><radialGradient id="dkGrad' + id + '" cx="40%" cy="35%" r="65%"><stop offset="0%" stop-color="#4d5f75"/><stop offset="100%" stop-color="#1e2533"/></radialGradient>' +
+      '<linearGradient id="aGrad' + id + '" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="' + colorLight + '"/><stop offset="100%" stop-color="' + color + '"/></linearGradient>' +
+      '<filter id="glow' + id + '" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
+      '<circle cx="110" cy="110" r="100" fill="none" stroke="' + color + '" stroke-width="14" opacity="0.13"/>' +
+      '<circle cx="110" cy="110" r="88" fill="none" stroke="' + color + '" stroke-width="11" opacity="0.26"/>' +
+      '<circle cx="110" cy="110" r="78" fill="none" stroke="#cbd5e1" stroke-opacity="0.5" stroke-width="18" stroke-linecap="round"/>' +
+      '<circle id="arc' + id + '" cx="110" cy="110" r="78" fill="none" stroke="url(#aGrad' + id + ')" stroke-width="18" stroke-linecap="round" stroke-dasharray="' + CIRC_VAL + '" stroke-dashoffset="' + CIRC_VAL + '" transform="rotate(-90 110 110)" filter="url(#glow' + id + ')"/>' +
+      '<circle id="dot' + id + '" cx="110" cy="32" r="10" fill="' + color + '" opacity="0"/>' +
+      '<circle id="dotHalo' + id + '" cx="110" cy="32" r="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.55" opacity="0"><animate attributeName="r" values="13;19;13" dur="2s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="2s" repeatCount="indefinite"/></circle>' +
+      '<circle cx="110" cy="110" r="57" fill="#253044"/><circle cx="110" cy="110" r="57" fill="url(#dkGrad' + id + ')"/><circle cx="110" cy="110" r="57" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>' +
+      '<text x="110" y="100" font-family="IBM Plex Sans,sans-serif" font-size="42" font-weight="800" text-anchor="middle" dominant-baseline="middle" fill="#fff">' + pct + '%</text>' +
+      '<text x="110" y="130" font-family="Inter,sans-serif" font-size="11" font-weight="600" text-anchor="middle" fill="' + colorLight + '" opacity="0.8" letter-spacing="1.5">' + sublabel + '</text>' +
+    '</svg></div>';
   }
 
   var donas = '<div class="kpi-donas-panel" style="margin-bottom:28px;">' +
-    donaComision('cm_ok', '#059669', '#34d399', pctProc, 'PROCEDENTES') +
-    donaComision('cm_ret', '#dc2626', '#f87171', pctRet, 'RETENIDOS') + '</div>';
+    donaCom('cm_ok', '#059669', '#34d399', pctProc, 'PROCEDENTE') +
+    donaCom('cm_ret', '#dc2626', '#f87171', pctRet, 'RETENIDO') + '</div>';
 
-  // ── Animación idéntica a initCharts de TESI ──
-  var animScript = '<script>(function(){' +
-    'var cfg=[{id:"cm_ok",pct:' + pctProc + '},{id:"cm_ret",pct:' + pctRet + '}];' +
-    'var circ=' + CIRC_VAL + ',R=78,CX=110,CY=110;' +
-    'cfg.forEach(function(c,idx){' +
-      'var arc=document.getElementById("arc"+c.id),pctEl=document.getElementById("pct"+c.id),' +
-          'dot=document.getElementById("dot"+c.id),halo=document.getElementById("dotHalo"+c.id);' +
-      'if(!arc||!pctEl)return;' +
-      'var targetOff=circ*(1-c.pct/100);' +
-      'function dp(p){var a=-Math.PI/2+2*Math.PI*p;return{x:CX+R*Math.cos(a),y:CY+R*Math.sin(a)}}' +
-      'setTimeout(function(){' +
-        'if(dot)dot.setAttribute("opacity",c.pct>0?"1":"0");' +
-        'if(halo)halo.setAttribute("opacity",c.pct>0?"1":"0");' +
-        'var s=null;(function t(n){if(!s)s=n;var r=Math.min((n-s)/1600,1),e=1-Math.pow(1-r,3);' +
-        'arc.setAttribute("stroke-dashoffset",(circ-(circ-targetOff)*e).toFixed(2));' +
-        'pctEl.textContent=Math.round(c.pct*e)+"%";' +
-        'if(c.pct>0){var p=dp(e*c.pct/100);if(dot){dot.setAttribute("cx",p.x.toFixed(2));dot.setAttribute("cy",p.y.toFixed(2))}' +
-        'if(halo){halo.setAttribute("cx",p.x.toFixed(2));halo.setAttribute("cy",p.y.toFixed(2))}}' +
-        'if(r<1)requestAnimationFrame(t);else{arc.setAttribute("stroke-dashoffset",targetOff.toFixed(2));pctEl.textContent=c.pct+"%";' +
-        'if(c.pct>0){var f=dp(c.pct/100);if(dot){dot.setAttribute("cx",f.x.toFixed(2));dot.setAttribute("cy",f.y.toFixed(2))}' +
-        'if(halo){halo.setAttribute("cx",f.x.toFixed(2));halo.setAttribute("cy",f.y.toFixed(2))}}}' +
-      '})(performance.now())},300+idx*200)})' +
-  '})();<\/script>';
+  var animScript = '<script>(function(){var ids=["cm_ok","cm_ret"],pcts=[' + pctProc + ',' + pctRet + '],circ=' + CIRC_VAL + ';' +
+    'ids.forEach(function(id,idx){var arc=document.getElementById("arc"+id),dot=document.getElementById("dot"+id),halo=document.getElementById("dotHalo"+id);' +
+    'if(!arc)return;var tOff=circ*(1-pcts[idx]/100);' +
+    'function dp(p){var a=-Math.PI/2+2*Math.PI*p;return{x:110+78*Math.cos(a),y:110+78*Math.sin(a)}}' +
+    'setTimeout(function(){if(dot)dot.setAttribute("opacity","1");if(halo)halo.setAttribute("opacity","1");' +
+    'var s=null;(function t(n){if(!s)s=n;var r=Math.min((n-s)/1600,1),e=1-Math.pow(1-r,3);' +
+    'arc.setAttribute("stroke-dashoffset",(circ-(circ-tOff)*e).toFixed(2));' +
+    'if(pcts[idx]>0){var p=dp(e*pcts[idx]/100);if(dot){dot.setAttribute("cx",p.x.toFixed(2));dot.setAttribute("cy",p.y.toFixed(2))}if(halo){halo.setAttribute("cx",p.x.toFixed(2));halo.setAttribute("cy",p.y.toFixed(2))}}' +
+    'if(r<1)requestAnimationFrame(t);else{arc.setAttribute("stroke-dashoffset",tOff.toFixed(2));if(pcts[idx]>0){var f=dp(pcts[idx]/100);if(dot){dot.setAttribute("cx",f.x.toFixed(2));dot.setAttribute("cy",f.y.toFixed(2))}if(halo){halo.setAttribute("cx",f.x.toFixed(2));halo.setAttribute("cy",f.y.toFixed(2))}}}' +
+    '})(performance.now())},300+idx*200)})})();<\/script>';
 
   // ── Tabla PROCEDENTES ──
   var tablaProcHtml = '<div style="margin-bottom:28px;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">' +
     '<div style="width:28px;height:28px;background:linear-gradient(135deg,#34d399,#10b981);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:800;box-shadow:0 2px 8px rgba(16,185,129,0.3);">✓</div>' +
     '<span style="font-size:15px;font-weight:800;color:#1e293b;">Procedentes para Pago</span>' +
     '<span style="margin-left:auto;font-size:12px;font-weight:800;color:#10b981;background:#f0fdf4;padding:4px 12px;border-radius:20px;border:1px solid #86efac;">' + procedentes.length + '</span></div>';
+
   if (procedentes.length > 0) {
     tablaProcHtml += '<table class="tp-exp-table"><thead><tr><th>ID Oportunidad</th><th>Fecha de Firma</th><th>Estatus General</th></tr></thead><tbody>';
     procedentes.forEach(function(e) {
-      var lbl = e.estatus === 'completo' ? '<span style="color:#10b981;font-weight:700;font-size:11px;">● Completo</span>' : '<span style="color:#f59e0b;font-weight:700;font-size:11px;">● Inc. otras áreas</span>';
-      tablaProcHtml += '<tr><td><span class="tp-exp-id">' + e.id + '</span></td><td><span class="tp-exp-fecha">' + e.fecha + '</span></td><td>' + lbl + '</td></tr>';
+      var estatusLabel = e.estatus === 'completo' ? '<span style="color:#10b981;font-weight:700;font-size:11px;">● Completo</span>' : '<span style="color:#f59e0b;font-weight:700;font-size:11px;">● Inc. otras áreas</span>';
+      tablaProcHtml += '<tr><td><span class="tp-exp-id">' + e.id + '</span></td><td><span class="tp-exp-fecha">' + e.fecha + '</span></td><td>' + estatusLabel + '</td></tr>';
     });
     tablaProcHtml += '</tbody></table>';
-  } else { tablaProcHtml += '<div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px;">Sin expedientes procedentes</div>'; }
+  } else {
+    tablaProcHtml += '<div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px;">Sin expedientes procedentes</div>';
+  }
   tablaProcHtml += '</div>';
 
-  // ── Sección RETENIDOS ──
+  // ── Sección RETENIDOS con detalle por expediente ──
   var tablaRetHtml = '<div><div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">' +
     '<div style="width:28px;height:28px;background:linear-gradient(135deg,#f87171,#ef4444);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:800;box-shadow:0 2px 8px rgba(239,68,68,0.3);">✗</div>' +
     '<span style="font-size:15px;font-weight:800;color:#1e293b;">Comisión Retenida</span>' +
     '<span style="margin-left:auto;font-size:12px;font-weight:800;color:#ef4444;background:#fef2f2;padding:4px 12px;border-radius:20px;border:1px solid #fecaca;">' + retenidos.length + '</span></div>';
+
   if (retenidos.length > 0) {
     retenidos.forEach(function(exp, idx) {
       var bg = idx % 2 === 0 ? 'rgba(254,242,242,0.5)' : 'rgba(255,255,255,0.5)';
       tablaRetHtml += '<div style="background:' + bg + ';border:1px solid #fecaca;border-radius:14px;padding:18px;margin-bottom:12px;">' +
-        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><span style="font-size:14px;font-weight:800;color:#1e293b;">' + exp.id + '</span><span style="font-size:11px;color:#94a3b8;margin-left:auto;">' + exp.fecha + '</span></div>' +
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">' +
+          '<span style="font-size:14px;font-weight:800;color:#1e293b;">' + exp.id + '</span>' +
+          '<span style="font-size:11px;color:#94a3b8;margin-left:auto;">' + exp.fecha + '</span></div>' +
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">' +
           '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#ef4444;background:#fef2f2;padding:3px 10px;border-radius:12px;border:1px solid #fecaca;"><span style="width:6px;height:6px;border-radius:50%;background:#ef4444;"></span>' + exp.incComercial + ' inc. Comercial</span>' +
-          '<span style="font-size:11px;font-weight:700;color:#94a3b8;">' + exp.totalIncidencias + ' total</span></div>';
+          '<span style="font-size:11px;font-weight:700;color:#94a3b8;">' + exp.totalIncidencias + ' total expediente</span></div>';
       if (exp.documentos && exp.documentos.length > 0) {
         tablaRetHtml += '<div style="background:#fff;border:1px solid #f1f5f9;border-radius:10px;overflow:hidden;">' +
           '<div style="padding:8px 14px;background:#f8fafc;border-bottom:1px solid #f1f5f9;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;">Documentos faltantes — Comercial</div>';
         exp.documentos.forEach(function(doc, di) {
           var dbg = di % 2 === 0 ? '#fff' : '#f8fafc';
           tablaRetHtml += '<div style="display:flex;align-items:flex-start;gap:8px;padding:10px 14px;background:' + dbg + ';border-bottom:1px solid #f1f5f9;">' +
-            '<div style="width:20px;height:20px;background:#fef2f2;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#ef4444;flex-shrink:0;">' + (di+1) + '</div>' +
+            '<div style="width:20px;height:20px;background:#fef2f2;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#ef4444;flex-shrink:0;">' + (di + 1) + '</div>' +
             '<div><div style="font-size:12px;font-weight:700;color:#1e293b;line-height:1.4;">' + doc.documento + '</div>' +
-            (doc.comentario && doc.comentario !== '—' ? '<div style="font-size:11px;color:#94a3b8;margin-top:2px;">' + doc.comentario + '</div>' : '') + '</div></div>';
+            (doc.comentario && doc.comentario !== '—' ? '<div style="font-size:11px;color:#94a3b8;margin-top:2px;">' + doc.comentario + '</div>' : '') +
+          '</div></div>';
         });
         tablaRetHtml += '</div>';
       }
       tablaRetHtml += '</div>';
     });
-  } else { tablaRetHtml += '<div style="text-align:center;padding:24px;color:#10b981;font-size:13px;font-weight:700;background:#f0fdf4;border-radius:12px;">✓ Sin comisiones retenidas</div>'; }
+  } else {
+    tablaRetHtml += '<div style="text-align:center;padding:24px;color:#10b981;font-size:13px;font-weight:700;background:#f0fdf4;border-radius:12px;">✓ Sin comisiones retenidas — todos los expedientes Normal están libres de incidencias en Comercial</div>';
+  }
   tablaRetHtml += '</div>';
 
   return headerHtml + kpiCards + donas + animScript + tablaProcHtml + tablaRetHtml;
+}
+
+// ════════════════════════════════════════════════════════════
+// PANEL CONTROL INTERNO Y PLD
+// Lee hoja "PLD" con columnas: No., Detalle, Fecha
+// Selector de mes propio · Glassmorphism cards
+// ════════════════════════════════════════════════════════════
+var cachePLD = null;
+
+function htmlPanelPLD() {
+  var anio = parseInt(document.getElementById('selectAnio').value);
+  var mesSelect = document.getElementById('selectMes');
+  var mesesDisponibles = [];
+  if (CACHE[anio]) {
+    mesesDisponibles = Object.keys(CACHE[anio]).filter(function(k) { return k.startsWith(String(anio)); })
+      .map(function(k) { return parseInt(k.split('-')[1]); }).sort(function(a,b) { return a - b; });
+  }
+  var mesActual = mesSelect.value ? parseInt(mesSelect.value) : (mesesDisponibles.length > 0 ? mesesDisponibles[mesesDisponibles.length - 1] : 0);
+  var opcionesMes = mesesDisponibles.map(function(m) {
+    return '<option value="' + m + '"' + (m === mesActual ? ' selected' : '') + '>' + MESES_L[m] + '</option>';
+  }).join('');
+
+  var html = '<div style="max-width:900px;margin:0 auto;padding:28px 40px;">';
+  
+  // Header
+  html += '<div style="display:flex;align-items:center;gap:14px;padding:20px 24px;background:linear-gradient(135deg,rgba(255,255,255,0.92),rgba(139,92,246,0.06));border:1px solid #ddd6fe;border-radius:16px;margin-bottom:24px;">' +
+    '<div style="width:44px;height:44px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 12px rgba(124,58,237,0.3);">⚖️</div>' +
+    '<div><div style="font-size:18px;font-weight:800;color:#1e293b;">Control Interno y PLD</div>' +
+    '<div style="font-size:12px;color:#64748b;font-weight:600;">Información relevante · Prevención de Lavado de Dinero</div></div>' +
+    '<select id="pldMesSelect" onchange="renderPLDContenido()" style="margin-left:auto;padding:8px 16px;border-radius:10px;border:1px solid rgba(139,92,246,0.3);background:#fff;font-family:IBM Plex Sans,sans-serif;font-size:13px;font-weight:700;color:#1e293b;cursor:pointer;">' + opcionesMes + '</select></div>';
+
+  html += '<div id="pldContenido"><div style="text-align:center;padding:40px;color:#94a3b8;">' + htmlClockLoader('Cargando PLD', 'Obteniendo datos...') + '</div></div>';
+  html += '</div>';
+
+  // Trigger load
+  html += '<script>(function(){ cargarDatosPLD(' + mesActual + '); })();<\/script>';
+  return html;
+}
+
+function cargarDatosPLD(mes) {
+  if (cachePLD) {
+    renderPLDCards(cachePLD, mes);
+    return;
+  }
+  google.script.run
+    .withSuccessHandler(function(data) {
+      cachePLD = data || [];
+      renderPLDCards(cachePLD, mes);
+    })
+    .withFailureHandler(function(err) {
+      document.getElementById('pldContenido').innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444;">Error al cargar datos PLD: ' + (err.message || err) + '</div>';
+    })
+    .getDatosPLD();
+}
+
+function renderComisionesContenidoPLD() {
+  // alias used by onchange
+  renderPLDContenido();
+}
+
+function renderPLDContenido() {
+  var mes = parseInt(document.getElementById('pldMesSelect').value);
+  cargarDatosPLD(mes);
+}
+
+function renderPLDCards(datos, mes) {
+  var cont = document.getElementById('pldContenido');
+  if (!cont) return;
+
+  // Filtrar por mes de la fecha
+  var filtrados = datos.filter(function(item) {
+    if (!item.fecha) return false;
+    var partes = item.fecha.split('/');
+    if (partes.length === 3) {
+      var mesItem = parseInt(partes[1]);
+      return mesItem === mes;
+    }
+    return false;
+  });
+
+  if (filtrados.length === 0) {
+    cont.innerHTML = '<div style="text-align:center;padding:60px;"><div style="font-size:48px;margin-bottom:16px;">📋</div><div style="font-size:14px;color:#94a3b8;font-weight:600;">Sin registros PLD para ' + MESES_L[mes] + '</div></div>';
+    return;
+  }
+
+  var html = '<div style="margin-bottom:16px;display:flex;align-items:center;gap:10px;">' +
+    '<div style="width:28px;height:28px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:800;box-shadow:0 2px 8px rgba(124,58,237,0.3);">📋</div>' +
+    '<span style="font-size:15px;font-weight:800;color:#1e293b;">' + filtrados.length + ' registro' + (filtrados.length !== 1 ? 's' : '') + ' en ' + MESES_L[mes] + '</span></div>';
+
+  filtrados.forEach(function(item, idx) {
+    var delay = (idx * 0.08).toFixed(2);
+    html += '<div style="display:flex;gap:18px;padding:22px 24px;background:linear-gradient(135deg,rgba(255,255,255,0.92),rgba(139,92,246,0.04));backdrop-filter:blur(12px);border:1px solid #ddd6fe;border-radius:16px;border-left:5px solid #7c3aed;margin-bottom:14px;box-shadow:0 4px 20px rgba(0,0,0,0.04),inset 0 1px 0 rgba(255,255,255,0.7);transition:transform 0.25s,box-shadow 0.25s;animation:fadeSlideRight 0.6s ease-out both;animation-delay:' + delay + 's;" onmouseenter="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 12px 32px rgba(0,0,0,0.10)\'" onmouseleave="this.style.transform=\'none\';this.style.boxShadow=\'0 4px 20px rgba(0,0,0,0.04)\'">' +
+      '<div style="width:44px;height:44px;background:linear-gradient(135deg,#c4b5fd,#7c3aed);border-radius:50%;border:3px solid #5b21b6;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:900;box-shadow:0 4px 12px rgba(124,58,237,0.4);flex-shrink:0;">' + item.numero + '</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:14px;font-weight:600;color:#1e293b;line-height:1.7;margin-bottom:8px;white-space:pre-line;">' + (item.detalle || '') + '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;">' +
+          '<span style="font-size:11px;font-weight:600;color:#94a3b8;">📅 ' + (item.fecha || '') + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  });
+
+  cont.innerHTML = html;
 }
 
 function abrirDetalle(exp) {
@@ -5763,7 +5905,19 @@ function htmlPanelProyectos(data) {
     ${htmlProyectosEstadoRiesgoPremium(kpis)}
 
     <!-- Lista de proyectos -->
+    <div style="padding:0 40px 16px;">
+      <button onclick="toggleProyTabla()" id="btnProyTabla" style="display:flex;align-items:center;gap:10px;width:100%;padding:16px 24px;background:linear-gradient(135deg,rgba(255,255,255,0.85),rgba(255,249,230,0.75));backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.4);border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,0.06),inset 0 1px 0 rgba(255,255,255,0.6);cursor:pointer;font-family:IBM Plex Sans,sans-serif;transition:all 0.25s ease;">
+        <div style="width:32px;height:32px;background:linear-gradient(135deg,#FDB913,#f59e0b);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:800;box-shadow:0 2px 8px rgba(253,185,19,0.35);flex-shrink:0;" id="btnProyIcon">▼</div>
+        <div style="flex:1;text-align:left;">
+          <div style="font-size:14px;font-weight:700;color:#1e293b;">Ver lista de proyectos</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">${proyectos.length} proyectos registrados</div>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;" id="btnProyLabel">Expandir</div>
+      </button>
+    </div>
+    <div id="proyTablaWrap" style="max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.4,0,0.2,1);">
     ${htmlProyectosTabla(proyectos)}
+    </div>
   `;
 }
 
@@ -6464,7 +6618,7 @@ function htmlProyectosTabla(proyectos) {
               
               return `
                 <tr>
-                  <td><span class="proy-tabla-num">${idx + 1}</span></td>
+                  <td><span class="proy-tabla-num">${p.id || (idx + 1)}</span></td>
                   <td class="proy-tabla-proyecto">
                     <div class="proy-tabla-proyecto-nombre">${p.proyecto || p.id || '—'}</div>
                   </td>
@@ -7082,6 +7236,34 @@ function htmlCSTabla(proyectos) {
 }
 
 // ══ TOGGLE TABLA CIBERSEGURIDAD ══
+function toggleSbDetalle() {
+  var body = document.getElementById('sbDetalleBody');
+  var icon = document.getElementById('sbDetalleIcon');
+  if (body.style.maxHeight && body.style.maxHeight !== '0px') {
+    body.style.maxHeight = '0px';
+    icon.classList.remove('open');
+  } else {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    icon.classList.add('open');
+  }
+}
+
+function toggleProyTabla() {
+  var wrap = document.getElementById('proyTablaWrap');
+  var icon = document.getElementById('btnProyIcon');
+  var label = document.getElementById('btnProyLabel');
+  var abierto = wrap.style.maxHeight !== '0px' && wrap.style.maxHeight !== '';
+  if (abierto) {
+    wrap.style.maxHeight = '0px';
+    icon.textContent = '▼';
+    label.textContent = 'Expandir';
+  } else {
+    wrap.style.maxHeight = wrap.scrollHeight + 'px';
+    icon.textContent = '▲';
+    label.textContent = 'Colapsar';
+  }
+}
+
 function toggleCSTabla() {
   var wrap = document.getElementById('csTablaWrap');
   var icon = document.getElementById('btnCSIcon');
